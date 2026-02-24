@@ -1,0 +1,72 @@
+/* CompanyFrame — envelope wrapping all lanes for a company */
+
+.frame {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
+  border-radius: var(--r-3);
+  background: color-mix(in srgb, var(--panel) 85%, transparent);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  animation: frameIn 0.5s 0.08s ease-out both;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(8px, 1.5vw, 16px);
+  flex-wrap: wrap;
+  padding: clamp(14px, 2vw, 20px) clamp(18px, 2.5vw, 28px);
+  border-bottom: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
+  background: color-mix(in srgb, var(--panel) 90%, transparent);
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.2vw, var(--fs-3));
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.role {
+  font-family: var(--font-body);
+  font-size: var(--fs-0);
+  color: var(--muted);
+}
+
+.period {
+  font-family: var(--font-body);
+  font-size: var(--fs-00);
+  color: var(--faint);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.5vw, 15px);
+  padding: clamp(12px, 1.8vw, 18px) clamp(16px, 2vw, 24px);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@keyframes frameIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .frame {
+    animation: none;
+  }
+}

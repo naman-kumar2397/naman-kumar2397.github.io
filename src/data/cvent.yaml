@@ -1,0 +1,201 @@
+company:
+  id: cvent
+  label: "Cvent"
+  role: "Senior Site Reliability Engineer"
+  period: "Oct 2019 – Sep 2024"
+  tags: ["sre", "observability", "platform", "aws", "devex"]
+
+impacts:
+  - id: cvent-imp-observability-unified
+    label: "Unified metrics, traces and logs into a single observability platform"
+    type: observability
+    metrics:
+      - "~880M log events/week migrated"
+      - "10+ production dashboards"
+
+  - id: cvent-imp-incident-speed
+    label: "Improved incident response speed through automated Sev1 orchestration"
+    type: reliability
+    metrics:
+      - ">20 min faster response"
+      - "Slack + PagerDuty automation"
+
+  - id: cvent-imp-platform-scale
+    label: "Improved platform scalability and deployment resilience"
+    type: scalability
+    metrics:
+      - "70+ ECS clusters updated"
+      - "Zero-downtime rollout"
+
+  - id: cvent-imp-cost-optimisation
+    label: "Reduced platform hosting and deployment costs"
+    type: scalability
+    metrics:
+      - "30% Octopus cost reduction"
+      - "Infrastructure optimisation"
+
+  - id: cvent-imp-security-posture
+    label: "Strengthened runtime security and least-privilege posture"
+    type: security
+    metrics:
+      - "Non-root container adoption"
+      - "Least-privilege enforcement"
+
+projects:
+  - id: cvent-prj-observability
+    title: "Observability Platform Transformation"
+    themes: ["observability", "migration", "standardization"]
+    problem:
+      id: cvent-p-obs
+      statement: "Fragmented monitoring and legacy tooling limited end-to-end visibility across services."
+    solution:
+      id: cvent-s-obs
+      statement: "Led large-scale migration from Splunk to Datadog and drove SLI/SLO adoption, custom instrumentation, and unified dashboards across Java microservices."
+      tools: ["datadog", "splunk", "aws", "java"]
+    impact_ids:
+      - cvent-imp-observability-unified
+
+  - id: cvent-prj-incident-automation
+    title: "Sev1 Incident Response Automation"
+    themes: ["incident-management", "automation", "reliability"]
+    problem:
+      id: cvent-p-incident
+      statement: "Manual incident coordination across Slack, PagerDuty, Jira and Zoom slowed response during critical outages."
+    solution:
+      id: cvent-s-incident
+      statement: "Co-developed automated Sev1 response workflows integrating Datadog alerts with Slack, PagerDuty, Jira and Zoom orchestration."
+      tools: ["datadog", "slack", "pagerduty", "jira", "zoom"]
+    impact_ids:
+      - cvent-imp-incident-speed
+
+  - id: cvent-prj-ecs-modernisation
+    title: "ECS Capacity Provider & Platform Modernisation"
+    themes: ["aws", "containers", "platform", "automation"]
+    problem:
+      id: cvent-p-ecs
+      statement: "Container platform scaling and deployments required safer automation to support growing service footprint."
+    solution:
+      id: cvent-s-ecs
+      statement: "Rolled out ECS Capacity Providers across 70+ clusters, evaluated Fargate adoption, and improved container platform resilience."
+      tools: ["aws-ecs", "fargate", "aws", "python"]
+    impact_ids:
+      - cvent-imp-platform-scale
+
+  - id: cvent-prj-devex-reliability
+    title: "Developer Experience & CI/CD Reliability Improvements"
+    themes: ["devex", "cicd", "automation", "reliability"]
+    problem:
+      id: cvent-p-devex
+      statement: "Flaky test pipelines and CI/CD friction caused repeated PR retries and developer productivity loss."
+    solution:
+      id: cvent-s-devex
+      statement: "Embedded with sprint teams to identify pipeline bottlenecks, reduce flaky JUnit/Jest failures, and streamline CI/CD tooling support."
+      tools: ["jenkins", "jest", "junit", "octopus", "nexus"]
+    impact_ids:
+      - cvent-imp-platform-scale
+
+  - id: cvent-prj-platform-hardening
+    title: "Platform Reliability, Security & Cost Optimisation"
+    themes: ["security", "platform", "cost", "automation"]
+    problem:
+      id: cvent-p-platform
+      statement: "Legacy hosting patterns and configuration drift increased operational overhead, cost and security risk."
+    solution:
+      id: cvent-s-platform
+      statement: "Implemented non-root container standards, HA Octopus setup, Chef re-engineering for 500+ servers, and broad platform optimisation initiatives."
+      tools: ["aws", "chef", "octopus", "docker", "cdk"]
+    impact_ids:
+      - cvent-imp-security-posture
+      - cvent-imp-cost-optimisation
+
+edges:
+  - from: cvent
+    to: cvent-prj-observability
+    rel: owns
+  - from: cvent
+    to: cvent-prj-incident-automation
+    rel: owns
+  - from: cvent
+    to: cvent-prj-ecs-modernisation
+    rel: owns
+  - from: cvent
+    to: cvent-prj-devex-reliability
+    rel: owns
+  - from: cvent
+    to: cvent-prj-platform-hardening
+    rel: owns
+
+  # problem/solution wiring
+  - from: cvent-prj-observability
+    to: cvent-p-obs
+    rel: has_problem
+  - from: cvent-prj-observability
+    to: cvent-s-obs
+    rel: has_solution
+  - from: cvent-p-obs
+    to: cvent-s-obs
+    rel: solved_by
+
+  - from: cvent-prj-incident-automation
+    to: cvent-p-incident
+    rel: has_problem
+  - from: cvent-prj-incident-automation
+    to: cvent-s-incident
+    rel: has_solution
+  - from: cvent-p-incident
+    to: cvent-s-incident
+    rel: solved_by
+
+  - from: cvent-prj-ecs-modernisation
+    to: cvent-p-ecs
+    rel: has_problem
+  - from: cvent-prj-ecs-modernisation
+    to: cvent-s-ecs
+    rel: has_solution
+  - from: cvent-p-ecs
+    to: cvent-s-ecs
+    rel: solved_by
+
+  - from: cvent-prj-devex-reliability
+    to: cvent-p-devex
+    rel: has_problem
+  - from: cvent-prj-devex-reliability
+    to: cvent-s-devex
+    rel: has_solution
+  - from: cvent-p-devex
+    to: cvent-s-devex
+    rel: solved_by
+
+  - from: cvent-prj-platform-hardening
+    to: cvent-p-platform
+    rel: has_problem
+  - from: cvent-prj-platform-hardening
+    to: cvent-s-platform
+    rel: has_solution
+  - from: cvent-p-platform
+    to: cvent-s-platform
+    rel: solved_by
+
+  # impacts
+  - from: cvent-prj-observability
+    to: cvent-imp-observability-unified
+    rel: drives
+
+  - from: cvent-prj-incident-automation
+    to: cvent-imp-incident-speed
+    rel: drives
+
+  - from: cvent-prj-ecs-modernisation
+    to: cvent-imp-platform-scale
+    rel: drives
+
+  - from: cvent-prj-devex-reliability
+    to: cvent-imp-platform-scale
+    rel: drives
+
+  - from: cvent-prj-platform-hardening
+    to: cvent-imp-security-posture
+    rel: drives
+  - from: cvent-prj-platform-hardening
+    to: cvent-imp-cost-optimisation
+    rel: drives

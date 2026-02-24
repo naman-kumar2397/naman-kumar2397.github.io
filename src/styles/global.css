@@ -1,0 +1,55 @@
+@layer base {
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--fs-1);
+    letter-spacing: 0.2px;
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.35s, color 0.35s;
+    /* Prevent horizontal overflow */
+    overflow-x: hidden; /* Fallback for older browsers */
+    overflow-x: clip;   /* Modern: allows position:sticky to work */
+  }
+
+  ::selection {
+    background: rgba(255, 204, 51, 0.25);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 204, 51, 0.35);
+  }
+
+  a:hover {
+    border-bottom-color: rgba(255, 204, 51, 0.9);
+  }
+
+  /* Utility-ish primitives */
+  .container {
+    width: min(1200px, calc(100% - 2 * var(--s-6)));
+    margin: 0 auto;
+    padding: var(--s-7) 0;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--stroke);
+    border-radius: var(--r-3);
+    box-shadow: var(--shadow-1);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+  }
+
+  .h-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.2px;
+  }
+
+  .muted { color: var(--muted); }
+  .faint { color: var(--faint); }
+}

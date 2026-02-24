@@ -1,0 +1,123 @@
+company:
+  id: cit
+  label: "CI&T"
+  role: "DevOps Lead Consultant (Contract)"
+  period: "May 2025 – Jun 2025"
+  tags: ["platform", "migration", "data", "aws", "terraform"]
+
+impacts:
+  - id: cit-imp-platform-consolidation
+    label: "Consolidated platform foundations across merged product ecosystems"
+    type: scalability
+    metrics:
+      - "iSelect + CompareTheMarket alignment"
+      - "Unified infra patterns"
+
+  - id: cit-imp-iac-standardisation
+    label: "Standardised infrastructure provisioning through Terraform adoption"
+    type: scalability
+    metrics:
+      - "CloudFormation → Terraform migration"
+      - "Multi-account consistency"
+
+  - id: cit-imp-data-unification
+    label: "Unified fragmented data ingestion into a centralised lakehouse"
+    type: observability
+    metrics:
+      - "Delta Lakehouse on Databricks"
+      - "Multi-source ingestion pipelines"
+
+projects:
+  - id: cit-prj-merger-platform
+    title: "Technology Asset Consolidation (iSelect + CompareTheMarket)"
+    themes: ["platform", "migration", "standardization"]
+    problem:
+      id: cit-p-merger
+      statement: "Two mature product ecosystems required consolidation of infrastructure and platform capabilities following organisational merger."
+    solution:
+      id: cit-s-merger
+      statement: "Led the technical consolidation strategy aligning infrastructure patterns, environments, and platform foundations across both product stacks."
+      tools: ["aws", "terraform", "python"]
+    impact_ids:
+      - cit-imp-platform-consolidation
+
+  - id: cit-prj-cfn-to-terraform
+    title: "CloudFormation → Terraform Migration"
+    themes: ["iac", "platform", "aws", "standardization"]
+    problem:
+      id: cit-p-iac
+      statement: "Infrastructure provisioning relied on fragmented CloudFormation stacks, limiting consistency and cross-account standardisation."
+    solution:
+      id: cit-s-iac
+      statement: "Spearheaded migration to Terraform across multiple AWS accounts, establishing repeatable infrastructure patterns and improving deployment consistency."
+      tools: ["terraform", "aws", "python"]
+    impact_ids:
+      - cit-imp-iac-standardisation
+
+  - id: cit-prj-delta-lakehouse
+    title: "Delta Lakehouse Data Platform Consolidation"
+    themes: ["data", "platform", "observability", "integration"]
+    problem:
+      id: cit-p-data
+      statement: "Marketing and business data pipelines were fragmented across multiple ingestion paths and platforms, reducing visibility and data consistency."
+    solution:
+      id: cit-s-data
+      statement: "Integrated ingestion pipelines from Salesforce, Meta, Google Ads, and SFTP sources into a unified Delta Lakehouse architecture on Databricks."
+      tools: ["databricks", "aws-s3", "python", "api", "sftp"]
+    impact_ids:
+      - cit-imp-data-unification
+
+edges:
+  - from: cit
+    to: cit-prj-merger-platform
+    rel: owns
+  - from: cit
+    to: cit-prj-cfn-to-terraform
+    rel: owns
+  - from: cit
+    to: cit-prj-delta-lakehouse
+    rel: owns
+
+  # project → problem/solution wiring
+  - from: cit-prj-merger-platform
+    to: cit-p-merger
+    rel: has_problem
+  - from: cit-prj-merger-platform
+    to: cit-s-merger
+    rel: has_solution
+  - from: cit-p-merger
+    to: cit-s-merger
+    rel: solved_by
+
+  - from: cit-prj-cfn-to-terraform
+    to: cit-p-iac
+    rel: has_problem
+  - from: cit-prj-cfn-to-terraform
+    to: cit-s-iac
+    rel: has_solution
+  - from: cit-p-iac
+    to: cit-s-iac
+    rel: solved_by
+
+  - from: cit-prj-delta-lakehouse
+    to: cit-p-data
+    rel: has_problem
+  - from: cit-prj-delta-lakehouse
+    to: cit-s-data
+    rel: has_solution
+  - from: cit-p-data
+    to: cit-s-data
+    rel: solved_by
+
+  # impacts
+  - from: cit-prj-merger-platform
+    to: cit-imp-platform-consolidation
+    rel: drives
+
+  - from: cit-prj-cfn-to-terraform
+    to: cit-imp-iac-standardisation
+    rel: drives
+
+  - from: cit-prj-delta-lakehouse
+    to: cit-imp-data-unification
+    rel: drives

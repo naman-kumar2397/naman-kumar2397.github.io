@@ -1,0 +1,35 @@
+/* ThemeToggle — small button group for Day/Night/System */
+
+.toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  background: var(--panel);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.btn:hover {
+  color: var(--muted);
+}
+
+.btn.active {
+  background: var(--stroke-strong);
+  color: var(--ink);
+}

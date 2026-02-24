@@ -1,0 +1,137 @@
+/* Design Tokens — Dual Theme: Night (default) / Day
+   Fonts loaded via next/font in layout.tsx — CSS variables --font-body and
+   --font-display are set on <html> by Next.js font classes.
+
+   Theme selection:
+   - data-theme="night"  → dark mode
+   - data-theme="day"    → light mode
+   - data-theme="system" → follows prefers-color-scheme (via media query fallback)
+*/
+
+:root {
+  /* Typography — fallbacks only */
+  --font-display: "Fraunces", serif;
+  --font-body: "Roboto", sans-serif;
+
+  /* Scale */
+  --fs-00: 12px;
+  --fs-0: 14px;
+  --fs-1: 16px;
+  --fs-2: 20px;
+  --fs-3: 28px;
+  --fs-4: 40px;
+
+  /* Spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+
+  /* Radii */
+  --r-1: 10px;
+  --r-2: 16px;
+  --r-3: 22px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   NIGHT THEME (default)
+   ═══════════════════════════════════════════════════════ */
+:root,
+:root[data-theme="night"] {
+  --bg: #0b0d10;
+  --panel: rgba(15, 18, 23, 0.78);
+  --panel-solid: #0f1217;
+  --ink: #e9eef6;
+  --muted: rgba(233, 238, 246, 0.72);
+  --faint: rgba(233, 238, 246, 0.35);
+
+  --signal: #ffcc33;
+  --signal-2: #6df2c1;
+  --danger: #ff6b8a;
+
+  --shadow-1: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 18px 60px rgba(0, 0, 0, 0.55);
+
+  --stroke: rgba(233, 238, 246, 0.12);
+  --stroke-strong: rgba(233, 238, 246, 0.22);
+
+  --blur: blur(18px);
+}
+
+/* ═══════════════════════════════════════════════════════
+   DAY THEME
+   ═══════════════════════════════════════════════════════ */
+:root[data-theme="day"] {
+  --bg: #f3f5f8;
+  --panel: rgba(255, 255, 255, 0.72);
+  --panel-solid: #ffffff;
+  --ink: #1a1d24;
+  --muted: rgba(26, 29, 36, 0.7);
+  --faint: rgba(26, 29, 36, 0.4);
+
+  --signal: #d9a300;
+  --signal-2: #1f9c72;
+  --danger: #d63e5e;
+
+  --shadow-1: 0 6px 20px rgba(0, 0, 0, 0.08);
+  --shadow-2: 0 12px 40px rgba(0, 0, 0, 0.12);
+
+  --stroke: rgba(26, 29, 36, 0.1);
+  --stroke-strong: rgba(26, 29, 36, 0.18);
+
+  --blur: blur(16px);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SYSTEM PREFERENCE FALLBACK (when data-theme="system")
+   ═══════════════════════════════════════════════════════ */
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    --bg: #f3f5f8;
+    --panel: rgba(255, 255, 255, 0.72);
+    --panel-solid: #ffffff;
+    --ink: #1a1d24;
+    --muted: rgba(26, 29, 36, 0.7);
+    --faint: rgba(26, 29, 36, 0.4);
+
+    --signal: #d9a300;
+    --signal-2: #1f9c72;
+    --danger: #d63e5e;
+
+    --shadow-1: 0 6px 20px rgba(0, 0, 0, 0.08);
+    --shadow-2: 0 12px 40px rgba(0, 0, 0, 0.12);
+
+    --stroke: rgba(26, 29, 36, 0.1);
+    --stroke-strong: rgba(26, 29, 36, 0.18);
+
+    --blur: blur(16px);
+  }
+}
+
+/* Default dark for system when no media matches */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --bg: #0b0d10;
+    --panel: rgba(15, 18, 23, 0.78);
+    --panel-solid: #0f1217;
+    --ink: #e9eef6;
+    --muted: rgba(233, 238, 246, 0.72);
+    --faint: rgba(233, 238, 246, 0.35);
+
+    --signal: #ffcc33;
+    --signal-2: #6df2c1;
+    --danger: #ff6b8a;
+
+    --shadow-1: 0 10px 30px rgba(0, 0, 0, 0.45);
+    --shadow-2: 0 18px 60px rgba(0, 0, 0, 0.55);
+
+    --stroke: rgba(233, 238, 246, 0.12);
+    --stroke-strong: rgba(233, 238, 246, 0.22);
+
+    --blur: blur(18px);
+  }
+}

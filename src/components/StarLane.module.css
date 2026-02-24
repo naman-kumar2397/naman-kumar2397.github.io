@@ -1,0 +1,370 @@
+/* StarLane — 3-column grid: Problem | Solution | Result */
+
+/* ── Lane container ── */
+.lane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: clamp(12px, 2vw, 18px) clamp(14px, 2vw, 22px);
+  border: 1px solid color-mix(in srgb, var(--stroke) 85%, transparent);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--panel) 92%, var(--ink) 3%);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.25s, opacity 0.35s, box-shadow 0.3s, transform 0.3s ease-out;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.lane:hover,
+.lane:focus-visible {
+  border-color: var(--stroke-strong);
+  outline: none;
+}
+
+/* ── Scroll-triggered visibility ── */
+.laneHidden { opacity: 0; transform: translateY(16px); }
+.laneVisible { animation: laneReveal 0.45s ease-out both; }
+
+@keyframes laneReveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Hover / dim / highlight states ── */
+.laneHovered {
+  border-color: transparent !important;
+}
+
+/* Gradient border via pseudo-element */
+.laneHovered::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--r-2) + 1px);
+  padding: 1.5px;
+  background: linear-gradient(135deg, rgba(255, 200, 80, 0.45) 0%, rgba(120, 200, 255, 0.35) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: lanePulse 2.8s ease-in-out infinite;
+}
+
+@keyframes lanePulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.laneDimmed { opacity: 0.22; pointer-events: none; }
+.laneLightDimmed { opacity: 0.65; }
+
+.laneHighlighted {
+  border-color: var(--signal) !important;
+  background: rgba(255, 204, 51, 0.04);
+}
+
+/* ── Lane header ── */
+.laneHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 22px;
+}
+
+.projectTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-1);
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.deepDiveLink {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--signal);
+  white-space: nowrap;
+  border-bottom: none !important;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.deepDiveLink:hover { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════
+   3-COLUMN GRID: Problem  →  Solution  →  Result
+   Arrows sit in narrow dedicated columns between cards.
+   ═══════════════════════════════════════════════════════ */
+.starGrid {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr 40px 1fr;
+  column-gap: clamp(4px, 0.6vw, 8px);
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Cards (Problem & Solution) ── */
+.card {
+  min-width: 0;
+  padding: clamp(8px, 1.4vw, 14px) clamp(10px, 1.4vw, 16px);
+  border: 1px solid color-mix(in srgb, var(--stroke) 90%, transparent);
+  border-radius: var(--r-1);
+  background: color-mix(in srgb, var(--panel) 95%, var(--ink) 5%);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* hidden before animation */
+  opacity: 0;
+  transform: translateX(-8px);
+  position: relative;
+  overflow: hidden;
+}
+
+.problemCard { border-left: 3px solid var(--danger); }
+.solutionCard { border-left: 3px solid var(--signal-2); }
+
+.cardLabel {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  color: var(--danger);
+  text-transform: uppercase;
+}
+.cardLabel[data-accent="solution"] { color: var(--signal-2); }
+
+.cardText {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Tool pills ── */
+.toolRow { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+
+.toolPill {
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: rgba(109, 242, 193, 0.1);
+  border: 1px solid rgba(109, 242, 193, 0.2);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--signal-2);
+  white-space: nowrap;
+}
+
+.toolMore { font-size: 10px; color: var(--faint); align-self: center; }
+
+/* ── Arrow cells ── */
+.arrowCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* hidden before animation */
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.arrowSvg {
+  width: 100%;
+  height: 20px;
+}
+
+/* ── Result cell (vertically centered impact stack) ── */
+.resultCell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding: clamp(8px, 1.4vw, 14px) clamp(10px, 1.4vw, 16px);
+  border-radius: var(--r-1);
+  background: color-mix(in srgb, var(--panel) 95%, var(--ink) 5%);
+  border: 1px solid color-mix(in srgb, var(--stroke) 90%, transparent);
+  border-left: 3px solid #7eb8ff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  /* hidden before animation */
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+.resultLabel {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  color: #7eb8ff;
+  text-transform: uppercase;
+}
+
+/* Result cell stays stable on hover — no animation */
+.resultCellActive {
+  /* intentionally empty: result nodes remain visually stable */
+}
+
+/* ── Impact badges ── */
+.impactBadge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  background: var(--panel);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  text-align: left;
+  min-width: 0;
+  max-width: 100%;
+}
+.impactBadge:hover { border-color: var(--imp-color, var(--signal)); }
+
+.impactBadgeGlow {
+  border-color: var(--imp-color, var(--signal)) !important;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--imp-color, var(--signal)) 30%, transparent);
+  background: color-mix(in srgb, var(--imp-color, var(--signal)) 6%, var(--bg));
+}
+
+/* Header row (dot + type + label) */
+.impactHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.impactDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.impactType {
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--imp-color, var(--faint));
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.impactLabel {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ── Metric chips row ── */
+.metricRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+  padding-left: 14px; /* align under label text */
+}
+
+.metricChip {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.metricOverflow {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--faint);
+  font-style: italic;
+  padding: 2px 6px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FLOW ANIMATION CLASSES
+   ═══════════════════════════════════════════════════════ */
+.stepReveal { animation: stepIn 0.35s ease-out both; }
+
+@keyframes stepIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.arrowReveal { animation: arrowDraw 0.3s ease-out both; }
+
+@keyframes arrowDraw {
+  from { opacity: 0; transform: scaleX(0); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .starGrid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    row-gap: 8px;
+  }
+  .arrowCell {
+    height: 24px;
+    transform-origin: center center;
+    transform: rotate(90deg) scaleX(0);
+  }
+  .arrowReveal { animation: arrowDrawVert 0.3s ease-out both; }
+}
+
+@keyframes arrowDrawVert {
+  from { opacity: 0; transform: rotate(90deg) scaleX(0); }
+  to   { opacity: 1; transform: rotate(90deg) scaleX(1); }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .lane, .laneHidden, .laneVisible {
+    animation: none !important; opacity: 1; transform: none;
+    transition: opacity 0.2s, border-color 0.2s;
+  }
+  .laneHovered::after {
+    animation: none;
+    opacity: 0.85;
+  }
+  .card, .arrowCell, .resultCell, .impactBadge {
+    opacity: 1; transform: none; animation: none !important;
+  }
+  .stepReveal, .arrowReveal {
+    animation: none !important; opacity: 1; transform: none;
+  }
+}

@@ -65,6 +65,28 @@
   }
 }
 
+/* ── Responsive: filter panel on mobile ── */
+@media (max-width: 640px) {
+  .panel {
+    width: calc(100vw - 32px);
+    max-width: 320px;
+    right: -8px;
+    max-height: 360px;
+  }
+
+  .trigger {
+    padding: 5px 10px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .badge {
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+}
+
 .searchRow {
   display: flex;
   align-items: center;

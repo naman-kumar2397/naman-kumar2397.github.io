@@ -32,6 +32,7 @@ interface StarLaneProps {
   delay: number;
   onHover: (projectId: string | null) => void;
   onImpactClick: (impactId: string) => void;
+  onDeepDive?: (slug: string, triggerEl?: HTMLElement) => void;
 }
 
 /* ── IntersectionObserver hook (fire once) ── */
@@ -93,6 +94,7 @@ export const StarLane = memo(function StarLane({
   delay,
   onHover,
   onImpactClick,
+  onDeepDive,
 }: StarLaneProps) {
   /* Dev render counter */
   if (isDev) {
@@ -129,16 +131,6 @@ export const StarLane = memo(function StarLane({
         <span className={styles.projectTitle} title={lane.projectTitle}>
           {lane.projectTitle}
         </span>
-        {lane.deepDiveSlug && (
-          <a
-            className={styles.deepDiveLink}
-            href={`/project/${lane.deepDiveSlug}/`}
-            onClick={(e) => e.stopPropagation()}
-            title="Read full case study"
-          >
-            Case Study →
-          </a>
-        )}
       </div>
 
       {/* ── 3-column grid: Problem | Solution | Result ── */}
@@ -220,6 +212,19 @@ export const StarLane = memo(function StarLane({
               </button>
             );
           })}
+          {lane.deepDiveSlug && onDeepDive && (
+            <button
+              className={styles.deepDiveResultBtn}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeepDive(lane.deepDiveSlug!, e.currentTarget);
+              }}
+              title="Open full case study"
+              type="button"
+            >
+              Deep Dive →
+            </button>
+          )}
         </div>
       </div>
     </div>

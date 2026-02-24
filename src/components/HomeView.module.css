@@ -26,45 +26,182 @@
   background: color-mix(in srgb, var(--panel) 85%, transparent);
   border: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
   border-radius: var(--r-2);
-  padding: 10px 16px;
+  padding: 12px 16px 10px;
   box-shadow: var(--shadow-1);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   animation: cardIn 0.5s ease-out both;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.identityRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* ── Avatar ── */
+.avatar {
+  position: relative;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--signal) 0%, var(--signal-2) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatarFallback {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--bg);
+  letter-spacing: 0.05em;
+  user-select: none;
 }
 
 .name {
-  display: block;
   font-family: var(--font-display);
   font-size: var(--fs-2);
   font-weight: 700;
   color: var(--ink);
-  margin-bottom: 4px;
+  line-height: 1.2;
 }
 
-.contactRow {
-  display: flex;
+.role {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.location {
+  display: inline-flex;
   align-items: center;
+  gap: 4px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--faint);
+  margin-top: 2px;
+}
+
+.location svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+/* ── Contact tiles ── */
+.contactTiles {
+  display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.sep {
-  color: var(--faint);
-  font-size: 9px;
-  user-select: none;
-}
-
-.detail {
+.contactTile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid color-mix(in srgb, var(--stroke) 60%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  color: var(--muted);
   font-family: var(--font-body);
   font-size: 12px;
-  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
   white-space: nowrap;
-  border-bottom: none !important;
-  transition: color 0.15s;
+  min-width: 0;
 }
-a.detail:hover {
+
+.contactTile:hover,
+.contactTile:focus-visible {
+  border-color: color-mix(in srgb, var(--signal) 50%, transparent);
+  background: color-mix(in srgb, var(--signal) 6%, transparent);
+  color: var(--ink);
+}
+
+.contactTile:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 1px;
+}
+
+.contactTileRevealed {
+  border-color: color-mix(in srgb, var(--signal) 35%, transparent);
+}
+
+/* Direct-link tile (e.g. Schedule meeting) — no reveal behaviour */
+.contactTileLink {
+  text-decoration: none;
+  color: var(--muted);
+}
+
+.tileIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+
+.contactTile:hover .tileIcon,
+.contactTile:focus-visible .tileIcon {
+  opacity: 1;
+}
+
+.tileContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.tileLabel {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
+
+.tileValue {
+  font-size: 11px;
   color: var(--signal);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+  line-height: 1.3;
+  border-bottom: none !important;
+  animation: fadeInValue 0.15s ease-out;
+}
+
+.tileValue:hover {
+  text-decoration: underline;
+}
+
+@keyframes fadeInValue {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Controls (right) ── */
@@ -80,26 +217,76 @@ a.detail:hover {
   align-items: center;
   gap: 5px;
   padding: 6px 14px;
-  border: 1px solid var(--stroke);
+  border: 1px solid color-mix(in srgb, var(--signal) 25%, transparent);
   border-radius: 6px;
   background: var(--panel);
-  color: var(--muted);
+  color: var(--signal);
   font-family: var(--font-body);
   font-size: 12px;
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
   white-space: nowrap;
   border-bottom: none !important;
+  animation: resumePulseTop 3s ease-in-out infinite;
+  transition: background 0.15s;
 }
 .downloadBtn:hover {
-  border-color: var(--signal);
-  color: var(--ink);
+  animation-play-state: paused;
+  border-color: var(--signal) !important;
+  color: var(--signal);
+  background: color-mix(in srgb, var(--signal) 8%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--signal) 20%, transparent);
+  border-bottom: none !important;
+}
+
+@keyframes resumePulseTop {
+  0%, 100% {
+    border-color: color-mix(in srgb, var(--signal) 25%, transparent);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    border-color: color-mix(in srgb, var(--signal) 55%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--signal) 12%, transparent);
+  }
 }
 
 @keyframes cardIn {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Section heading (shared between Work Experience & credentials) ── */
+.sectionHeading {
+  font-family: var(--font-display);
+  font-size: clamp(16px, 2vw, var(--fs-2));
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+  margin: 0;
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid color-mix(in srgb, var(--stroke) 50%, transparent);
+}
+
+/* ── Sticky variant (Work Experience only) ── */
+.stickyHeading {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding-top: var(--s-3);
+  margin-top: calc(-1 * var(--s-3));
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: box-shadow 0.2s;
+}
+
+/* ── Experience section wrapper ── */
+.experienceSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  scroll-margin-top: 100px;
 }
 
 /* ── Empty state ── */
@@ -146,19 +333,138 @@ a.detail:hover {
 }
 
 /* ── Responsive ── */
+@media (max-width: 900px) {
+  .page {
+    padding: 0 clamp(10px, 2.5vw, 20px) clamp(24px, 4vw, 48px);
+  }
+
+  .companySection {
+    scroll-margin-top: 72px;
+  }
+
+  .companyStack {
+    gap: clamp(18px, 3vw, 32px);
+  }
+
+  .experienceSection {
+    scroll-margin-top: 72px;
+  }
+}
+
 @media (max-width: 640px) {
   .topBar {
     flex-direction: column;
     gap: 10px;
   }
+
   .controls {
     align-self: flex-end;
+    gap: 6px;
+  }
+
+  .downloadBtn {
+    padding: 5px 10px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .downloadBtn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .identityCard {
+    padding: 10px 12px 8px;
+  }
+
+  .avatar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .avatarFallback {
+    font-size: 14px;
+  }
+
+  .name {
+    font-size: clamp(16px, 4.5vw, 22px);
+  }
+
+  .role {
+    font-size: 12px;
+  }
+
+  .sectionHeading {
+    font-size: clamp(15px, 4vw, 18px);
+  }
+
+  .stickyHeading {
+    top: 0;
+  }
+
+  .contactTiles {
+    gap: 5px;
+  }
+
+  .contactTile {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .tileValue {
+    max-width: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 0 8px 24px;
+  }
+
+  .topBar {
+    gap: 8px;
+    padding: 10px 0;
+  }
+
+  .controls {
+    gap: 4px;
+  }
+
+  .identityRow {
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .avatarFallback {
+    font-size: 13px;
+  }
+
+  .contactTiles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+
+  .tileValue {
+    max-width: 140px;
   }
 }
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   .identityCard {
+    animation: none;
+  }
+
+  .tileValue {
+    animation: none;
+  }
+
+  .downloadBtn {
     animation: none;
   }
 }

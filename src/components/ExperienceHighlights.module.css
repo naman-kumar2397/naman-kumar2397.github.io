@@ -1,0 +1,109 @@
+/* ExperienceHighlights — compact summary strip */
+
+.strip {
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--panel) 80%, var(--signal) 3%);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  scroll-margin-top: 60px;
+}
+
+/* ── List ── */
+.list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3) var(--s-6);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Single item ── */
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--fs-0);
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+/* ── Bullet dot ── */
+.bullet {
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--signal);
+  align-self: flex-start;
+}
+
+/* ── Text ── */
+.text {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+/* ── Metric chips row ── */
+.metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: 100%;
+  padding-left: 11px; /* align with text (bullet width + gap) */
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: var(--fs-00);
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: var(--signal);
+  border: 1px solid color-mix(in srgb, var(--signal) 30%, transparent);
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--signal) 8%, transparent);
+  white-space: nowrap;
+  line-height: 1.55;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .list {
+    grid-template-columns: 1fr;
+    gap: var(--s-3);
+  }
+}
+
+@media (max-width: 640px) {
+  .strip {
+    padding: var(--s-3) var(--s-4);
+  }
+
+  .item {
+    font-size: 13px;
+  }
+
+  .chip {
+    font-size: 11px;
+    padding: 1px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .strip {
+    padding: var(--s-3) var(--s-3);
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .strip {
+    animation: none;
+  }
+}

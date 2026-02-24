@@ -62,7 +62,7 @@ async function main() {
     "Contact:",
     "  Email: namankumar2397@gmail.com",
     "  Phone: +61 452 176 778",
-    "  LinkedIn: linkedin.com/in/naman-kumar2397",
+    "  LinkedIn: https://www.linkedin.com/in/-namankumar/",
   ];
 
   let y = height - 170;

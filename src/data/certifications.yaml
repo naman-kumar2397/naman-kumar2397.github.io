@@ -1,0 +1,32 @@
+certifications:
+  - id: cert-aws-saa-2019
+    name: "AWS Certified Solutions Architect – Associate"
+    issuer: "Amazon Web Services"
+    year: "2019"
+    status: "active"
+    credential_id: "R2XYHRM1JE1E1TKJ"
+    credential_url: ""
+
+  - id: cert-amcat-sd-2017
+    name: "Software Development"
+    issuer: "AMCAT"
+    year: "2017"
+    status: "active"
+    credential_id: "1300011134163817"
+    credential_url: ""
+
+  - id: cert-cognixia-aws-2017
+    name: "AWS Cloud Computing"
+    issuer: "Cognixia"
+    year: "2017"
+    status: "active"
+    credential_id: "CT-AWS10092017"
+    credential_url: ""
+
+  - id: cert-rhel-7-2016
+    name: "RHEL 7.0"
+    issuer: "Red Hat"
+    year: "2016"
+    status: "active"
+    credential_id: ""
+    credential_url: ""

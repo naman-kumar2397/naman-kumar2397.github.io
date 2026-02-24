@@ -1,25 +1,106 @@
 ---
 title: "S3 Security Remediation (Org-wide Baseline Policies)"
-companyId: "synechron"
-projectId: "prj-s3-remediation"
-themes: ["security", "governance", "iac", "aws", "standardization"]
-tools: ["aws-s3", "iam", "terraform", "cloudformation"]
+company: "Synechron (Client: Latitude Financial Services)"
+role: Lead Site Reliability Engineer
+period: 2025
+impactSnapshot:
+  - "Org-wide S3 security baseline established"
+  - "Encryption-at-rest + HTTPS transport enforced across estate"
+  - "Eliminated ClickOps-driven policy drift"
+  - "Audit-ready posture via repeatable IaC rollout"
 ---
 
 ## Context
-Organisation-wide uplift of S3 bucket security posture by rolling out baseline controls consistently.
 
-## Baseline Controls (high level)
-- Encryption enforcement (at-rest requirements)
-- Secure transport enforcement (HTTPS)
-- Policy drift minimisation via IaC rollout patterns
+The AWS estate contained a large number of S3 buckets with inconsistent security posture across multiple accounts and teams. Common issues included:
 
-## Rollout Strategy
-- Discovery and classification
-- Staged rollout with guardrails
-- Verification and reporting
+- Missing or inconsistent encryption-at-rest enforcement
+- Lack of secure transport (HTTPS-only) requirements on bucket policies
+- Policy drift caused by manual ClickOps configurations
+- No standard baseline — each team had its own conventions (or none)
 
-## Outcomes
-- Reduced audit risk and inconsistency
-- Repeatable, governed storage baseline
+This created audit risk, potential data exposure, and significant friction during compliance reviews. The objective was to establish a repeatable, enforceable baseline across all existing and future S3 buckets.
 
+## Problem
+
+S3 controls had evolved organically. Teams created buckets manually or through ad-hoc CloudFormation templates with no shared policy standards. The result:
+
+- Non-uniform bucket policies — some enforced HTTPS, most didn't
+- Encryption gaps — default encryption was not consistently enabled, and no deny rules prevented unencrypted uploads
+- No drift detection — changes made via console went untracked
+- High audit friction — each compliance review required manual bucket-by-bucket inspection
+
+Manual point-in-time remediation would not scale. Any one-off fix would drift within weeks as new buckets were provisioned without the baseline.
+
+## What I Implemented
+
+- Defined baseline bucket policy patterns covering two controls: encryption-at-rest (AES-256/KMS) and transport security (deny HTTP).
+- Built reusable Terraform modules encapsulating the baseline policies — parameterised for bucket name, KMS key ARN, and exception lists.
+- Created a CloudFormation StackSet-based rollout for accounts still on CFN, with equivalent controls.
+- Implemented pre-apply validation using terraform plan + custom policy checks to flag policy regressions before they reached production.
+- Built a bucket inventory script (Python + boto3) that scanned all accounts via AWS Organizations, classified buckets by compliance state, and produced a prioritised remediation queue.
+- Partnered with platform teams to remediate high-risk buckets first (public-facing, PII-containing, cross-account shared).
+- Ensured all changes were audit-friendly: every remediation was a version-controlled PR with plan output attached.
+
+## Rollout & Change Safety
+
+The rollout was phased to avoid disrupting production workloads that might have implicit dependencies on unencrypted access patterns:
+
+- Inventory and classification first — before writing any policy, every bucket was catalogued with its current policy state, ownership, and data classification. This took approximately one week and surfaced several buckets with no identifiable owner.
+- Non-breaking controls first — HTTPS enforcement was rolled out before encryption deny rules. HTTPS-only is backward-compatible for any modern SDK client (all AWS SDKs default to HTTPS). This de-risked the first wave of changes.
+- Canary accounts — two non-production accounts received the full baseline first. Changes soaked for one week with CloudTrail monitoring for AccessDenied errors that might indicate broken workflows.
+- Progressive account rollout — production accounts were onboarded in waves of 2–3 per week. Each wave included a 48-hour monitoring window before the next wave began.
+- Exception mechanism — a documented exception process allowed teams to request temporary exclusions for specific buckets (e.g., legacy ETL pipelines using unsigned URLs). Exceptions required a ticket, an owner, and an expiry date.
+
+Rollback path: each Terraform/CFN change was a discrete PR. Reverting a bucket to its previous policy required merging a single revert commit. No cascading dependencies.
+
+## Failure Modes & Guardrails
+
+- Breaking existing workloads — the primary risk. Mitigated by the phased rollout and canary soak. Additionally, the bucket inventory script tagged each bucket with its access pattern (cross-account, public, internal-only), allowing targeted risk assessment before policy application.
+- Unsigned URL breakage — some legacy data pipelines used pre-signed HTTP URLs. The HTTPS-only policy would break these. The inventory phase identified these buckets, and they were excluded from the first wave. Owners were notified with a migration timeline.
+- Encryption key rotation conflicts — enforcing KMS encryption on buckets that previously used AES-256 (or no encryption) required coordination with key policies. A pre-check validated that the target KMS key's policy granted sufficient access before the bucket policy was applied.
+- Orphaned buckets — buckets with no identifiable owner posed a risk: applying policy changes with no one to verify correctness. These were flagged separately and remediated last, with extended monitoring.
+- Terraform state drift — if manual console changes occurred after IaC rollout, subsequent applies could fail or produce unexpected diffs. A scheduled drift-detection pipeline (terraform plan in read-only mode) ran nightly and alerted on any non-empty diff.
+
+## Measurement & Success Metrics
+
+Measurement was structured around compliance coverage and operational friction:
+
+- Baseline coverage — percentage of S3 buckets with both controls (encryption-at-rest + HTTPS transport) enforced. Tracked per-account and org-wide. Starting coverage was low (exact figure under NDA); target was 100% of non-excepted buckets.
+- Policy drift rate — number of buckets that fell out of compliance between weekly scans. Measured by re-running the inventory script and diffing against the previous state. The goal was zero new drift after IaC enforcement was active.
+- AccessDenied errors — monitored via CloudTrail after each rollout wave. Any spike in S3-related AccessDenied events within 48 hours of a policy change triggered investigation. Used as a canary signal for broken workloads.
+- Remediation velocity — number of buckets brought into compliance per week. Tracked to ensure the rollout stayed on schedule and to identify bottlenecks (e.g., accounts with complex ownership).
+- Audit time reduction — measured qualitatively by comparing the effort required for the next compliance review against previous reviews. The goal was to move from manual bucket inspection to a single report generated from the inventory script.
+
+Direction of change: baseline coverage increased steadily through the rollout, policy drift dropped to near-zero after IaC enforcement was active, and the subsequent compliance review required significantly less manual effort. Exact figures are under client NDA.
+
+## Key Technical Decisions
+
+Policy guardrails over one-time fixes — rather than point-in-time remediation, the focus was on preventing future drift through reusable policy patterns enforced at the IaC layer. This meant every new bucket provisioned through the standard pipeline automatically inherited the baseline.
+
+Phased rollout over big-bang — production risk was managed by treating this as an operational change, not just a Terraform apply. Each wave had a monitoring window, a rollback plan, and an explicit go/no-go decision before proceeding.
+
+IaC-first enforcement — all remediations were driven through Infrastructure as Code (Terraform modules + CFN StackSets). No manual console changes were made. This ensured repeatability, auditability, and long-term consistency. Every change was a PR with plan output attached.
+
+## Impact
+
+- Established a consistent S3 security baseline across the entire AWS estate — encryption-at-rest and HTTPS transport enforced on all non-excepted buckets.
+- Eliminated ClickOps-driven policy drift by moving all bucket policy management to version-controlled IaC.
+- Reduced organisational data exposure risk by closing encryption and transport security gaps.
+- Improved audit readiness — compliance reviews shifted from manual bucket inspection to automated inventory reports.
+- Enabled repeatable future bucket provisioning with secure defaults baked into the Terraform module.
+
+## Lessons Learned
+
+- Security posture must be treated as a platform capability, not a one-off project. Without enforceable baselines, drift is inevitable.
+- Guardrails scale better than manual remediation. Policy-as-code prevents regressions; spreadsheet-tracked fixes do not.
+- Early stakeholder alignment is critical for org-wide changes. Teams that were consulted early cooperated readily; those surprised by policy changes pushed back.
+- Visibility into bucket ownership greatly accelerates remediation. The inventory phase was the highest-leverage work in the entire project.
+- Phased rollout with canary monitoring is non-negotiable for security policy changes in production. Breaking a workload to enforce a control undermines trust in the entire programme.
+
+## Future Enhancements
+
+- Preventive SCP guardrails to deny creation of non-compliant buckets at the AWS Organizations level
+- Automated bucket posture scoring with a weighted risk model (public access, data classification, encryption state)
+- Continuous compliance dashboard surfacing real-time baseline coverage and drift
+- Event-driven drift detection via CloudTrail events, triggering auto-remediation for known-safe policy corrections

@@ -38,7 +38,7 @@ describe("Catalog consistency", () => {
 
   // Find all company YAML files (exclude catalog.yaml)
   const companyFiles = fs.readdirSync(dataDir).filter((f) => {
-    return f.endsWith(".yaml") && f !== "catalog.yaml";
+    return f.endsWith(".yaml") && !["catalog.yaml", "certifications.yaml", "education.yaml"].includes(f);
   });
 
   it("catalog.yaml should have unique tool ids", () => {

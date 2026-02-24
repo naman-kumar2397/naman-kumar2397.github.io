@@ -8,29 +8,54 @@ interface Company {
   label: string;
 }
 
+interface NavSection {
+  id: string;
+  label: string;
+  nested?: boolean;
+}
+
 interface CompanyMiniNavProps {
   companies: Company[];
+  sections?: NavSection[];
 }
 
 /**
- * Floating mini-nav for quick navigation between company sections.
- * Uses IntersectionObserver to track active section based on scroll.
+ * Left-side hamburger menu for quick navigation between company sections.
+ * Closed by default; opens a compact drawer on click.
+ * Uses IntersectionObserver to track the active section while scrolling.
  */
 export const CompanyMiniNav = memo(function CompanyMiniNav({
   companies,
+  sections = [],
 }: CompanyMiniNavProps) {
   const [activeId, setActiveId] = useState<string | null>(companies[0]?.id ?? null);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [topOffset, setTopOffset] = useState(120);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const ratioMapRef = useRef<Map<string, number>>(new Map());
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const toggleRef = useRef<HTMLButtonElement | null>(null);
+  const activeItemRef = useRef<HTMLButtonElement | null>(null);
 
-  /* Determine active company based on intersection ratios */
+  /* ── Vertically center hamburger with identity card ── */
+  useEffect(() => {
+    const measure = () => {
+      const card = document.getElementById("identity-card");
+      if (card) {
+        const rect = card.getBoundingClientRect();
+        // Center vertically relative to identity card
+        setTopOffset(Math.round(rect.top + rect.height / 2 - 20)); // 20 = half of 40px button height
+      }
+    };
+    const raf = requestAnimationFrame(measure);
+    return () => cancelAnimationFrame(raf);
+  }, [companies]);
+
+  /* ── Determine active company based on intersection ratios ── */
   const updateActiveFromRatios = useCallback(() => {
     const map = ratioMapRef.current;
     if (map.size === 0) return;
 
-    // Find company with highest intersection ratio
     let maxRatio = -1;
     let maxId: string | null = null;
 
@@ -41,14 +66,12 @@ export const CompanyMiniNav = memo(function CompanyMiniNav({
       }
     }
 
-    // Fall back to first visible if all ratios are 0
+    // Fall back to first company near the top of viewport
     if (maxRatio <= 0) {
-      // Find first company whose section is near the top of viewport
       for (const company of companies) {
         const el = document.getElementById(`company-${company.id}`);
         if (el) {
           const rect = el.getBoundingClientRect();
-          // If top is within 200px of viewport top, consider it "active"
           if (rect.top <= 200 && rect.bottom > 100) {
             maxId = company.id;
             break;
@@ -62,11 +85,10 @@ export const CompanyMiniNav = memo(function CompanyMiniNav({
     }
   }, [companies, activeId]);
 
-  /* Setup IntersectionObserver */
+  /* ── IntersectionObserver setup ── */
   useEffect(() => {
     if (companies.length === 0) return;
 
-    // Create observer
     observerRef.current = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -77,17 +99,14 @@ export const CompanyMiniNav = memo(function CompanyMiniNav({
       },
       {
         root: null,
-        rootMargin: "-100px 0px -50% 0px", // Bias towards top of viewport
+        rootMargin: "-100px 0px -50% 0px",
         threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
-      }
+      },
     );
 
-    // Observe all company sections
     for (const company of companies) {
       const el = document.getElementById(`company-${company.id}`);
-      if (el) {
-        observerRef.current.observe(el);
-      }
+      if (el) observerRef.current.observe(el);
     }
 
     return () => {
@@ -96,116 +115,224 @@ export const CompanyMiniNav = memo(function CompanyMiniNav({
     };
   }, [companies, updateActiveFromRatios]);
 
-  /* Handle click - smooth scroll to company section */
-  const handleClick = useCallback(
-    (companyId: string) => {
-      const el = document.getElementById(`company-${companyId}`);
-      if (!el) return;
+  /* ── Close on outside click ── */
+  useEffect(() => {
+    if (!isOpen) return;
 
-      // Check for reduced motion preference
-      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      el.scrollIntoView({
-        behavior: prefersReduced ? "instant" : "smooth",
-        block: "start",
-      });
-
-      setActiveId(companyId);
-      setIsMobileOpen(false);
-    },
-    []
-  );
-
-  /* Keyboard handler */
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent, companyId: string) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        handleClick(companyId);
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(target) &&
+        toggleRef.current &&
+        !toggleRef.current.contains(target)
+      ) {
+        setIsOpen(false);
       }
-    },
-    [handleClick]
-  );
+    };
 
-  if (companies.length <= 1) {
-    // No need for nav with only one company
-    return null;
-  }
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [isOpen]);
+
+  /* ── Close on Escape ── */
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen]);
+
+  /* ── Auto-scroll active item into view when menu opens ── */
+  useEffect(() => {
+    if (isOpen && activeItemRef.current) {
+      activeItemRef.current.scrollIntoView({ block: "nearest" });
+    }
+  }, [isOpen]);
+
+  /* ── Handle company click: scroll + close menu ── */
+  const handleSelect = useCallback((companyId: string) => {
+    const el = document.getElementById(`company-${companyId}`);
+    if (!el) return;
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({
+      behavior: prefersReduced ? "instant" : "smooth",
+      block: "start",
+    });
+
+    setActiveId(companyId);
+    setIsOpen(false);
+  }, []);
+
+  /* ── Handle section click: scroll to anchor + close menu ── */
+  const handleSectionSelect = useCallback((sectionId: string) => {
+    const el = document.getElementById(sectionId);
+    if (!el) return;
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({
+      behavior: prefersReduced ? "instant" : "smooth",
+      block: "start",
+    });
+
+    setIsOpen(false);
+  }, []);
+
+  if (companies.length <= 1 && sections.length === 0) return null;
 
   return (
     <>
-      {/* Desktop: Floating rail */}
-      <nav
-        className={`${styles.nav} ${isExpanded ? styles.navExpanded : ""}`}
-        aria-label="Company navigation"
-        onMouseEnter={() => setIsExpanded(true)}
-        onMouseLeave={() => setIsExpanded(false)}
-        onFocus={() => setIsExpanded(true)}
-        onBlur={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget)) {
-            setIsExpanded(false);
-          }
-        }}
+      {/* Hamburger toggle button */}
+      <button
+        ref={toggleRef}
+        className={styles.hamburger}
+        style={{ "--hamburger-top": `${topOffset}px` } as React.CSSProperties}
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-label="Open navigation"
+        aria-expanded={isOpen}
+        aria-controls="company-nav-panel"
       >
-        <ul className={styles.list} role="list">
-          {companies.map((company) => {
-            const isActive = company.id === activeId;
-            return (
-              <li key={company.id} className={styles.item}>
-                <button
-                  className={`${styles.pill} ${isActive ? styles.pillActive : ""}`}
-                  onClick={() => handleClick(company.id)}
-                  onKeyDown={(e) => handleKeyDown(e, company.id)}
-                  aria-current={isActive ? "true" : undefined}
-                  title={company.label}
-                >
-                  <span className={styles.dot} aria-hidden="true" />
-                  <span className={styles.label}>{company.label}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {/* Mobile: Collapsed button + overlay */}
-      <div className={styles.mobileContainer}>
-        <button
-          className={styles.mobileToggle}
-          onClick={() => setIsMobileOpen(!isMobileOpen)}
-          aria-expanded={isMobileOpen}
-          aria-label="Company navigation menu"
+        <svg
+          className={styles.hamburgerIcon}
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          aria-hidden="true"
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          <span className={styles.mobileLabel}>Companies</span>
-        </button>
+          <path
+            d="M3 5h14M3 10h14M3 15h14"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
 
-        {isMobileOpen && (
-          <>
-            <div className={styles.mobileBackdrop} onClick={() => setIsMobileOpen(false)} />
-            <div className={styles.mobilePanel}>
-              <ul className={styles.mobileList} role="list">
-                {companies.map((company) => {
-                  const isActive = company.id === activeId;
-                  return (
-                    <li key={company.id}>
-                      <button
-                        className={`${styles.mobileItem} ${isActive ? styles.mobileItemActive : ""}`}
-                        onClick={() => handleClick(company.id)}
-                        aria-current={isActive ? "true" : undefined}
-                      >
-                        {company.label}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </>
-        )}
-      </div>
+      {/* Backdrop (visible when open) */}
+      {isOpen && (
+        <div className={styles.backdrop} aria-hidden="true" />
+      )}
+
+      {/* Slide-in drawer panel */}
+      <nav
+        id="company-nav-panel"
+        ref={panelRef}
+        className={`${styles.panel} ${isOpen ? styles.panelOpen : ""}`}
+        aria-label="Page navigation"
+        role="navigation"
+      >
+        <div className={styles.panelHeader}>
+          <span className={styles.panelTitle}>Navigate</span>
+          <button
+            className={styles.closeBtn}
+            onClick={() => setIsOpen(false)}
+            aria-label="Close navigation"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* ── Navigation items ── */}
+        <ul className={styles.list} role="list">
+          {sections.filter((s) => !s.nested).map((section) => (
+            <li key={section.id} className={styles.item}>
+              <button
+                className={styles.menuItem}
+                onClick={() => handleSectionSelect(section.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSectionSelect(section.id);
+                  }
+                }}
+                tabIndex={isOpen ? 0 : -1}
+              >
+                <span className={styles.sectionIcon} aria-hidden="true" />
+                <span className={styles.menuLabel}>{section.label}</span>
+              </button>
+
+              {/* Nest companies + nested sections under Work Experience */}
+              {section.id === "experience" && (
+                <ul className={styles.nestedList} role="list">
+                  {/* Nested section links (e.g. Highlights) */}
+                  {sections
+                    .filter((s) => s.nested)
+                    .map((s) => (
+                      <li key={s.id} className={styles.item}>
+                        <button
+                          className={`${styles.menuItem} ${styles.nestedItem}`}
+                          onClick={() => handleSectionSelect(s.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleSectionSelect(s.id);
+                            }
+                          }}
+                          tabIndex={isOpen ? 0 : -1}
+                        >
+                          <span className={styles.dot} aria-hidden="true" />
+                          <span className={styles.menuLabel}>{s.label}</span>
+                        </button>
+                      </li>
+                    ))}
+                  {/* Company links */}
+                  {companies.map((company) => {
+                    const isActive = company.id === activeId;
+                    return (
+                      <li key={company.id} className={styles.item}>
+                        <button
+                          ref={isActive ? activeItemRef : undefined}
+                          className={`${styles.menuItem} ${styles.nestedItem} ${isActive ? styles.menuItemActive : ""}`}
+                          onClick={() => handleSelect(company.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleSelect(company.id);
+                            }
+                          }}
+                          aria-current={isActive ? "true" : undefined}
+                          tabIndex={isOpen ? 0 : -1}
+                        >
+                          <span className={styles.dot} aria-hidden="true" />
+                          <span className={styles.menuLabel}>{company.label}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {/* ── Download Resume action ── */}
+        <div className={styles.drawerFooter}>
+          <a
+            href="/resume.pdf"
+            download
+            className={`${styles.menuItem} ${styles.resumeLink}`}
+            aria-label="Download resume"
+            tabIndex={isOpen ? 0 : -1}
+            onClick={() => setIsOpen(false)}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M7 1v8m0 0L4 6.5M7 9l3-2.5M2 12h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className={styles.menuLabel}>Download Resume</span>
+          </a>
+        </div>
+      </nav>
     </>
   );
 });

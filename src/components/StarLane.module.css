@@ -89,16 +89,32 @@
   min-width: 0;
 }
 
-.deepDiveLink {
+/* Deep-dive button in result cell */
+.deepDiveResultBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border: 1px solid color-mix(in srgb, var(--signal) 30%, transparent);
+  border-radius: 10px;
+  background: rgba(255, 204, 51, 0.06);
+  color: var(--signal);
   font-family: var(--font-body);
   font-size: 11px;
-  color: var(--signal);
-  white-space: nowrap;
-  border-bottom: none !important;
-  opacity: 0.7;
-  transition: opacity 0.15s;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  margin-top: 4px;
+  align-self: flex-start;
 }
-.deepDiveLink:hover { opacity: 1; }
+.deepDiveResultBtn:hover {
+  background: rgba(255, 204, 51, 0.12);
+  border-color: var(--signal);
+}
+.deepDiveResultBtn:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
 
 /* ═══════════════════════════════════════════════════════
    3-COLUMN GRID: Problem  →  Solution  →  Result
@@ -331,24 +347,128 @@
   to   { opacity: 1; transform: scaleX(1); }
 }
 
-/* ── Responsive ── */
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE — vertical stack at ≤ 900 px
+   ══════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
+  /* Stack cards vertically */
   .starGrid {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
-    row-gap: 8px;
+    row-gap: 0;
   }
+
+  /* Tighter lane padding on mobile */
+  .lane {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  /* Cards: tighter padding */
+  .card {
+    padding: 10px 12px;
+  }
+
+  /* Result cell */
+  .resultCell {
+    padding: 10px 12px;
+  }
+
+  /* Hide horizontal arrow SVGs; show vertical connector instead */
   .arrowCell {
-    height: 24px;
-    transform-origin: center center;
-    transform: rotate(90deg) scaleX(0);
+    height: auto;
+    min-height: 24px;
+    transform: none;
+    opacity: 1;
+    flex-direction: column;
+    gap: 0;
   }
-  .arrowReveal { animation: arrowDrawVert 0.3s ease-out both; }
+
+  .arrowSvg {
+    display: none;
+  }
+
+  /* Vertical connector: line + chevron */
+  .arrowCell::before {
+    content: "";
+    display: block;
+    width: 2px;
+    height: 10px;
+    background: rgba(109, 242, 193, 0.35);
+    border-radius: 1px;
+  }
+
+  .arrowCell::after {
+    content: "";
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid rgba(109, 242, 193, 0.55);
+    border-bottom: 2px solid rgba(109, 242, 193, 0.55);
+    transform: rotate(45deg);
+    margin-top: -2px;
+  }
+
+  /* Arrow reveal on mobile — simple fade */
+  .arrowReveal {
+    animation: arrowFadeIn 0.25s ease-out both;
+  }
+
+  /* Impact badges: full width */
+  .impactBadge {
+    padding: 6px 10px;
+  }
+
+  /* Metric chips: slightly smaller */
+  .metricRow {
+    padding-left: 10px;
+  }
+
+  /* Project title: allow wrapping */
+  .projectTitle {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* Tool pills smaller */
+  .toolPill {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
 }
 
-@keyframes arrowDrawVert {
-  from { opacity: 0; transform: rotate(90deg) scaleX(0); }
-  to   { opacity: 1; transform: rotate(90deg) scaleX(1); }
+/* Smaller mobile fine-tuning */
+@media (max-width: 480px) {
+  .lane {
+    padding: 10px 10px;
+  }
+
+  .card {
+    padding: 8px 10px;
+  }
+
+  .resultCell {
+    padding: 8px 10px;
+  }
+
+  .cardText {
+    font-size: 11px;
+    -webkit-line-clamp: 4;
+  }
+
+  .impactLabel {
+    font-size: 10px;
+    white-space: normal;
+  }
+
+  .metricChip {
+    max-width: 120px;
+  }
+}
+
+@keyframes arrowFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ── Reduced motion ── */

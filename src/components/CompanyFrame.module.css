@@ -57,10 +57,45 @@
 }
 
 /* ── Responsive ── */
+@media (max-width: 900px) {
+  .frame {
+    border-radius: var(--r-2);
+  }
+
+  .header {
+    padding: 12px 14px;
+    gap: 6px;
+  }
+
+  .body {
+    padding: 10px 10px;
+    gap: 10px;
+  }
+}
+
 @media (max-width: 640px) {
   .header {
     flex-direction: column;
     gap: 4px;
+  }
+
+  .name {
+    font-size: clamp(16px, 4.5vw, 20px);
+  }
+
+  .role {
+    font-size: 12px;
+  }
+
+  .period {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .body {
+    padding: 8px 6px;
+    gap: 8px;
   }
 }
 

@@ -57,6 +57,12 @@ tools:
   - id: bedrock
     label: AWS Bedrock
     category: cloud
+  - id: cdk
+    label: AWS CDK
+    category: iac
+  - id: chef
+    label: Chef
+    category: platform
   - id: claude
     label: Claude (LLM)
     category: other
@@ -72,9 +78,15 @@ tools:
   - id: dcgm-exporter
     label: NVIDIA DCGM Exporter
     category: observability
+  - id: docker
+    label: Docker
+    category: platform
   - id: dynatrace
     label: Dynatrace
     category: observability
+  - id: fargate
+    label: AWS Fargate
+    category: cloud
   - id: grafana
     label: Grafana
     category: observability
@@ -84,17 +96,38 @@ tools:
   - id: ivanti
     label: Ivanti Security Controls
     category: security
+  - id: java
+    label: Java
+    category: language
+  - id: jenkins
+    label: Jenkins
+    category: platform
+  - id: jest
+    label: Jest
+    category: language
   - id: jira
     label: Jira
     category: incident
+  - id: junit
+    label: JUnit
+    category: language
   - id: kubernetes
     label: Kubernetes
     category: platform
   - id: networking
     label: Networking
     category: other
+  - id: nexus
+    label: Nexus Repository
+    category: platform
+  - id: octopus
+    label: Octopus Deploy
+    category: platform
   - id: opsgenie
     label: OpsGenie
+    category: incident
+  - id: pagerduty
+    label: PagerDuty
     category: incident
   - id: prometheus
     label: Prometheus
@@ -114,6 +147,9 @@ tools:
   - id: slack
     label: Slack
     category: collaboration
+  - id: splunk
+    label: Splunk
+    category: observability
   - id: sumologic
     label: Sumo Logic
     category: observability
@@ -123,3 +159,6 @@ tools:
   - id: terraform
     label: Terraform
     category: iac
+  - id: zoom
+    label: Zoom
+    category: collaboration

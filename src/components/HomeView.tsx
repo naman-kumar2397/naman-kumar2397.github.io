@@ -1,27 +1,121 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { StarLane } from "@/components/StarLane";
 import { CompanyFrame } from "@/components/CompanyFrame";
 import { CompanyMiniNav } from "@/components/CompanyMiniNav";
 import { ImpactInspector } from "@/components/ImpactInspector";
 import { FilterDropdown } from "@/components/FilterDropdown";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { DeepDiveModal } from "@/components/DeepDiveModal";
+import type { DeepDiveContent } from "@/components/DeepDiveModal";
+import { CredentialsSection } from "@/components/CredentialsSection";
+import { ExperienceHighlights } from "@/components/ExperienceHighlights";
+import { ScheduleMeetingModal } from "@/components/ScheduleMeetingModal";
+import { Footer } from "@/components/Footer";
+import { Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { profile } from "@/data/profile";
 import type { StarLayout, LaneImpact, StarLane as StarLaneData } from "@/lib/layout-engine";
-import type { Catalog } from "@/lib/data-loader";
+import type { Catalog, Certification, Education, Highlight } from "@/lib/data-loader";
 import styles from "./HomeView.module.css";
+
+/* ── Contact-tile icon lookup ── */
+const CONTACT_ICONS: Record<string, React.ReactNode> = {
+  phone: <Phone size={14} aria-hidden="true" />,
+  email: <Mail size={14} aria-hidden="true" />,
+  calendar: <Calendar size={14} aria-hidden="true" />,
+  linkedin: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+    </svg>
+  ),
+};
+
+/** A small tile that reveals its value on hover/focus/tap and copies to clipboard. */
+function ContactTile({ id, label, value, href }: {
+  id: string; label: string; value: string; href: string;
+}) {
+  const [revealed, setRevealed] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const copyValue = useCallback(() => {
+    const text = id === "linkedin" ? href : value;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setCopied(false), 1800);
+    }).catch(() => { /* clipboard blocked — open link instead */ });
+  }, [id, href, value]);
+
+  const handleClick = useCallback(() => {
+    if (!revealed) {
+      setRevealed(true);
+    } else {
+      copyValue();
+    }
+  }, [revealed, copyValue]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleClick();
+    }
+  }, [handleClick]);
+
+  // Reveal on hover (desktop)
+  const handleMouseEnter = useCallback(() => setRevealed(true), []);
+
+  return (
+    <button
+      type="button"
+      className={`${styles.contactTile} ${revealed ? styles.contactTileRevealed : ""}`}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onMouseEnter={handleMouseEnter}
+      onFocus={() => setRevealed(true)}
+      aria-label={revealed ? `Copy ${label}` : `Reveal ${label}`}
+      title={revealed ? value : `Reveal ${label}`}
+    >
+      <span className={styles.tileIcon}>{CONTACT_ICONS[id]}</span>
+      <span className={styles.tileContent}>
+        <span className={styles.tileLabel}>{copied ? "Copied!" : label}</span>
+        {revealed && (
+          <a
+            href={href}
+            target={id === "linkedin" ? "_blank" : undefined}
+            rel={id === "linkedin" ? "noopener noreferrer" : undefined}
+            className={styles.tileValue}
+            onClick={(e) => e.stopPropagation()}
+            tabIndex={-1}
+          >
+            {value}
+          </a>
+        )}
+      </span>
+    </button>
+  );
+}
 
 interface HomeViewProps {
   layouts: StarLayout[];
   catalog: Catalog;
+  deepDiveMap: Record<string, DeepDiveContent>;
+  certifications: Certification[];
+  education: Education[];
+  highlights: Highlight[];
 }
 
-export function HomeView({ layouts, catalog }: HomeViewProps) {
+export function HomeView({ layouts, catalog, deepDiveMap, certifications, education, highlights }: HomeViewProps) {
   const [activeThemes, setActiveThemes] = useState<string[]>([]);
   const [activeTools, setActiveTools] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [focusedImpactId, setFocusedImpactId] = useState<string | null>(null);
   const [hoveredLane, setHoveredLane] = useState<string | null>(null);
+  const [activeDeepDive, setActiveDeepDive] = useState<string | null>(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const scheduleTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const deepDiveTriggerRef = useRef<HTMLElement | null>(null);
 
   /* URL-based project redirect */
   useEffect(() => {
@@ -69,6 +163,28 @@ export function HomeView({ layouts, catalog }: HomeViewProps) {
   const handleImpactClick = useCallback((impactId: string) => {
     setFocusedImpactId((prev) => (prev === impactId ? null : impactId));
   }, []);
+
+  /* Deep-dive modal open */
+  const handleDeepDive = useCallback((slug: string, triggerEl?: HTMLElement) => {
+    if (deepDiveMap[slug]) {
+      deepDiveTriggerRef.current = triggerEl ?? null;
+      setActiveDeepDive(slug);
+    }
+  }, [deepDiveMap]);
+
+  const handleDeepDiveClose = useCallback(() => {
+    setActiveDeepDive(null);
+  }, []);
+
+  /* Label maps for modal */
+  const toolLabelMap = useMemo(
+    () => new Map(catalog.tools.map((t) => [t.id, t.label])),
+    [catalog],
+  );
+  const themeLabelMap = useMemo(
+    () => new Map(catalog.themes.map((t) => [t.id, t.label])),
+    [catalog],
+  );
 
   /* Aggregate all lanes across layouts (for filter dropdowns) */
   const allLanes = useMemo(() => layouts.flatMap((l) => l.lanes), [layouts]);
@@ -197,18 +313,50 @@ export function HomeView({ layouts, catalog }: HomeViewProps) {
       {/* ── Top bar: identity left, controls right ── */}
       <div className={styles.topBar}>
         {/* Identity card */}
-        <div className={styles.identityCard}>
-          <span className={styles.name}>Naman Kumar</span>
-          <div className={styles.contactRow}>
-            <span className={styles.detail}>Melbourne, VIC</span>
-            <span className={styles.sep}>·</span>
-            <a href="tel:+61452176778" className={styles.detail}>+61 452 176 778</a>
-            <span className={styles.sep}>·</span>
-            <a href="mailto:namankumar2397@gmail.com" className={styles.detail}>namankumar2397@gmail.com</a>
-            <span className={styles.sep}>·</span>
-            <a href="https://linkedin.com/in/naman-kumar2397" target="_blank" rel="noopener noreferrer" className={styles.detail}>
-              LinkedIn ↗
-            </a>
+        <div id="identity-card" className={styles.identityCard}>
+          <div className={styles.identityRow}>
+            {/* Avatar */}
+            <div className={styles.avatar} aria-hidden="true">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={profile.photo}
+                alt=""
+                className={styles.avatarImg}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+              <span className={styles.avatarFallback}>{profile.initials}</span>
+            </div>
+            <div className={styles.identityText}>
+              <span className={styles.name}>{profile.name}</span>
+              <span className={styles.role}>{profile.title}</span>
+              <span className={styles.location}>
+                <MapPin size={12} aria-hidden="true" />
+                {profile.location}
+              </span>
+            </div>
+          </div>
+
+          {/* Contact tiles */}
+          <div className={styles.contactTiles}>
+            {profile.contacts.map((c) =>
+              c.id === "calendar" ? (
+                <button
+                  key={c.id}
+                  ref={scheduleTriggerRef}
+                  type="button"
+                  className={`${styles.contactTile} ${styles.contactTileLink}`}
+                  aria-label={c.label}
+                  onClick={() => setScheduleOpen(true)}
+                >
+                  <span className={styles.tileIcon}>{CONTACT_ICONS[c.id]}</span>
+                  <span className={styles.tileContent}>
+                    <span className={styles.tileLabel}>{c.label}</span>
+                  </span>
+                </button>
+              ) : (
+                <ContactTile key={c.id} id={c.id} label={c.label} value={c.value} href={c.href} />
+              )
+            )}
           </div>
         </div>
 
@@ -236,8 +384,14 @@ export function HomeView({ layouts, catalog }: HomeViewProps) {
         </div>
       </div>
 
-      {/* ── Company envelopes with STAR Lanes inside ── */}
-      <div className={styles.companyStack}>
+      {/* ── Work Experience section ── */}
+      <section id="experience" className={styles.experienceSection}>
+        <h2 className={`${styles.sectionHeading} ${styles.stickyHeading}`}>Work Experience</h2>
+
+        {/* Experience highlights strip */}
+        <ExperienceHighlights highlights={highlights} />
+
+        <div className={styles.companyStack}>
         {totalFilteredCount === 0 ? (
           <div className={styles.emptyState}>
             <p className={styles.emptyText}>No matching projects</p>
@@ -289,6 +443,7 @@ export function HomeView({ layouts, catalog }: HomeViewProps) {
                       delay={i * 0.06}
                       onHover={handleLaneHover}
                       onImpactClick={handleImpactClick}
+                      onDeepDive={lane.deepDiveSlug ? handleDeepDive : undefined}
                     />
                   );
                 })}
@@ -297,10 +452,32 @@ export function HomeView({ layouts, catalog }: HomeViewProps) {
             );
           })
         )}
-      </div>
+        </div>
+      </section>
 
-      {/* ── Company mini-nav (floating) ── */}
-      {visibleCompanies.length > 1 && <CompanyMiniNav companies={visibleCompanies} />}
+      {/* ── Certifications & Education ── */}
+      <CredentialsSection certifications={certifications} education={education} />
+
+      {/* ── Footer ── */}
+      <Footer onOpenSchedule={() => setScheduleOpen(true)} />
+
+      {/* ── Schedule meeting modal (single instance) ── */}
+      <ScheduleMeetingModal
+        isOpen={scheduleOpen}
+        onClose={() => setScheduleOpen(false)}
+        triggerRef={scheduleTriggerRef}
+      />
+
+      {/* ── Hamburger menu (floating) ── */}
+      <CompanyMiniNav
+        companies={visibleCompanies}
+        sections={[
+          { id: "experience", label: "Work Experience" },
+          ...(highlights.length > 0 ? [{ id: "highlights", label: "Highlights", nested: true }] : []),
+          ...(certifications.length > 0 ? [{ id: "certifications", label: "Certifications" }] : []),
+          ...(education.length > 0 ? [{ id: "education", label: "Education" }] : []),
+        ]}
+      />
 
       {/* ── Impact Inspector (floating) ── */}
       {focusedImpactData && (
@@ -308,6 +485,17 @@ export function HomeView({ layouts, catalog }: HomeViewProps) {
           impact={focusedImpactData}
           projectTitles={inspectorProjectTitles}
           onClose={() => setFocusedImpactId(null)}
+        />
+      )}
+
+      {/* ── Deep-dive modal ── */}
+      {activeDeepDive && deepDiveMap[activeDeepDive] && (
+        <DeepDiveModal
+          content={deepDiveMap[activeDeepDive]}
+          toolLabels={toolLabelMap}
+          themeLabels={themeLabelMap}
+          onClose={handleDeepDiveClose}
+          triggerRef={deepDiveTriggerRef}
         />
       )}
     </div>

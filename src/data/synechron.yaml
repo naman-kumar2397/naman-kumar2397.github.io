@@ -1,6 +1,6 @@
 company:
   id: synechron
-  label: "Synechron (Client: Latitude Financial Services)"
+  label: "Synechron"
   role: "Lead Site Reliability Engineer"
   period: "Aug 2025 – Present"
   tags: ["leadership", "platform", "reliability", "automation", "observability"]

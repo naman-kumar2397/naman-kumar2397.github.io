@@ -258,8 +258,9 @@ function validateCrossPortfolioUniqueness(portfolios: Portfolio[]): void {
 export function loadAllPortfolios(): { portfolios: Portfolio[]; catalog: Catalog } {
   const catalog = loadCatalog();
 
-  // Load all company YAML files dynamically (excluding catalog.yaml)
-  const allFiles = fs.readdirSync(dataDir).filter((f) => f.endsWith(".yaml") && f !== "catalog.yaml");
+  // Load all company YAML files dynamically (excluding non-portfolio files)
+  const nonPortfolioFiles = new Set(["catalog.yaml", "certifications.yaml", "education.yaml", "highlights.yaml"]);
+  const allFiles = fs.readdirSync(dataDir).filter((f) => f.endsWith(".yaml") && !nonPortfolioFiles.has(f));
   const rawPortfolios = allFiles.map((f) => loadPortfolio(f));
 
   // Build portfolio map keyed by company id
@@ -279,4 +280,69 @@ export function loadAllPortfolios(): { portfolios: Portfolio[]; catalog: Catalog
   validateCrossPortfolioUniqueness(portfolios);
 
   return { portfolios, catalog };
+}
+
+/* ── Certifications ── */
+
+const CertificationSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  issuer: z.string(),
+  year: z.union([z.string(), z.number()]).transform(String),
+  status: z.enum(["active", "expired", "in-progress"]),
+  credential_id: z.string().optional().default(""),
+  credential_url: z.string().optional().default(""),
+});
+
+export type Certification = z.infer<typeof CertificationSchema>;
+
+export function loadCertifications(): Certification[] {
+  const filePath = path.join(dataDir, "certifications.yaml");
+  if (!fs.existsSync(filePath)) return [];
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const parsed = yaml.load(raw) as Record<string, unknown>;
+  // Support both top-level array and { certifications: [...] } wrapper
+  const items = Array.isArray(parsed) ? parsed : (parsed?.certifications ?? []);
+  return z.array(CertificationSchema).parse(items);
+}
+
+/* ── Education ── */
+
+const EducationSchema = z.object({
+  id: z.string(),
+  degree: z.string(),
+  institution: z.string(),
+  period: z.union([z.string(), z.number()]).transform(String),
+  notes: z.string().optional().default(""),
+});
+
+export type Education = z.infer<typeof EducationSchema>;
+
+export function loadEducation(): Education[] {
+  const filePath = path.join(dataDir, "education.yaml");
+  if (!fs.existsSync(filePath)) return [];
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const parsed = yaml.load(raw) as Record<string, unknown>;
+  // Support both top-level array and { education: [...] } wrapper
+  const items = Array.isArray(parsed) ? parsed : (parsed?.education ?? []);
+  return z.array(EducationSchema).parse(items);
+}
+
+/* ── Highlights ── */
+
+const HighlightSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  metrics: z.array(z.string()).default([]),
+});
+
+export type Highlight = z.infer<typeof HighlightSchema>;
+
+export function loadHighlights(): Highlight[] {
+  const filePath = path.join(dataDir, "highlights.yaml");
+  if (!fs.existsSync(filePath)) return [];
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const parsed = yaml.load(raw) as Record<string, unknown>;
+  const items = Array.isArray(parsed) ? parsed : (parsed?.highlights ?? []);
+  return z.array(HighlightSchema).parse(items);
 }

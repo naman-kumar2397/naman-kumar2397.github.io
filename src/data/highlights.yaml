@@ -1,0 +1,24 @@
+highlights:
+  - id: hl-yoe
+    text: "8+ years in SRE, Cloud & Platform Engineering"
+    metrics: ["4 companies", "3 countries"]
+
+  - id: hl-incident
+    text: "Built AI-powered incident intelligence reducing MTTR"
+    metrics: ["~20M log events/week", "3 observability systems unified"]
+
+  - id: hl-security
+    text: "Org-wide security baselines via IaC (S3, IAM, encryption)"
+    metrics: ["100% encryption enforcement", "Zero policy drift"]
+
+  - id: hl-scale
+    text: "Scaled GPU workloads for Netflix AI campaign launch"
+    metrics: ["10–50× burst traffic", "Zero user-facing failures"]
+
+  - id: hl-iac
+    text: "Led CloudFormation-to-Terraform migrations across multi-account estates"
+    metrics: ["3 AWS accounts", "60+ resources migrated"]
+
+  - id: hl-certs
+    text: "AWS Certified Solutions Architect; RHEL, Kubernetes ops"
+    metrics: []

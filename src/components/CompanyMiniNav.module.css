@@ -1,78 +1,218 @@
-/* CompanyMiniNav — floating company navigation rail */
+/* CompanyMiniNav — left-side hamburger drawer */
 
-/* ── Desktop: Floating nav rail ── */
-.nav {
+/* ── Hamburger toggle button ── */
+.hamburger {
   position: fixed;
-  top: 120px;
-  right: clamp(16px, 2vw, 32px);
-  z-index: 50;
+  top: var(--hamburger-top, 120px);
+  left: clamp(12px, 2vw, 24px);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--stroke) 60%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  color: var(--muted);
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.hamburger:hover {
+  border-color: var(--signal);
+  color: var(--ink);
+  box-shadow: var(--shadow-2);
+}
+
+.hamburger:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.hamburgerIcon {
+  display: block;
+}
+
+/* ── Backdrop overlay ── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 69;
+  background: rgba(0, 0, 0, 0.25);
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* ── Drawer panel ── */
+.panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 70;
   display: flex;
   flex-direction: column;
-  padding: 6px;
-  background: color-mix(in srgb, var(--panel) 92%, transparent);
-  border: 1px solid color-mix(in srgb, var(--stroke) 60%, transparent);
-  border-radius: 12px;
+  width: clamp(240px, 30vw, 320px);
+  max-width: 90vw;
+  height: 100dvh;
+  padding: 0;
+  background: color-mix(in srgb, var(--panel) 98%, transparent);
+  border-right: 1px solid var(--stroke);
   box-shadow: var(--shadow-2);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
-  transition: width 0.2s ease, padding 0.2s ease;
-  width: 40px;
-  overflow: hidden;
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0s 0.22s;
 }
 
-.navExpanded {
-  width: auto;
-  min-width: 140px;
-  padding: 8px 10px;
+.panelOpen {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0s 0s;
 }
 
+/* ── Panel header ── */
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--stroke) 40%, transparent);
+}
+
+.panelTitle {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.closeBtn:hover {
+  background: color-mix(in srgb, var(--signal) 12%, transparent);
+  color: var(--ink);
+}
+
+.closeBtn:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 1px;
+}
+
+/* ── Group label ── */
+.groupLabel {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--faint);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 12px 16px 4px;
+}
+
+/* ── Section icon (dash instead of dot) ── */
+.sectionIcon {
+  flex-shrink: 0;
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--faint);
+  transition: background 0.15s;
+}
+
+.menuItem:hover .sectionIcon {
+  background: var(--signal);
+}
+
+/* ── List inside drawer ── */
 .list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 4px 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+}
+
+/* ── Nested company list under Work Experience ── */
+.nestedList {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0 2px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.nestedItem {
+  padding-left: 16px;
+  font-size: 12px;
+}
+
+.nestedItem .dot {
+  width: 6px;
+  height: 6px;
 }
 
 .item {
   display: flex;
+  flex-direction: column;
 }
 
-.pill {
+.menuItem {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
+  gap: 10px;
   width: 100%;
+  padding: 10px 12px;
   border: none;
   border-radius: 8px;
   background: transparent;
   color: var(--muted);
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 13px;
   text-align: left;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
 }
 
-.pill:hover {
+.menuItem:hover {
   background: color-mix(in srgb, var(--signal) 10%, transparent);
   color: var(--ink);
 }
 
-.pill:focus-visible {
+.menuItem:focus-visible {
   outline: 2px solid var(--signal);
-  outline-offset: 1px;
+  outline-offset: -2px;
 }
 
-.pillActive {
+.menuItemActive {
   background: color-mix(in srgb, var(--signal) 15%, transparent);
   color: var(--signal);
 }
 
-.pillActive .dot {
+.menuItemActive .dot {
   background: var(--signal);
   box-shadow: 0 0 8px color-mix(in srgb, var(--signal) 50%, transparent);
 }
@@ -86,166 +226,91 @@
   transition: background 0.15s, box-shadow 0.15s;
 }
 
-.label {
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 0.15s 0.05s, transform 0.15s 0.05s;
+.menuLabel {
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.navExpanded .label {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* Hide label when collapsed (accessibility: still readable by screen readers) */
-.nav:not(.navExpanded) .label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
-  border: 0;
 }
 
-/* ── Mobile: Hidden desktop, show mobile ── */
-@media (max-width: 768px) {
-  .nav {
-    display: none;
-  }
-}
-
-/* ── Mobile container ── */
-.mobileContainer {
-  display: none;
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 60;
-}
-
-@media (max-width: 768px) {
-  .mobileContainer {
-    display: block;
-  }
-}
-
-.mobileToggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: color-mix(in srgb, var(--panel) 95%, transparent);
-  border: 1px solid var(--stroke);
-  border-radius: 8px;
-  color: var(--muted);
-  font-family: var(--font-body);
-  font-size: 12px;
-  cursor: pointer;
-  box-shadow: var(--shadow-1);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.mobileToggle:hover {
-  border-color: var(--signal);
-  color: var(--ink);
-}
-
-.mobileLabel {
-  /* Hide text on very small screens */
-}
-
-@media (max-width: 400px) {
-  .mobileLabel {
-    display: none;
-  }
-}
-
-.mobileBackdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: -1;
-}
-
-.mobilePanel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  min-width: 180px;
+/* ── Drawer footer (resume link) ── */
+.drawerFooter {
+  margin-top: auto;
   padding: 8px;
-  background: color-mix(in srgb, var(--panel) 98%, transparent);
-  border: 1px solid var(--stroke);
-  border-radius: 10px;
-  box-shadow: var(--shadow-2);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  animation: panelIn 0.15s ease-out;
+  border-top: 1px solid color-mix(in srgb, var(--stroke) 30%, transparent);
 }
 
-.mobileList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.mobileItem {
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  font-family: var(--font-body);
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.mobileItem:hover {
-  background: color-mix(in srgb, var(--signal) 10%, transparent);
-  color: var(--ink);
-}
-
-.mobileItemActive {
-  background: color-mix(in srgb, var(--signal) 15%, transparent);
+.resumeLink {
+  position: relative;
+  text-decoration: none;
+  border: 1px solid color-mix(in srgb, var(--signal) 25%, transparent);
   color: var(--signal);
+  font-weight: 500;
+  animation: resumePulse 3s ease-in-out infinite;
 }
 
-@keyframes panelIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
+.resumeLink:hover {
+  animation-play-state: paused;
+  border-color: var(--signal);
+  background: color-mix(in srgb, var(--signal) 12%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--signal) 20%, transparent);
+}
+
+.resumeLink svg {
+  flex-shrink: 0;
+}
+
+@keyframes resumePulse {
+  0%, 100% {
+    border-color: color-mix(in srgb, var(--signal) 25%, transparent);
+    box-shadow: 0 0 0 0 transparent;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  50% {
+    border-color: color-mix(in srgb, var(--signal) 55%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--signal) 12%, transparent);
   }
+}
+
+/* ── Mobile adjustments ── */
+@media (max-width: 768px) {
+  .hamburger {
+    left: 12px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .panel {
+    width: clamp(260px, 75vw, 340px);
+  }
+}
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  .nav,
-  .label,
-  .pill,
-  .dot,
-  .mobileToggle,
-  .mobilePanel {
+  .panel {
     transition: none;
   }
 
-  .mobilePanel {
+  .panelOpen {
+    transition: none;
+  }
+
+  .backdrop {
+    animation: none;
+  }
+
+  .hamburger,
+  .closeBtn,
+  .menuItem,
+  .dot {
+    transition: none;
+  }
+
+  .resumeLink {
     animation: none;
   }
 }

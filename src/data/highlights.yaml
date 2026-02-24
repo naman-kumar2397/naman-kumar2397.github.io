@@ -1,7 +1,7 @@
 highlights:
   - id: hl-yoe
     text: "8+ years in SRE, Cloud & Platform Engineering"
-    metrics: ["4 companies", "3 countries"]
+    metrics: ["4 companies", "Observability SME"]
 
   - id: hl-incident
     text: "Built AI-powered incident intelligence reducing MTTR"

@@ -1,0 +1,39 @@
+version: 1
+
+# Render order, top to bottom
+companies:
+  - synechron
+  - cit
+  - akqa
+  - cvent
+
+# Optional explicit ordering of lanes (projects) within each company.
+# If omitted for a company, keep current YAML order as fallback.
+lanes:
+  synechron:
+    - prj-ai-incident-assistant
+    - prj-s3-remediation
+    - prj-logs-migration
+    - prj-ecs-upgrades
+    - prj-patch-management
+    - prj-iac-introduction
+    - prj-team-enablement
+
+  cit:
+    - cit-prj-merger-platform
+    - cit-prj-cfn-to-terraform
+    - cit-prj-delta-lakehouse
+
+  akqa:
+    - akqa-prj-netflix-game-launch
+    - akqa-prj-observability-revamp
+    - akqa-prj-incident-workflow-automation
+    - akqa-prj-change-request-standardisation
+
+  # placeholder for later
+  cvent: []
+
+# Optional: hide items without deleting source YAML
+hide:
+  companies: []
+  lanes: []

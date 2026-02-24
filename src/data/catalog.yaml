@@ -1,0 +1,164 @@
+themes:
+  - id: leadership
+    label: Leadership & Enablement
+  - id: aiops
+    label: AIOps & Incident Intelligence
+  - id: incident-management
+    label: Incident Management
+  - id: observability
+    label: Observability
+  - id: automation
+    label: Automation
+  - id: platform
+    label: Platform Engineering
+  - id: aws
+    label: AWS
+  - id: containers
+    label: Containers
+  - id: security
+    label: Security Hardening
+  - id: governance
+    label: Governance & Baselines
+  - id: iac
+    label: Infrastructure as Code
+  - id: migration
+    label: Migrations
+  - id: standardization
+    label: Standardisation
+  - id: kubernetes
+    label: Kubernetes
+  - id: scalability
+    label: Scalability
+  - id: launch
+    label: Launch
+  - id: reliability
+    label: Reliability
+  - id: data
+    label: Data Engineering
+  - id: integration
+    label: Integration
+
+tools:
+  - id: api
+    label: REST/HTTP API
+    category: integration
+  - id: aws
+    label: AWS
+    category: cloud
+  - id: aws-ecs
+    label: Amazon ECS
+    category: platform
+  - id: aws-lambda
+    label: AWS Lambda
+    category: cloud
+  - id: aws-s3
+    label: Amazon S3
+    category: cloud
+  - id: bedrock
+    label: AWS Bedrock
+    category: cloud
+  - id: cdk
+    label: AWS CDK
+    category: iac
+  - id: chef
+    label: Chef
+    category: platform
+  - id: claude
+    label: Claude (LLM)
+    category: other
+  - id: cloudformation
+    label: CloudFormation
+    category: iac
+  - id: databricks
+    label: Databricks
+    category: data
+  - id: datadog
+    label: Datadog
+    category: observability
+  - id: dcgm-exporter
+    label: NVIDIA DCGM Exporter
+    category: observability
+  - id: docker
+    label: Docker
+    category: platform
+  - id: dynatrace
+    label: Dynatrace
+    category: observability
+  - id: fargate
+    label: AWS Fargate
+    category: cloud
+  - id: grafana
+    label: Grafana
+    category: observability
+  - id: iam
+    label: AWS IAM
+    category: security
+  - id: ivanti
+    label: Ivanti Security Controls
+    category: security
+  - id: java
+    label: Java
+    category: language
+  - id: jenkins
+    label: Jenkins
+    category: platform
+  - id: jest
+    label: Jest
+    category: language
+  - id: jira
+    label: Jira
+    category: incident
+  - id: junit
+    label: JUnit
+    category: language
+  - id: kubernetes
+    label: Kubernetes
+    category: platform
+  - id: networking
+    label: Networking
+    category: other
+  - id: nexus
+    label: Nexus Repository
+    category: platform
+  - id: octopus
+    label: Octopus Deploy
+    category: platform
+  - id: opsgenie
+    label: OpsGenie
+    category: incident
+  - id: pagerduty
+    label: PagerDuty
+    category: incident
+  - id: prometheus
+    label: Prometheus
+    category: observability
+  - id: python
+    label: Python
+    category: language
+  - id: servicenow
+    label: ServiceNow
+    category: incident
+  - id: sftp
+    label: SFTP
+    category: integration
+  - id: shell
+    label: Shell
+    category: language
+  - id: slack
+    label: Slack
+    category: collaboration
+  - id: splunk
+    label: Splunk
+    category: observability
+  - id: sumologic
+    label: Sumo Logic
+    category: observability
+  - id: teams
+    label: Microsoft Teams
+    category: collaboration
+  - id: terraform
+    label: Terraform
+    category: iac
+  - id: zoom
+    label: Zoom
+    category: collaboration

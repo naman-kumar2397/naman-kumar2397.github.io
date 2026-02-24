@@ -1,0 +1,296 @@
+company:
+  id: synechron
+  label: "Synechron"
+  role: "Lead Site Reliability Engineer"
+  period: "Aug 2025 – Present"
+  tags: ["leadership", "platform", "reliability", "automation", "observability"]
+  people_scope:
+    team_size: 10
+    team_model: "Offshore enablement"
+
+impacts:
+  - id: imp-mttr
+    label: "Reduced incident resolution time (MTTR) by accelerating context gathering and correlation"
+    type: reliability
+    metrics:
+      - "Faster cross-tool correlation"
+      - "Reduced manual triage steps"
+
+  - id: imp-single-pane
+    label: "Consolidated observability into a single-pane-of-glass for faster diagnosis"
+    type: observability
+    metrics:
+      - "~20M log events/week consolidated"
+      - "Unified Datadog telemetry view"
+
+  - id: imp-zero-clickops
+    label: "Reduced ClickOps through repeatable automation and Infrastructure-as-Code"
+    type: scalability
+    metrics:
+      - "Repeatable IaC-driven workflows"
+      - "Lower manual change surface"
+
+  - id: imp-faster-upgrades
+    label: "Faster, repeatable environment upgrades with minimal manual effort"
+    type: scalability
+    metrics:
+      - "End-to-end ECS upgrade automation"
+      - "Consistent multi-environment rollout"
+
+  - id: imp-operational-scale
+    label: "Improved operational scalability of the SRE function through enablement and standardisation"
+    type: scalability
+    metrics:
+      - "10-person offshore model enabled"
+      - "Standardised operating rhythms"
+
+  - id: imp-risk-reduction
+    label: "Reduced data-exposure and audit risk via consistent S3 controls"
+    type: security
+    metrics:
+      - "Org-wide S3 policy baseline"
+      - "Encryption + transport enforcement"
+
+  - id: imp-security-baseline
+    label: "Established a repeatable security baseline for object storage across the organisation"
+    type: security
+    metrics:
+      - "Policy-as-code guardrails"
+      - "Consistent bucket posture"
+
+projects:
+  - id: prj-team-enablement
+    title: "Team Enablement & Offshore Delivery Operating Model"
+    themes: ["leadership", "standardization"]
+    problem:
+      id: p-team-enablement
+      statement: "Delivery and operations friction between client expectations and offshore execution reduced reliability outcomes and predictability."
+    solution:
+      id: s-team-enablement
+      statement: "Established enablement practices, operating rhythms, and collaboration loops for a 10-person offshore team aligned to reliability KPIs."
+      tools: ["jira"]
+    impact_ids: ["imp-operational-scale"]
+
+  - id: prj-ai-incident-assistant
+    title: "AI Incident Management Assistant"
+    themes: ["aiops", "incident-management", "observability", "automation", "aws"]
+    problem:
+      id: p-ai-incident
+      statement: "Responders lost time correlating incident context across ServiceNow + Dynatrace + Datadog and extracting business impact during incidents."
+    solution:
+      id: s-ai-incident
+      statement: "Built a conversational AI on AWS Bedrock (Claude) connected to MCP servers for ServiceNow, Dynatrace, and Datadog to surface traces, impact, and mitigation hints."
+      tools: ["bedrock", "claude", "servicenow", "dynatrace", "datadog"]
+    impact_ids: ["imp-mttr", "imp-single-pane"]
+    deepDive:
+      enabled: true
+      slug: "prj-ai-incident-assistant"
+
+  - id: prj-ecs-upgrades
+    title: "ECS Upgrades Automation"
+    themes: ["automation", "platform", "aws", "containers"]
+    problem:
+      id: p-ecs-upgrades
+      statement: "ECS cluster upgrades were manual, time-consuming, and error-prone across environments."
+    solution:
+      id: s-ecs-upgrades
+      statement: "Developed end-to-end automation to upgrade ECS clusters across environments with zero manual intervention."
+      tools: ["aws-ecs", "python", "shell"]
+    impact_ids: ["imp-faster-upgrades", "imp-zero-clickops"]
+
+  - id: prj-patch-management
+    title: "Patch Management Automation (Ivanti)"
+    themes: ["security", "automation", "platform", "standardization"]
+    problem:
+      id: p-patching
+      statement: "Monthly patching depended on ClickOps, limiting repeatability, consistency, and scale."
+    solution:
+      id: s-patching
+      statement: "Introduced Ivanti Security Controls and designed networking + architecture patterns to enable scalable patch automation without ClickOps."
+      tools: ["ivanti", "networking", "python"]
+    impact_ids: ["imp-zero-clickops", "imp-operational-scale"]
+
+  - id: prj-logs-migration
+    title: "Sumo Logic → Datadog Logs Migration"
+    themes: ["observability", "migration", "standardization"]
+    problem:
+      id: p-logs-migration
+      statement: "Fragmented observability across multiple tools reduced visibility and slowed diagnosis during incidents."
+    solution:
+      id: s-logs-migration
+      statement: "Migrated ~20M log events/week from Sumo Logic to Datadog to consolidate telemetry and improve diagnosis workflows."
+      tools: ["sumologic", "datadog"]
+    impact_ids: ["imp-single-pane", "imp-mttr"]
+
+  - id: prj-iac-introduction
+    title: "Introducing IaC (ClickOps → CloudFormation/Terraform)"
+    themes: ["iac", "platform", "aws", "standardization"]
+    problem:
+      id: p-iac
+      statement: "Inherited AWS accounts relied on ClickOps, creating drift, weak governance, and limited reproducibility."
+    solution:
+      id: s-iac
+      statement: "Drove a gradual transition to Infrastructure-as-Code using CloudFormation and Terraform to standardise deployment patterns."
+      tools: ["cloudformation", "terraform", "aws"]
+    impact_ids: ["imp-zero-clickops", "imp-operational-scale"]
+
+  - id: prj-s3-remediation
+    title: "S3 Security Remediation (Org-wide Baseline Policies)"
+    themes: ["security", "governance", "iac", "aws", "standardization"]
+    problem:
+      id: p-s3-remediation
+      statement: "S3 buckets across the organisation had inconsistent security posture (policy drift, encryption enforcement gaps, and transport controls), increasing audit and data-exposure risk."
+    solution:
+      id: s-s3-remediation
+      statement: "Rolled out baseline S3 bucket policies to enforce encryption-at-rest and secure transport controls, standardising posture across the estate via repeatable IaC-driven rollout."
+      tools: ["aws-s3", "iam", "terraform", "cloudformation"]
+    impact_ids: ["imp-risk-reduction", "imp-security-baseline", "imp-zero-clickops"]
+    deepDive:
+      enabled: true
+      slug: "prj-s3-remediation"
+
+edges:
+  # Company -> Projects
+  - from: synechron
+    to: prj-team-enablement
+    rel: owns
+  - from: synechron
+    to: prj-ai-incident-assistant
+    rel: owns
+  - from: synechron
+    to: prj-ecs-upgrades
+    rel: owns
+  - from: synechron
+    to: prj-patch-management
+    rel: owns
+  - from: synechron
+    to: prj-logs-migration
+    rel: owns
+  - from: synechron
+    to: prj-iac-introduction
+    rel: owns
+  - from: synechron
+    to: prj-s3-remediation
+    rel: owns
+
+  # Project -> Problem / Solution
+  - from: prj-team-enablement
+    to: p-team-enablement
+    rel: has_problem
+  - from: prj-team-enablement
+    to: s-team-enablement
+    rel: has_solution
+  - from: p-team-enablement
+    to: s-team-enablement
+    rel: solved_by
+
+  - from: prj-ai-incident-assistant
+    to: p-ai-incident
+    rel: has_problem
+  - from: prj-ai-incident-assistant
+    to: s-ai-incident
+    rel: has_solution
+  - from: p-ai-incident
+    to: s-ai-incident
+    rel: solved_by
+
+  - from: prj-ecs-upgrades
+    to: p-ecs-upgrades
+    rel: has_problem
+  - from: prj-ecs-upgrades
+    to: s-ecs-upgrades
+    rel: has_solution
+  - from: p-ecs-upgrades
+    to: s-ecs-upgrades
+    rel: solved_by
+
+  - from: prj-patch-management
+    to: p-patching
+    rel: has_problem
+  - from: prj-patch-management
+    to: s-patching
+    rel: has_solution
+  - from: p-patching
+    to: s-patching
+    rel: solved_by
+
+  - from: prj-logs-migration
+    to: p-logs-migration
+    rel: has_problem
+  - from: prj-logs-migration
+    to: s-logs-migration
+    rel: has_solution
+  - from: p-logs-migration
+    to: s-logs-migration
+    rel: solved_by
+
+  - from: prj-iac-introduction
+    to: p-iac
+    rel: has_problem
+  - from: prj-iac-introduction
+    to: s-iac
+    rel: has_solution
+  - from: p-iac
+    to: s-iac
+    rel: solved_by
+
+  - from: prj-s3-remediation
+    to: p-s3-remediation
+    rel: has_problem
+  - from: prj-s3-remediation
+    to: s-s3-remediation
+    rel: has_solution
+  - from: p-s3-remediation
+    to: s-s3-remediation
+    rel: solved_by
+
+  # Project -> Impact (shared)
+  - from: prj-ai-incident-assistant
+    to: imp-mttr
+    rel: drives
+  - from: prj-ai-incident-assistant
+    to: imp-single-pane
+    rel: drives
+
+  - from: prj-logs-migration
+    to: imp-single-pane
+    rel: drives
+  - from: prj-logs-migration
+    to: imp-mttr
+    rel: drives
+
+  - from: prj-ecs-upgrades
+    to: imp-faster-upgrades
+    rel: drives
+  - from: prj-ecs-upgrades
+    to: imp-zero-clickops
+    rel: drives
+
+  - from: prj-patch-management
+    to: imp-zero-clickops
+    rel: drives
+  - from: prj-patch-management
+    to: imp-operational-scale
+    rel: drives
+
+  - from: prj-iac-introduction
+    to: imp-zero-clickops
+    rel: drives
+  - from: prj-iac-introduction
+    to: imp-operational-scale
+    rel: drives
+
+  - from: prj-team-enablement
+    to: imp-operational-scale
+    rel: drives
+
+  - from: prj-s3-remediation
+    to: imp-risk-reduction
+    rel: drives
+  - from: prj-s3-remediation
+    to: imp-security-baseline
+    rel: drives
+  - from: prj-s3-remediation
+    to: imp-zero-clickops
+    rel: drives
+

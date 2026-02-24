@@ -1,0 +1,57 @@
+/* Entrance & interaction animations — Operational Noir */
+
+@keyframes nodeEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes edgeDraw {
+  from {
+    opacity: 0;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+  to {
+    opacity: 1;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus outline style for keyboard navigation */
+.flow-node:focus {
+  outline: none;
+}
+
+.flow-node:focus-visible rect,
+.flow-node:focus-visible path,
+.flow-node:focus-visible circle {
+  filter: url(#glow);
+}
+
+/* Smooth focus transitions on nodes */
+.flow-node {
+  transition: opacity 0.4s ease;
+}

@@ -1,0 +1,123 @@
+/* CalEmbed — lazy-loaded scheduling embed */
+
+.wrapper {
+  min-height: 200px;
+}
+
+/* ── Placeholder / loading state ── */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 400px;
+  border: 1px dashed color-mix(in srgb, var(--stroke) 50%, transparent);
+  border-radius: var(--r-3);
+  background: color-mix(in srgb, var(--panel) 40%, transparent);
+}
+
+.placeholderText {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid color-mix(in srgb, var(--stroke) 40%, transparent);
+  border-top-color: var(--signal);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Embed container ── */
+.embedContainer {
+  width: 100%;
+  min-height: 500px;
+  border: 1px solid color-mix(in srgb, var(--stroke) 40%, transparent);
+  border-radius: var(--r-3);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--panel) 60%, transparent);
+}
+
+.iframe {
+  width: 100%;
+  height: 600px;
+  border: none;
+  display: block;
+}
+
+/* ── Fallback card ── */
+.fallbackCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 48px 24px;
+  border: 1px solid color-mix(in srgb, var(--stroke) 50%, transparent);
+  border-radius: var(--r-3);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  text-align: center;
+}
+
+.fallbackText {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.fallbackBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border: 1px solid color-mix(in srgb, var(--signal) 50%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--signal) 10%, transparent);
+  color: var(--signal);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.fallbackBtn:hover {
+  background: color-mix(in srgb, var(--signal) 18%, transparent);
+  border-color: var(--signal);
+  border-bottom: 1px solid var(--signal);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .embedContainer {
+    min-height: 400px;
+  }
+
+  .iframe {
+    height: 500px;
+  }
+
+  .fallbackCard {
+    padding: 32px 16px;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+    border-top-color: var(--faint);
+  }
+}

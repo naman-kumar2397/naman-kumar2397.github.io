@@ -1,0 +1,46 @@
+---
+title: "Netflix Game Launch Reliability (AI Face-Transforming Game)"
+companyId: "akqa"
+projectId: "akqa-prj-netflix-game-launch"
+themes: ["kubernetes", "scalability", "observability", "launch"]
+tools: ["kubernetes", "grafana", "dcgm-exporter", "prometheus"]
+---
+
+## Context
+
+AKQA partnered with Netflix to build an AI-powered face-transforming game experience for a high-profile marketing campaign. The game relied on GPU-accelerated inference to process user-uploaded photos in real time, served through a Kubernetes-based platform that needed to handle unpredictable traffic spikes during the campaign's promotional window.
+
+## Challenge
+
+- Traffic could surge 10–50x above baseline within minutes of social media virality
+- GPU workloads have unique scaling characteristics — cold-start times are measured in minutes, not seconds
+- Traditional CPU-based autoscaling heuristics don't map well to GPU utilisation patterns
+- Zero tolerance for user-facing errors during the campaign window
+
+## Architecture
+
+- Multi-zone Kubernetes clusters with dedicated GPU node pools
+- Horizontal Pod Autoscaler tuned to custom GPU utilisation metrics rather than CPU
+- Pre-warmed capacity buffers to absorb burst traffic before autoscaler reacts
+- Separate inference pods from serving pods to allow independent scaling
+- Connection draining and graceful shutdown to prevent mid-inference failures
+
+## Observability Stack
+
+- NVIDIA DCGM Exporter integrated with Prometheus for GPU-specific metrics (utilisation, memory, temperature, ECC errors)
+- Grafana dashboards providing real-time cluster-wide GPU health visibility
+- Custom alerting thresholds for GPU saturation, memory pressure, and thermal throttling
+- Distributed tracing for end-to-end inference latency (upload → result)
+
+## Outcomes
+
+- Sustained peak traffic without user-impacting failures during the campaign launch
+- GPU autoscaling responded within acceptable latency bounds despite cold-start constraints
+- Observability coverage filled a previously unmonitored gap in the infrastructure
+- Patterns established here were reused for subsequent GPU-dependent workloads at AKQA
+
+## Lessons Learned
+
+- GPU scaling is not a drop-in replacement for CPU scaling — dedicated metrics and tuning are essential
+- Pre-warming is a blunt but effective tool when cold-start costs are high
+- Campaign-driven traffic patterns require load testing with realistic burst profiles, not steady-state assumptions

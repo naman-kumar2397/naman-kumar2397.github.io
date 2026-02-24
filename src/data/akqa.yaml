@@ -1,0 +1,190 @@
+company:
+  id: akqa
+  label: AKQA
+  role: Lead Site Reliability Engineer
+  period: Sep 2024 – Apr 2025
+  tags:
+  - sre
+  - kubernetes
+  - observability
+  - automation
+  - governance
+impacts:
+- id: "akqa-imp-launch-scale"
+  label: "Delivered high-availability launch readiness and rapid scaling for peak user traffic"
+  type: scalability
+  metrics:
+  - 50k+ concurrent users in first 10 minutes
+  - Kubernetes autoscaling design
+- id: "akqa-imp-obs-gaps"
+  label: "Improved reliability through standardised monitoring, logging and alerting across client estates"
+  type: observability
+  metrics:
+  - "Cross-client observability uplift"
+  - Reduced monitoring blind spots
+- id: "akqa-imp-incident-automation"
+  label: Reduced incident handling overhead through workflow automation and tool integration
+  type: reliability
+  metrics:
+  - Ops workflow automation
+  - Toolchain integration
+- id: "akqa-imp-change-governance"
+  label: Reduced deployment risk through standardised change governance and automation
+  type: security
+  metrics:
+  - Change request standardisation
+  - Approval automation
+projects:
+- id: "akqa-prj-netflix-game-launch"
+  title: "Netflix Game Launch Reliability (AI Face-Transforming Game)"
+  themes:
+  - kubernetes
+  - scalability
+  - observability
+  - launch
+  problem:
+    id: "akqa-p-launch"
+    statement: "Launch traffic spikes required rapid scaling, strong GPU observability, and resilient runtime foundations\
+      \ to prevent user-impacting failures."
+  solution:
+    id: "akqa-s-launch"
+    statement: Designed and deployed Kubernetes clusters with autoscaling and a GPU observability stack using Grafana + NVIDIA
+      DCGM Exporter to support peak demand and proactive issue detection.
+    tools:
+    - kubernetes
+    - grafana
+    - "dcgm-exporter"
+    - prometheus
+  impact_ids:
+  - "akqa-imp-launch-scale"
+  - "akqa-imp-obs-gaps"
+  deepDive:
+    enabled: true
+    slug: "akqa-prj-netflix-game-launch"
+- id: "akqa-prj-observability-revamp"
+  title: "Enterprise-wide Observability Revamp"
+  themes:
+  - observability
+  - standardization
+  - reliability
+  problem:
+    id: "akqa-p-obs"
+    statement: "Inconsistent monitoring, logging, and alerting practices across clients reduced visibility and slowed incident\
+      \ triage."
+  solution:
+    id: "akqa-s-obs"
+    statement: "Led a structured assessment and uplift program across client infrastructures to close monitoring gaps, improve\
+      \ alert quality, and standardise observability patterns."
+    tools:
+    - grafana
+    - prometheus
+    - datadog
+    - terraform
+  impact_ids:
+  - "akqa-imp-obs-gaps"
+- id: "akqa-prj-incident-workflow-automation"
+  title: Incident Workflow Automation (OpsGenie/Slack/Teams/Jira)
+  themes:
+  - automation
+  - "incident-management"
+  - reliability
+  problem:
+    id: "akqa-p-incident"
+    statement: Manual incident coordination and handoffs across tools increased response time and operational overhead.
+  solution:
+    id: "akqa-s-incident"
+    statement: Built automated incident workflows using Python and AWS Lambda to coordinate OpsGenie alerts and generate consistent
+      collaboration artifacts in Slack/Teams and Jira.
+    tools:
+    - python
+    - "aws-lambda"
+    - opsgenie
+    - slack
+    - teams
+    - jira
+  impact_ids:
+  - "akqa-imp-incident-automation"
+- id: "akqa-prj-change-request-standardisation"
+  title: "Standardised Change Request Process & Approval Automation"
+  themes:
+  - governance
+  - automation
+  - standardization
+  - security
+  problem:
+    id: "akqa-p-change"
+    statement: "Change request practices were inconsistent, creating avoidable deployment risk and slow approvals."
+  solution:
+    id: "akqa-s-change"
+    statement: "Defined best practices for change requests, introduced lightweight automation to streamline approvals, and\
+      \ improved operational consistency across delivery teams."
+    tools:
+    - jira
+    - python
+    - "aws-lambda"
+  impact_ids:
+  - "akqa-imp-change-governance"
+edges:
+- from: akqa
+  to: "akqa-prj-netflix-game-launch"
+  rel: owns
+- from: akqa
+  to: "akqa-prj-observability-revamp"
+  rel: owns
+- from: akqa
+  to: "akqa-prj-incident-workflow-automation"
+  rel: owns
+- from: akqa
+  to: "akqa-prj-change-request-standardisation"
+  rel: owns
+- from: "akqa-prj-netflix-game-launch"
+  to: "akqa-p-launch"
+  rel: has_problem
+- from: "akqa-prj-netflix-game-launch"
+  to: "akqa-s-launch"
+  rel: has_solution
+- from: "akqa-p-launch"
+  to: "akqa-s-launch"
+  rel: solved_by
+- from: "akqa-prj-observability-revamp"
+  to: "akqa-p-obs"
+  rel: has_problem
+- from: "akqa-prj-observability-revamp"
+  to: "akqa-s-obs"
+  rel: has_solution
+- from: "akqa-p-obs"
+  to: "akqa-s-obs"
+  rel: solved_by
+- from: "akqa-prj-incident-workflow-automation"
+  to: "akqa-p-incident"
+  rel: has_problem
+- from: "akqa-prj-incident-workflow-automation"
+  to: "akqa-s-incident"
+  rel: has_solution
+- from: "akqa-p-incident"
+  to: "akqa-s-incident"
+  rel: solved_by
+- from: "akqa-prj-change-request-standardisation"
+  to: "akqa-p-change"
+  rel: has_problem
+- from: "akqa-prj-change-request-standardisation"
+  to: "akqa-s-change"
+  rel: has_solution
+- from: "akqa-p-change"
+  to: "akqa-s-change"
+  rel: solved_by
+- from: "akqa-prj-netflix-game-launch"
+  to: "akqa-imp-launch-scale"
+  rel: drives
+- from: "akqa-prj-netflix-game-launch"
+  to: "akqa-imp-obs-gaps"
+  rel: drives
+- from: "akqa-prj-observability-revamp"
+  to: "akqa-imp-obs-gaps"
+  rel: drives
+- from: "akqa-prj-incident-workflow-automation"
+  to: "akqa-imp-incident-automation"
+  rel: drives
+- from: "akqa-prj-change-request-standardisation"
+  to: "akqa-imp-change-governance"
+  rel: drives

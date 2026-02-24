@@ -1,0 +1,112 @@
+---
+title: AI Incident Management Assistant
+company: "Synechron (Client: Latitude Financial Services)"
+role: Lead Site Reliability Engineer
+period: 2025
+impactSnapshot:
+  - "Faster MTTR via automated cross-tool correlation"
+  - "~20M log events/week consolidated into single pane"
+  - "Eliminated manual triage across 3 observability systems"
+  - "Adopted by on-call SREs for Sev-1/Sev-2 incidents"
+---
+
+## Context
+
+Incident responders were losing valuable time stitching together context from multiple systems — ServiceNow for tickets, Dynatrace for APM, and Datadog for logs and metrics.
+
+During high-severity incidents, this context switching increased Mean Time To Resolution (MTTR) and created cognitive overload for on-call engineers. Responders routinely spent the first 10–15 minutes of a Sev-1 just gathering baseline context before they could begin diagnosis.
+
+The goal was to reduce manual correlation work and provide responders with fast, conversational access to incident intelligence — without introducing a new tool they had to learn under pressure.
+
+## Architecture Overview
+
+The solution was built as a conversational AI assistant powered by AWS Bedrock (Claude), connected to internal observability and ITSM systems through secure MCP-style integrations.
+
+Core flow:
+
+- User asks an incident question in natural language
+- Bedrock agent decomposes the query and orchestrates parallel tool calls
+- Connectors fetch live telemetry from source systems via scoped API tokens
+- Response is synthesised with grounded context, source attribution, and recommended next actions
+
+Key integrations:
+
+- ServiceNow — incident metadata, assignment groups, timeline, change records
+- Dynatrace — distributed traces, service health, anomaly detection events
+- Datadog — log queries, metric snapshots, monitor status
+
+Each connector ran as a stateless Lambda behind API Gateway, authorised via IAM roles with least-privilege scoping per data source.
+
+## What I Built
+
+- Designed the end-to-end conversational incident assistant architecture, from agent orchestration to connector interfaces.
+- Implemented secure connectors to ServiceNow, Dynatrace, and Datadog, each with retry logic, circuit-breaker patterns, and response-size guardrails.
+- Built prompt orchestration to guide Claude toward deterministic, incident-safe responses — including structured output schemas for consistent formatting.
+- Added guardrails to prevent hallucinated remediation steps (source-attribution requirement, confidence thresholds, explicit "I don't know" fallback).
+- Enabled rapid context summarisation for Sev incidents, including automatic timeline reconstruction from correlated events.
+- Worked closely with SRE stakeholders to tune responses for real on-call workflows, running shadow-mode comparisons against manual triage.
+
+## Rollout & Change Safety
+
+The assistant was introduced incrementally to avoid disrupting active incident workflows:
+
+- Shadow mode first — the assistant ran alongside existing triage for two weeks, with outputs reviewed post-incident but not shown live. This built confidence in response quality before any on-call engineer depended on it.
+- Opt-in pilot — three volunteer SREs used the assistant during real Sev-2 incidents. Feedback was collected via a lightweight post-incident survey (3 questions, < 1 min).
+- Graduated rollout — after pilot validation, the assistant was made available to the full on-call rotation. A feature flag controlled availability, allowing instant rollback without a deployment.
+- No forced adoption — the assistant was positioned as an optional accelerator, not a mandatory step in the incident process. This reduced resistance and encouraged organic adoption.
+
+Rollback path: disabling the feature flag removed the assistant from the incident UI entirely. No data dependencies were created between the assistant's outputs and downstream ITSM workflows.
+
+## Failure Modes & Guardrails
+
+- Hallucinated remediation — the most critical risk. Mitigated by requiring every recommendation to cite a source (ServiceNow change record, Dynatrace anomaly event, or Datadog log pattern). Responses without source attribution were suppressed and replaced with "Insufficient data to recommend an action."
+- Connector timeout — if any upstream system (ServiceNow, Dynatrace, Datadog) failed to respond within 8 seconds, the assistant returned a partial response with a clear label indicating which data source was unavailable. No silent degradation.
+- Prompt injection — user inputs were sanitised before being passed to the Bedrock agent. System prompts were immutable and not exposed to the conversation context. Tool call parameters were validated against strict schemas.
+- Token budget overflow — long incident histories could exceed context windows. A sliding-window summariser truncated older events, preserving the most recent 30 minutes of telemetry in full fidelity.
+- Stale data — connectors included cache-control headers and TTL metadata in responses. The assistant surfaced data freshness ("Datadog metrics as of 2 min ago") so responders could judge recency.
+
+## Measurement & Success Metrics
+
+Quantitative measurement was structured around three areas:
+
+- Triage time — measured as the interval between incident creation in ServiceNow and the first diagnostic action (e.g., runbook triggered, team paged, or root cause hypothesis logged). Compared pre/post assistant availability across matched-severity incidents.
+- Context-gathering queries — tracked the number of manual queries SREs made to Dynatrace, Datadog, and ServiceNow during incidents. The assistant aimed to reduce per-incident query count by consolidating context into a single conversational interface.
+- Adoption rate — measured as the percentage of Sev-1/Sev-2 incidents where the assistant was invoked at least once. Tracked weekly to detect adoption trends and drop-off.
+
+Qualitative signal was captured via post-incident surveys:
+
+- Responder confidence ("Did you feel you had sufficient context within the first 5 minutes?")
+- Trust calibration ("Did the assistant produce any response you disagreed with?")
+- Friction points ("What slowed you down?")
+
+Direction of change: triage time decreased, per-incident cross-tool queries decreased, and adoption rate increased steadily after the pilot period. Exact figures are under client NDA.
+
+## Key Technical Decisions
+
+Deterministic over creative responses — for incident workflows, correctness matters more than fluency. Prompts and tool usage were structured to prioritise grounded telemetry, verifiable sources, and minimal speculation. Temperature was set to 0 for all incident-context queries.
+
+Tool-first reasoning — the assistant was designed to fetch telemetry first, reason second, and summarise last. Every response required at least one tool call to have executed successfully before generation. This eliminated the class of "confident but groundless" responses.
+
+On-call ergonomics — special focus was placed on concise summaries, clear impact statements, and actionable next steps. Responses were capped at 250 words by default, with "show more" expansion for full telemetry. The assistant was optimised for high-stress incident conditions, not casual exploration.
+
+## Impact
+
+- Reduced time spent correlating incident context across three observability tools into a single conversational query.
+- Enabled faster triage during Sev-1/Sev-2 incidents by front-loading context that previously required multiple tool switches.
+- Created a single conversational interface over ServiceNow, Dynatrace, and Datadog — consolidating approximately 20 million log events per week into queryable context.
+- Improved responder confidence during early incident phases, measured via post-incident survey scores.
+
+## Lessons Learned
+
+- AI in incident response must be heavily grounded in real telemetry — any response without a verifiable source erodes trust immediately.
+- Guardrails and prompt structure matter more than model capability. The difference between a useful assistant and a dangerous one was entirely in the orchestration layer.
+- On-call UX is fundamentally different from chatbot UX. Responders under pressure need answers in seconds, not conversations over minutes.
+- The biggest wins came from reducing cognitive load, not adding more data. Summarisation and source consolidation mattered more than raw data access.
+- Shadow-mode rollout was essential for building trust. Engineers who saw the assistant perform well in review were far more likely to use it live.
+
+## Future Enhancements
+
+- Automated incident timeline generation from correlated events across all three systems
+- Probable root cause ranking based on historical incident similarity
+- Deeper runbook integration with step-by-step guided remediation
+- Proactive anomaly surfacing — alerting the assistant to emerging issues before an incident is declared

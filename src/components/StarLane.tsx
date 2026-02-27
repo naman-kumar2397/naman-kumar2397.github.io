@@ -61,18 +61,12 @@ interface ToolItem {
 interface StarLaneProps {
   lane: StarLaneData;
   tools: ToolItem[];
-  isHovered: boolean;
   isDimmed: boolean;
-  isLightDimmed: boolean;
   isImpactHighlighted: boolean;
   highlightedImpactId: string | null;
   delay: number;
   isExpanded: boolean;
-  isPinned: boolean;
   onToggleExpand: (projectId: string) => void;
-  onHoverExpand: (projectId: string) => void;
-  onHoverCollapse: (projectId: string) => void;
-  onHover: (projectId: string | null) => void;
   onImpactClick: (impactId: string) => void;
   onDeepDive?: (slug: string, triggerEl?: HTMLElement) => void;
 }
@@ -106,18 +100,12 @@ Arrow.displayName = "Arrow";
 export const StarLane = memo(function StarLane({
   lane,
   tools,
-  isHovered,
   isDimmed,
-  isLightDimmed,
   isImpactHighlighted,
   highlightedImpactId,
   delay,
   isExpanded,
-  isPinned,
   onToggleExpand,
-  onHoverExpand,
-  onHoverCollapse,
-  onHover,
   onImpactClick,
   onDeepDive,
 }: StarLaneProps) {
@@ -129,13 +117,11 @@ export const StarLane = memo(function StarLane({
 
   const [observerRef, inView] = useInView(0.12);
   const laneRef = useRef<HTMLDivElement>(null);
-  const hoverEnterTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const hoverLeaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   /* Wider stagger for more dramatic sequential flow */
   const step = (n: number) => `${delay + n * 0.15}s`;
 
-  /* Keep expanded lane's top in viewport */
+  /* Keep expanded lane's top in viewport on click */
   useEffect(() => {
     if (isExpanded && laneRef.current) {
       const el = laneRef.current;
@@ -146,42 +132,9 @@ export const StarLane = memo(function StarLane({
     }
   }, [isExpanded]);
 
-  /* Cleanup timers */
-  useEffect(() => {
-    return () => {
-      clearTimeout(hoverEnterTimer.current);
-      clearTimeout(hoverLeaveTimer.current);
-    };
-  }, []);
-
   const handleToggle = useCallback(() => {
-    // Click always pins/unpins — cancel any hover timers
-    clearTimeout(hoverEnterTimer.current);
-    clearTimeout(hoverLeaveTimer.current);
     onToggleExpand(lane.projectId);
   }, [lane.projectId, onToggleExpand]);
-
-  const handleMouseEnter = useCallback(() => {
-    onHover(lane.projectId);
-    clearTimeout(hoverLeaveTimer.current);
-    // Don't hover-expand if already pinned open
-    if (!isPinned) {
-      hoverEnterTimer.current = setTimeout(() => {
-        onHoverExpand(lane.projectId);
-      }, 300);
-    }
-  }, [lane.projectId, onHover, onHoverExpand, isPinned]);
-
-  const handleMouseLeave = useCallback(() => {
-    onHover(null);
-    clearTimeout(hoverEnterTimer.current);
-    // Don't hover-collapse if pinned
-    if (!isPinned) {
-      hoverLeaveTimer.current = setTimeout(() => {
-        onHoverCollapse(lane.projectId);
-      }, 500);
-    }
-  }, [lane.projectId, onHover, onHoverCollapse, isPinned]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -193,9 +146,7 @@ export const StarLane = memo(function StarLane({
   const laneClasses = [
     styles.lane,
     inView ? styles.laneVisible : styles.laneHidden,
-    isHovered ? styles.laneHovered : "",
     isDimmed ? styles.laneDimmed : "",
-    isLightDimmed ? styles.laneLightDimmed : "",
     isImpactHighlighted ? styles.laneHighlighted : "",
     isExpanded ? styles.laneExpanded : "",
   ].filter(Boolean).join(" ");
@@ -206,6 +157,7 @@ export const StarLane = memo(function StarLane({
   return (
     <div
       id={`project-${lane.projectId}`}
+      data-testid={`lane-${lane.projectId}`}
       ref={mergeRefs(observerRef, laneRef)}
       className={laneClasses}
       style={{ animationDelay: `${delay}s` }}
@@ -213,8 +165,6 @@ export const StarLane = memo(function StarLane({
       role="row"
       aria-label={`Project: ${lane.projectTitle}`}
       aria-expanded={isExpanded}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       onClick={handleToggle}
       onKeyDown={handleKeyDown}
     >
@@ -233,10 +183,6 @@ export const StarLane = memo(function StarLane({
           {/* "View details" micro-hint — only when collapsed */}
           {!isExpanded && (
             <span className={styles.detailsHint}>View details</span>
-          )}
-          {/* Pinned indicator */}
-          {isPinned && isExpanded && (
-            <span className={styles.pinnedBadge} title="Click to unpin">📌</span>
           )}
         </div>
         <div className={styles.headerRight}>
@@ -260,10 +206,10 @@ export const StarLane = memo(function StarLane({
         </div>
       </div>
 
-      {/* ── Summary line (collapsed only) ── */}
-      {!isExpanded && (
-        <p className={styles.summaryLine}>{lane.projectSummary}</p>
-      )}
+      {/* ── Summary line (always mounted; hidden via CSS when expanded to avoid layout shift) ── */}
+      <p className={`${styles.summaryLine} ${isExpanded ? styles.summaryLineHidden : ""}`}>
+        {lane.projectSummary}
+      </p>
 
       {/* ── Expanded content (grid-rows animation) ── */}
       <div
@@ -286,7 +232,7 @@ export const StarLane = memo(function StarLane({
 
           {/* Arrow 1 */}
           <div className={`${styles.arrowCell} ${inView ? styles.arrowReveal : ""}`} style={{ animationDelay: step(1) }}>
-            <Arrow active={isHovered} variant="problem-solution" />
+            <Arrow active={isExpanded} variant="problem-solution" />
           </div>
 
           {/* Solution */}
@@ -308,7 +254,7 @@ export const StarLane = memo(function StarLane({
 
           {/* Arrow 2 */}
           <div className={`${styles.arrowCell} ${inView ? styles.arrowReveal : ""}`} style={{ animationDelay: step(3) }}>
-            <Arrow active={isHovered} variant="solution-result" />
+            <Arrow active={isExpanded} variant="solution-result" />
           </div>
 
           {/* Result */}

@@ -182,9 +182,7 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
   const [activeThemes, setActiveThemes] = useState<string[]>([]);
   const [activeTools, setActiveTools] = useState<string[]>([]);
   const [search, setSearch] = useState("");
-  const [hoveredLane, setHoveredLane] = useState<string | null>(null);
   const [expandedLanes, setExpandedLanes] = useState<Set<string>>(new Set());
-  const [pinnedLanes, setPinnedLanes] = useState<Set<string>>(new Set());
   const [activeDeepDive, setActiveDeepDive] = useState<string | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const scheduleTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -208,7 +206,6 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setExpandedLanes(new Set());
-        setPinnedLanes(new Set());
       }
     };
     window.addEventListener("keydown", handleKey);
@@ -228,47 +225,16 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
     setSearch("");
   }, []);
 
-  /* Lane hover */
-  const handleLaneHover = useCallback((projectId: string | null) => {
-    setHoveredLane(projectId);
-  }, []);
-
-  /* Lane expand/collapse toggle — click pins the lane open */
+  /* Lane expand/collapse toggle (click only) */
   const handleLaneToggle = useCallback((projectId: string) => {
     setExpandedLanes((prev) => {
       const next = new Set(prev);
       if (next.has(projectId)) {
         next.delete(projectId);
-        setPinnedLanes((pp) => { const np = new Set(pp); np.delete(projectId); return np; });
       } else {
         next.add(projectId);
-        setPinnedLanes((pp) => new Set(pp).add(projectId));
       }
       return next;
-    });
-  }, []);
-
-  /* Hover-expand: opens lane after delay (only if that lane isn't pinned) */
-  const handleHoverExpand = useCallback((projectId: string) => {
-    setPinnedLanes((pinned) => {
-      if (!pinned.has(projectId)) {
-        setExpandedLanes((prev) => new Set(prev).add(projectId));
-      }
-      return pinned;
-    });
-  }, []);
-
-  /* Hover-collapse: closes lane after delay (only if that lane isn't pinned) */
-  const handleHoverCollapse = useCallback((projectId: string) => {
-    setPinnedLanes((pinned) => {
-      if (!pinned.has(projectId)) {
-        setExpandedLanes((prev) => {
-          const next = new Set(prev);
-          next.delete(projectId);
-          return next;
-        });
-      }
-      return pinned;
     });
   }, []);
 
@@ -379,7 +345,6 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
     const pruned = new Set([...expandedLanes].filter((id) => visibleIds.has(id)));
     if (pruned.size !== expandedLanes.size) {
       setExpandedLanes(pruned);
-      setPinnedLanes((prev) => new Set([...prev].filter((id) => pruned.has(id))));
     }
   }, [expandedLanes, filteredLayoutsData]);
 
@@ -493,8 +458,8 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
         {/* Experience highlights strip */}
         <ExperienceHighlights highlights={highlights} />
 
-        {/* AI side-projects kanban */}
-        <SideProjectsBoard />
+        {/* AI side-projects kanban (hidden for now) */}
+        {/* <SideProjectsBoard /> */}
 
         <h2 className={`${styles.sectionHeading} ${styles.stickyHeading}`}>Work Experience</h2>
 
@@ -530,27 +495,17 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
                   // Use pre-computed stable tools array
                   const laneTools = laneToolsMap.get(lane.projectId) ?? [];
 
-                  // Light dim if another lane is hovered
-                  const isLightDimmed =
-                    hoveredLane !== null && hoveredLane !== lane.projectId;
-
                   return (
                     <StarLane
                       key={lane.projectId}
                       lane={lane}
                       tools={laneTools}
-                      isHovered={hoveredLane === lane.projectId}
                       isDimmed={false}
-                      isLightDimmed={isLightDimmed}
                       isImpactHighlighted={false}
                       highlightedImpactId={null}
                       delay={i * 0.06}
                       isExpanded={expandedLanes.has(lane.projectId)}
-                      isPinned={pinnedLanes.has(lane.projectId)}
                       onToggleExpand={handleLaneToggle}
-                      onHoverExpand={handleHoverExpand}
-                      onHoverCollapse={handleHoverCollapse}
-                      onHover={handleLaneHover}
                       onImpactClick={() => {}}
                       onDeepDive={lane.deepDiveSlug ? handleDeepDive : undefined}
                     />

@@ -40,12 +40,14 @@
   border-color: transparent !important;
 }
 
-/* Gradient border via pseudo-element */
+/* Gradient border via pseudo-element — inset: 0 keeps it within bounds
+   to prevent any 1-px extension from causing layout shifts that
+   re-trigger mouseenter/mouseleave in a loop. */
 .laneHovered::after {
   content: "";
   position: absolute;
-  inset: -1px;
-  border-radius: calc(var(--r-2) + 1px);
+  inset: 0;
+  border-radius: var(--r-2);
   padding: 1.5px;
   background: linear-gradient(135deg, rgba(255, 200, 80, 0.45) 0%, rgba(120, 200, 255, 0.35) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);

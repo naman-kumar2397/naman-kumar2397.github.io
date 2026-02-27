@@ -48,6 +48,16 @@ export interface StarLayout {
   impactProjectMap: Record<string, string[]>;
 }
 
+/* ── Utility: group an impact list by type ────────────── */
+
+export function groupImpactsByType(impacts: LaneImpact[]): Record<string, LaneImpact[]> {
+  return impacts.reduce<Record<string, LaneImpact[]>>((acc, impact) => {
+    if (!acc[impact.type]) acc[impact.type] = [];
+    acc[impact.type].push(impact);
+    return acc;
+  }, {});
+}
+
 /* ── Main layout function ─────────────────────────────── */
 
 export function computeLayout(portfolio: Portfolio): StarLayout {

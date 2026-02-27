@@ -30,6 +30,7 @@ impacts:
 projects:
   - id: cit-prj-merger-platform
     title: "Technology Asset Consolidation (iSelect + CompareTheMarket)"
+    summary: "Led infrastructure consolidation strategy across iSelect and CompareTheMarket stacks"
     themes: ["platform", "migration", "standardization"]
     problem:
       id: cit-p-merger
@@ -43,6 +44,7 @@ projects:
 
   - id: cit-prj-cfn-to-terraform
     title: "CloudFormation → Terraform Migration"
+    summary: "Migrated multi-account AWS infrastructure from CloudFormation to Terraform"
     themes: ["iac", "platform", "aws", "standardization"]
     problem:
       id: cit-p-iac
@@ -56,6 +58,7 @@ projects:
 
   - id: cit-prj-delta-lakehouse
     title: "Delta Lakehouse Data Platform Consolidation"
+    summary: "Unified fragmented data pipelines into a central Delta Lakehouse on Databricks"
     themes: ["data", "platform", "observability", "integration"]
     problem:
       id: cit-p-data

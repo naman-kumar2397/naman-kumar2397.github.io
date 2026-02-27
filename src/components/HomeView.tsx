@@ -4,18 +4,19 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from "react"
 import { StarLane } from "@/components/StarLane";
 import { CompanyFrame } from "@/components/CompanyFrame";
 import { CompanyMiniNav } from "@/components/CompanyMiniNav";
-import { ImpactInspector } from "@/components/ImpactInspector";
+// ImpactInspector removed — impact metrics now inline in expanded StarLane
 import { FilterDropdown } from "@/components/FilterDropdown";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DeepDiveModal } from "@/components/DeepDiveModal";
 import type { DeepDiveContent } from "@/components/DeepDiveModal";
 import { CredentialsSection } from "@/components/CredentialsSection";
 import { ExperienceHighlights } from "@/components/ExperienceHighlights";
+import SideProjectsBoard from "@/components/SideProjectsBoard";
 import { ScheduleMeetingModal } from "@/components/ScheduleMeetingModal";
 import { Footer } from "@/components/Footer";
 import { Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { profile } from "@/data/profile";
-import type { StarLayout, LaneImpact, StarLane as StarLaneData } from "@/lib/layout-engine";
+import type { StarLayout, StarLane as StarLaneData } from "@/lib/layout-engine";
 import type { Catalog, Certification, Education, Highlight } from "@/lib/data-loader";
 import styles from "./HomeView.module.css";
 
@@ -31,6 +32,37 @@ const CONTACT_ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
+/* ── Typing animation hook ── */
+function useTypingText(text: string, speed = 42): { displayed: string; done: boolean } {
+  // Initialize with full text so SSR/static HTML has content; effect resets and types on client
+  const [displayed, setDisplayed] = useState(text);
+  const [done, setDone] = useState(true);
+
+  useEffect(() => {
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return; // keep full static text
+
+    // Reset and start typing after page settles
+    setDone(false);
+    setDisplayed("");
+    let i = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i < text.length) {
+        timer = setTimeout(tick, speed);
+      } else {
+        setDone(true);
+      }
+    };
+    timer = setTimeout(tick, 700); // delay so page load animation settles first
+    return () => clearTimeout(timer);
+  }, [text, speed]);
+
+  return { displayed, done };
+}
+
 /** A small tile that reveals its value on hover/focus/tap and copies to clipboard. */
 function ContactTile({ id, label, value, href }: {
   id: string; label: string; value: string; href: string;
@@ -38,6 +70,29 @@ function ContactTile({ id, label, value, href }: {
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const collapseTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  /* Cancel any pending collapse */
+  const cancelCollapse = useCallback(() => {
+    clearTimeout(collapseTimerRef.current);
+  }, []);
+
+  /* Schedule a collapse after a short delay to avoid flicker on re-entry */
+  const scheduleCollapse = useCallback(() => {
+    clearTimeout(collapseTimerRef.current);
+    collapseTimerRef.current = setTimeout(() => {
+      setRevealed(false);
+      setCopied(false);
+    }, 250);
+  }, []);
+
+  /* Clean up timers on unmount */
+  useEffect(() => {
+    return () => {
+      clearTimeout(timerRef.current);
+      clearTimeout(collapseTimerRef.current);
+    };
+  }, []);
 
   const copyValue = useCallback(() => {
     const text = id === "linkedin" ? href : value;
@@ -63,8 +118,23 @@ function ContactTile({ id, label, value, href }: {
     }
   }, [handleClick]);
 
-  // Reveal on hover (desktop)
-  const handleMouseEnter = useCallback(() => setRevealed(true), []);
+  // Reveal on hover (desktop); cancel any pending collapse
+  const handleMouseEnter = useCallback(() => {
+    cancelCollapse();
+    setRevealed(true);
+  }, [cancelCollapse]);
+
+  // Collapse on hover-out after a short delay to prevent flicker
+  const handleMouseLeave = useCallback(() => {
+    scheduleCollapse();
+  }, [scheduleCollapse]);
+
+  // Collapse when keyboard focus leaves the tile (but not to a child element)
+  const handleBlur = useCallback((e: React.FocusEvent<HTMLButtonElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      scheduleCollapse();
+    }
+  }, [scheduleCollapse]);
 
   return (
     <button
@@ -73,7 +143,9 @@ function ContactTile({ id, label, value, href }: {
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       onMouseEnter={handleMouseEnter}
-      onFocus={() => setRevealed(true)}
+      onMouseLeave={handleMouseLeave}
+      onFocus={() => { cancelCollapse(); setRevealed(true); }}
+      onBlur={handleBlur}
       aria-label={revealed ? `Copy ${label}` : `Reveal ${label}`}
       title={revealed ? value : `Reveal ${label}`}
     >
@@ -110,8 +182,9 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
   const [activeThemes, setActiveThemes] = useState<string[]>([]);
   const [activeTools, setActiveTools] = useState<string[]>([]);
   const [search, setSearch] = useState("");
-  const [focusedImpactId, setFocusedImpactId] = useState<string | null>(null);
   const [hoveredLane, setHoveredLane] = useState<string | null>(null);
+  const [expandedLanes, setExpandedLanes] = useState<Set<string>>(new Set());
+  const [pinnedLanes, setPinnedLanes] = useState<Set<string>>(new Set());
   const [activeDeepDive, setActiveDeepDive] = useState<string | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const scheduleTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -130,11 +203,12 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
     }
   }, []);
 
-  /* Escape to reset impact focus */
+  /* Escape to collapse all expanded lanes */
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setFocusedImpactId(null);
+        setExpandedLanes(new Set());
+        setPinnedLanes(new Set());
       }
     };
     window.addEventListener("keydown", handleKey);
@@ -159,9 +233,43 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
     setHoveredLane(projectId);
   }, []);
 
-  /* Impact focus */
-  const handleImpactClick = useCallback((impactId: string) => {
-    setFocusedImpactId((prev) => (prev === impactId ? null : impactId));
+  /* Lane expand/collapse toggle — click pins the lane open */
+  const handleLaneToggle = useCallback((projectId: string) => {
+    setExpandedLanes((prev) => {
+      const next = new Set(prev);
+      if (next.has(projectId)) {
+        next.delete(projectId);
+        setPinnedLanes((pp) => { const np = new Set(pp); np.delete(projectId); return np; });
+      } else {
+        next.add(projectId);
+        setPinnedLanes((pp) => new Set(pp).add(projectId));
+      }
+      return next;
+    });
+  }, []);
+
+  /* Hover-expand: opens lane after delay (only if that lane isn't pinned) */
+  const handleHoverExpand = useCallback((projectId: string) => {
+    setPinnedLanes((pinned) => {
+      if (!pinned.has(projectId)) {
+        setExpandedLanes((prev) => new Set(prev).add(projectId));
+      }
+      return pinned;
+    });
+  }, []);
+
+  /* Hover-collapse: closes lane after delay (only if that lane isn't pinned) */
+  const handleHoverCollapse = useCallback((projectId: string) => {
+    setPinnedLanes((pinned) => {
+      if (!pinned.has(projectId)) {
+        setExpandedLanes((prev) => {
+          const next = new Set(prev);
+          next.delete(projectId);
+          return next;
+        });
+      }
+      return pinned;
+    });
   }, []);
 
   /* Deep-dive modal open */
@@ -219,26 +327,6 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
 
   const activeCount = activeThemes.length + activeTools.length + (search ? 1 : 0);
 
-  /* Combined impact-project map across all layouts */
-  const combinedImpactProjectMap = useMemo(() => {
-    const map: Record<string, string[]> = {};
-    for (const layout of layouts) {
-      for (const [impactId, projectIds] of Object.entries(layout.impactProjectMap)) {
-        if (!map[impactId]) map[impactId] = [];
-        map[impactId].push(...projectIds);
-      }
-    }
-    return map;
-  }, [layouts]);
-
-  /* Combined all impacts across layouts */
-  const allImpacts = useMemo(() => layouts.flatMap((l) => l.allImpacts), [layouts]);
-
-  /* Impact focus set */
-  const projectsForFocusedImpact = focusedImpactId
-    ? new Set(combinedImpactProjectMap[focusedImpactId] || [])
-    : null;
-
   /* Filter function (reused per company) */
   const filterLane = useCallback(
     (lane: StarLaneData): boolean => {
@@ -282,30 +370,34 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
     }));
   }, [layouts, filterLane]);
 
-  /* Impact data for inspector */
-  const focusedImpactData: LaneImpact | null = useMemo(() => {
-    if (!focusedImpactId) return null;
-    const imp = allImpacts.find((i) => i.id === focusedImpactId);
-    if (!imp) return null;
-    return { id: imp.id, label: imp.label, type: imp.type as LaneImpact["type"], metrics: imp.metrics };
-  }, [focusedImpactId, allImpacts]);
-
-  const inspectorProjectTitles = useMemo(() => {
-    if (!focusedImpactId) return [];
-    const pids = combinedImpactProjectMap[focusedImpactId] || [];
-    return pids
-      .map((pid) => allLanes.find((l) => l.projectId === pid)?.projectTitle)
-      .filter(Boolean) as string[];
-  }, [focusedImpactId, combinedImpactProjectMap, allLanes]);
+  /* Auto-collapse expanded lanes if they get filtered out */
+  useEffect(() => {
+    if (expandedLanes.size === 0) return;
+    const visibleIds = new Set(filteredLayoutsData.flatMap(({ filteredLanes }) =>
+      filteredLanes.map((l) => l.projectId)
+    ));
+    const pruned = new Set([...expandedLanes].filter((id) => visibleIds.has(id)));
+    if (pruned.size !== expandedLanes.size) {
+      setExpandedLanes(pruned);
+      setPinnedLanes((prev) => new Set([...prev].filter((id) => pruned.has(id))));
+    }
+  }, [expandedLanes, filteredLayoutsData]);
 
   /* Check if all companies have zero matches */
   const totalFilteredCount = filteredLayoutsData.reduce((sum, d) => sum + d.filteredLanes.length, 0);
+
+  /* Typing animation for role/title */
+  const { displayed: displayedRole, done: typingDone } = useTypingText(profile.title);
 
   /* Visible companies for nav (only those with matching lanes) */
   const visibleCompanies = useMemo(() => {
     return filteredLayoutsData
       .filter((d) => d.filteredLanes.length > 0)
-      .map((d) => ({ id: d.layout.companyId, label: d.layout.companyLabel }));
+      .map((d) => ({
+        id: d.layout.companyId,
+        label: d.layout.companyLabel,
+        projects: d.filteredLanes.map((l) => ({ id: l.projectId, title: l.projectTitle })),
+      }));
   }, [filteredLayoutsData]);
 
   return (
@@ -328,7 +420,17 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
             </div>
             <div className={styles.identityText}>
               <span className={styles.name}>{profile.name}</span>
-              <span className={styles.role}>{profile.title}</span>
+              <span className={styles.role}>
+                {/* SR always reads full title */}
+                <span className={styles.srOnly}>{profile.title}</span>
+                {/* Animated visual span */}
+                <span
+                  aria-hidden="true"
+                  className={`${styles.typingText} ${typingDone ? styles.typingDone : ""}`}
+                >
+                  {displayedRole}
+                </span>
+              </span>
               <span className={styles.location}>
                 <MapPin size={12} aria-hidden="true" />
                 {profile.location}
@@ -386,10 +488,15 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
 
       {/* ── Work Experience section ── */}
       <section id="experience" className={styles.experienceSection}>
-        <h2 className={`${styles.sectionHeading} ${styles.stickyHeading}`}>Work Experience</h2>
+        <h2 className={`${styles.sectionHeading} ${styles.stickyHeading}`}>Summary</h2>
 
         {/* Experience highlights strip */}
         <ExperienceHighlights highlights={highlights} />
+
+        {/* AI side-projects kanban */}
+        <SideProjectsBoard />
+
+        <h2 className={`${styles.sectionHeading} ${styles.stickyHeading}`}>Work Experience</h2>
 
         <div className={styles.companyStack}>
         {totalFilteredCount === 0 ? (
@@ -400,9 +507,12 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
             </button>
           </div>
         ) : (
-          filteredLayoutsData.map(({ layout, filteredLanes }) => {
+          (() => {
+            let visibleIdx = 0;
+            return filteredLayoutsData.map(({ layout, filteredLanes }) => {
             // Skip companies with no matching lanes
             if (filteredLanes.length === 0) return null;
+            const frameIdx = visibleIdx++;
 
             return (
               <section
@@ -414,21 +524,15 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
                   companyName={layout.companyLabel}
                   role={layout.companyRole}
                   period={layout.companyPeriod}
+                  index={frameIdx}
                 >
                 {filteredLanes.map((lane, i) => {
                   // Use pre-computed stable tools array
                   const laneTools = laneToolsMap.get(lane.projectId) ?? [];
 
-                  // Dim if impact is focused and this lane doesn't have it
-                  const isDimmedByImpact =
-                    projectsForFocusedImpact !== null && !projectsForFocusedImpact.has(lane.projectId);
-
                   // Light dim if another lane is hovered
                   const isLightDimmed =
-                    hoveredLane !== null && hoveredLane !== lane.projectId && !isDimmedByImpact;
-
-                  const isImpactHighlighted =
-                    projectsForFocusedImpact !== null && projectsForFocusedImpact.has(lane.projectId);
+                    hoveredLane !== null && hoveredLane !== lane.projectId;
 
                   return (
                     <StarLane
@@ -436,13 +540,18 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
                       lane={lane}
                       tools={laneTools}
                       isHovered={hoveredLane === lane.projectId}
-                      isDimmed={isDimmedByImpact}
+                      isDimmed={false}
                       isLightDimmed={isLightDimmed}
-                      isImpactHighlighted={isImpactHighlighted}
-                      highlightedImpactId={focusedImpactId}
+                      isImpactHighlighted={false}
+                      highlightedImpactId={null}
                       delay={i * 0.06}
+                      isExpanded={expandedLanes.has(lane.projectId)}
+                      isPinned={pinnedLanes.has(lane.projectId)}
+                      onToggleExpand={handleLaneToggle}
+                      onHoverExpand={handleHoverExpand}
+                      onHoverCollapse={handleHoverCollapse}
                       onHover={handleLaneHover}
-                      onImpactClick={handleImpactClick}
+                      onImpactClick={() => {}}
                       onDeepDive={lane.deepDiveSlug ? handleDeepDive : undefined}
                     />
                   );
@@ -450,7 +559,8 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
                 </CompanyFrame>
               </section>
             );
-          })
+          });
+          })()
         )}
         </div>
       </section>
@@ -478,15 +588,6 @@ export function HomeView({ layouts, catalog, deepDiveMap, certifications, educat
           ...(education.length > 0 ? [{ id: "education", label: "Education" }] : []),
         ]}
       />
-
-      {/* ── Impact Inspector (floating) ── */}
-      {focusedImpactData && (
-        <ImpactInspector
-          impact={focusedImpactData}
-          projectTitles={inspectorProjectTitles}
-          onClose={() => setFocusedImpactId(null)}
-        />
-      )}
 
       {/* ── Deep-dive modal ── */}
       {activeDeepDive && deepDiveMap[activeDeepDive] && (

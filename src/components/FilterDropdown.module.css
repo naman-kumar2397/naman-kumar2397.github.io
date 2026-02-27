@@ -7,14 +7,14 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border: 1px solid var(--stroke);
-  border-radius: 6px;
-  background: var(--bg);
+  border: 1px solid var(--glass-2-stroke);
+  border-radius: var(--r-1);
+  background: transparent;
   color: var(--muted);
   font-family: var(--font-body);
   font-size: var(--fs-00);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color var(--duration-fast), color var(--duration-fast);
   white-space: nowrap;
 }
 
@@ -45,23 +45,25 @@
   width: 320px;
   max-height: 420px;
   overflow-y: auto;
-  background: var(--panel);
-  border: 1px solid var(--stroke);
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  background: var(--glass-2-bg);
+  border: 1px solid var(--glass-2-stroke);
+  border-radius: var(--r-2);
+  box-shadow: var(--glass-2-shadow);
+  backdrop-filter: var(--glass-2-blur);
+  -webkit-backdrop-filter: var(--glass-2-blur);
   padding: 12px;
   z-index: 200;
-  animation: dropIn 0.15s ease-out;
+  animation: dropIn var(--duration-expand) var(--ease-spring);
 }
 
 @keyframes dropIn {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-6px) scale(0.97);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -97,14 +99,14 @@
 .search {
   flex: 1;
   padding: 6px 10px;
-  border: 1px solid var(--stroke);
+  border: 1px solid var(--glass-2-stroke);
   border-radius: 5px;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: var(--fs-00);
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--duration-micro) var(--ease-fluid);
 }
 
 .search:focus {
@@ -125,7 +127,7 @@
   font-size: 12px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s;
+  transition: background var(--duration-micro) var(--ease-fluid);
 }
 
 .clearBtn:hover {
@@ -147,7 +149,7 @@
   font-weight: 600;
   color: var(--faint);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--ls-caps, 0.04em);
   margin-bottom: 6px;
 }
 
@@ -159,14 +161,14 @@
 
 .chip {
   padding: 4px 10px;
-  border: 1px solid var(--stroke);
-  border-radius: 14px;
+  border: 1px solid var(--glass-2-stroke);
+  border-radius: var(--r-1);
   background: transparent;
   color: var(--muted);
   font-family: var(--font-body);
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--duration-fast), transform var(--duration-xs);
   white-space: nowrap;
 }
 
@@ -175,11 +177,16 @@
   color: var(--ink);
 }
 
+.chip:active {
+  transform: scale(0.94);
+}
+
 .chipActive {
   background: var(--signal);
   border-color: var(--signal);
   color: var(--bg);
   font-weight: 600;
+  animation: chipPop var(--duration-fast) var(--ease-spring);
 }
 
 .chipTool {
@@ -192,6 +199,7 @@
   border-style: solid;
   color: var(--bg);
   font-weight: 600;
+  animation: chipPop var(--duration-fast) var(--ease-spring);
 }
 
 .empty {
@@ -200,4 +208,18 @@
   font-size: var(--fs-00);
   padding: 16px 0;
   margin: 0;
+}
+
+@keyframes chipPop {
+  0%   { transform: scale(0.88); }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .panel { animation: none; }
+  .chipActive,
+  .chipToolActive { animation: none; }
+  .chip:active { transform: none; }
 }

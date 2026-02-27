@@ -1,9 +1,9 @@
-/* Entrance & interaction animations — Operational Noir */
+/* Entrance & interaction animations — V1 Modern Editorial Ops */
 
 @keyframes nodeEnter {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -32,7 +32,7 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -53,5 +53,5 @@
 
 /* Smooth focus transitions on nodes */
 .flow-node {
-  transition: opacity 0.4s ease;
+  transition: opacity var(--duration-md, 0.25s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }

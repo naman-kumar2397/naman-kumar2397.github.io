@@ -24,6 +24,7 @@ export interface LaneImpact {
 export interface StarLane {
   projectId: string;
   projectTitle: string;
+  projectSummary: string;
   deepDiveSlug?: string;
   problemId: string;
   problemText: string;
@@ -48,6 +49,67 @@ export interface StarLayout {
   impactProjectMap: Record<string, string[]>;
 }
 
+/* ── Merge impacts that share the same type within a project ── */
+
+function mergeImpactsByType(rawImpacts: LaneImpact[]): LaneImpact[] {
+  if (rawImpacts.length <= 1) return rawImpacts;
+
+  // Group by normalised type (lowercase)
+  const groups = new Map<string, LaneImpact[]>();
+  for (const imp of rawImpacts) {
+    const key = imp.type.toLowerCase() as LaneImpact["type"];
+    const arr = groups.get(key) ?? [];
+    arr.push(imp);
+    groups.set(key, arr);
+  }
+
+  // Preserve original type ordering (first-seen order)
+  const result: LaneImpact[] = [];
+  const seen = new Set<string>();
+
+  for (const imp of rawImpacts) {
+    const key = imp.type.toLowerCase() as LaneImpact["type"];
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const group = groups.get(key)!;
+    if (group.length === 1) {
+      result.push(group[0]);
+    } else {
+      // Merge: combine IDs, labels, and metrics (deduped)
+      const mergedId = group.map((g) => g.id).join("+");
+      const mergedLabels: string[] = [];
+      const mergedMetrics: string[] = [];
+      const seenLabels = new Set<string>();
+      const seenMetrics = new Set<string>();
+
+      for (const g of group) {
+        const normLabel = g.label.trim();
+        if (!seenLabels.has(normLabel.toLowerCase())) {
+          seenLabels.add(normLabel.toLowerCase());
+          mergedLabels.push(normLabel);
+        }
+        for (const m of g.metrics) {
+          const normMetric = m.trim();
+          if (!seenMetrics.has(normMetric.toLowerCase())) {
+            seenMetrics.add(normMetric.toLowerCase());
+            mergedMetrics.push(normMetric);
+          }
+        }
+      }
+
+      result.push({
+        id: mergedId,
+        label: mergedLabels.join("; "),
+        type: key,
+        metrics: mergedMetrics,
+      });
+    }
+  }
+
+  return result;
+}
+
 /* ── Main layout function ─────────────────────────────── */
 
 export function computeLayout(portfolio: Portfolio): StarLayout {
@@ -64,27 +126,32 @@ export function computeLayout(portfolio: Portfolio): StarLayout {
     });
   });
 
-  const lanes: StarLane[] = projects.map((proj, i) => ({
-    projectId: proj.id,
-    projectTitle: proj.title,
-    deepDiveSlug: proj.deepDive?.enabled ? proj.deepDive.slug : undefined,
-    problemId: proj.problem.id,
-    problemText: proj.problem.statement,
-    solutionId: proj.solution.id,
-    solutionText: proj.solution.statement,
-    tools: proj.solution.tools,
-    impacts: proj.impact_ids
+  const lanes: StarLane[] = projects.map((proj, i) => {
+    const rawImpacts: LaneImpact[] = proj.impact_ids
       .map((iid) => impactMap.get(iid))
       .filter(Boolean)
       .map((imp) => ({
         id: imp!.id,
         label: imp!.label,
-        type: imp!.type as LaneImpact["type"],
+        type: imp!.type.toLowerCase() as LaneImpact["type"],
         metrics: imp!.metrics,
-      })),
-    themes: proj.themes,
-    index: i,
-  }));
+      }));
+
+    return {
+      projectId: proj.id,
+      projectTitle: proj.title,
+      projectSummary: proj.summary ?? proj.solution.statement.split(/\.\s/)[0] + ".",
+      deepDiveSlug: proj.deepDive?.enabled ? proj.deepDive.slug : undefined,
+      problemId: proj.problem.id,
+      problemText: proj.problem.statement,
+      solutionId: proj.solution.id,
+      solutionText: proj.solution.statement,
+      tools: proj.solution.tools,
+      impacts: mergeImpactsByType(rawImpacts),
+      themes: proj.themes,
+      index: i,
+    };
+  });
 
   return {
     companyId: company.id,

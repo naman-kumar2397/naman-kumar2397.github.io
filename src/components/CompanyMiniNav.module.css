@@ -9,24 +9,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--stroke) 60%, transparent);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 1px solid var(--glass-2-stroke);
+  border-radius: var(--r-1);
+  background: var(--glass-2-bg);
   color: var(--muted);
   cursor: pointer;
-  box-shadow: var(--shadow-1);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  box-shadow: var(--glass-2-shadow);
+  backdrop-filter: var(--glass-2-blur);
+  -webkit-backdrop-filter: var(--glass-2-blur);
+  transition: border-color var(--duration-fast), color var(--duration-fast);
 }
 
 .hamburger:hover {
   border-color: var(--signal);
   color: var(--ink);
-  box-shadow: var(--shadow-2);
+}
+
+.hamburger:active {
+  transform: scale(0.92);
+  transition-duration: var(--duration-xs);
 }
 
 .hamburger:focus-visible {
@@ -59,21 +63,21 @@
   max-width: 90vw;
   height: 100dvh;
   padding: 0;
-  background: color-mix(in srgb, var(--panel) 98%, transparent);
-  border-right: 1px solid var(--stroke);
-  box-shadow: var(--shadow-2);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  background: var(--glass-0-bg);
+  border-right: 1px solid var(--glass-0-stroke);
+  box-shadow: var(--glass-0-shadow);
+  backdrop-filter: var(--glass-0-blur);
+  -webkit-backdrop-filter: var(--glass-0-blur);
   transform: translateX(-100%);
   visibility: hidden;
-  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-              visibility 0s 0.22s;
+  transition: transform var(--duration-slow, 0.4s) var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+              visibility 0s var(--duration-slow, 0.4s);
 }
 
 .panelOpen {
   transform: translateX(0);
   visibility: visible;
-  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+  transition: transform var(--duration-slow, 0.4s) var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
               visibility 0s 0s;
 }
 
@@ -83,7 +87,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 16px 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--stroke) 40%, transparent);
+  border-bottom: 1px solid var(--glass-0-stroke);
 }
 
 .panelTitle {
@@ -91,7 +95,7 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--muted);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--ls-caps, 0.04em);
   text-transform: uppercase;
 }
 
@@ -153,6 +157,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ── Nested company list under Work Experience ── */
@@ -173,6 +180,41 @@
 .nestedItem .dot {
   width: 6px;
   height: 6px;
+}
+
+/* ── Project sub-list under each company ── */
+.projectList {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0 2px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.projectItem {
+  padding-left: 12px;
+  font-size: 11px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  color: var(--faint);
+}
+
+.projectItem:hover {
+  color: var(--ink);
+}
+
+.projectDash {
+  flex-shrink: 0;
+  width: 8px;
+  height: 1px;
+  border-radius: 0.5px;
+  background: var(--faint);
+  transition: background 0.15s;
+}
+
+.projectItem:hover .projectDash {
+  background: var(--signal);
 }
 
 .item {
@@ -200,6 +242,11 @@
 .menuItem:hover {
   background: color-mix(in srgb, var(--signal) 10%, transparent);
   color: var(--ink);
+}
+
+.menuItem:active {
+  transform: scale(0.97);
+  transition-duration: var(--duration-xs);
 }
 
 .menuItem:focus-visible {
@@ -232,16 +279,17 @@
   white-space: nowrap;
 }
 
-/* ── Drawer footer (resume link) ── */
-.drawerFooter {
-  margin-top: auto;
-  padding: 8px;
+/* ── Resume link (inside list) ── */
+.resumeItem {
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid color-mix(in srgb, var(--stroke) 30%, transparent);
 }
 
 .resumeLink {
   position: relative;
   text-decoration: none;
+  box-sizing: border-box;
   border: 1px solid color-mix(in srgb, var(--signal) 25%, transparent);
   color: var(--signal);
   font-weight: 500;
@@ -283,6 +331,14 @@
   }
 }
 
+/* On small mobile, move hamburger to right side to avoid overlapping the identity card */
+@media (max-width: 640px) {
+  .hamburger {
+    left: auto;
+    right: clamp(8px, 2vw, 16px);
+  }
+}
+
 /* ── Animations ── */
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -312,5 +368,10 @@
 
   .resumeLink {
     animation: none;
+  }
+
+  .projectItem,
+  .projectDash {
+    transition: none;
   }
 }

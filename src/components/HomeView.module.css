@@ -9,6 +9,13 @@
   margin: 0 auto;
   padding: 0 clamp(16px, 3vw, 40px) clamp(32px, 5vw, 64px);
   box-sizing: border-box;
+  /* Smooth content appearance */
+  animation: pageIn var(--duration-expand) var(--ease-fluid) both;
+}
+
+@keyframes pageIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ── Top bar: identity + controls in one row ── */
@@ -19,21 +26,48 @@
   gap: 16px;
   padding: clamp(12px, 2vw, 20px) 0;
   flex-wrap: wrap;
+  /* Children stagger in via --load-i set below */
+}
+
+.topBar > * {
+  animation: staggerFadeUp var(--duration-entrance, 0.5s) var(--ease-out) both;
+  animation-delay: calc(var(--load-i, 0) * var(--stagger-lg, 140ms));
 }
 
 /* ── Identity card ── */
 .identityCard {
-  background: color-mix(in srgb, var(--panel) 85%, transparent);
-  border: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
+  --load-i: 0;
+  position: relative;
+  background: var(--glass-1-bg);
+  border: 1px solid var(--glass-1-stroke);
   border-radius: var(--r-2);
-  padding: 12px 16px 10px;
-  box-shadow: var(--shadow-1);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  animation: cardIn 0.5s ease-out both;
+  padding: 14px 18px 12px;
+  box-shadow: var(--glass-1-shadow);
+  backdrop-filter: var(--glass-1-blur);
+  -webkit-backdrop-filter: var(--glass-1-blur);
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow: hidden;
+}
+
+/* Noise overlay */
+.identityCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url("/noise-128.png") repeat;
+  background-size: 128px 128px;
+  opacity: var(--noise-opacity, 0.025);
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: overlay;
+}
+
+.identityCard > * {
+  position: relative;
+  z-index: 1;
 }
 
 .identityRow {
@@ -52,14 +86,16 @@
 .avatar {
   position: relative;
   flex-shrink: 0;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--r-2);
   overflow: hidden;
-  background: linear-gradient(135deg, var(--signal) 0%, var(--signal-2) 100%);
+  background: var(--panel-solid, var(--bg));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--signal) 70%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: avatarPulse 3.5s ease-in-out infinite;
 }
 
 .avatarImg {
@@ -68,16 +104,27 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
+  object-position: top center;
+  border-radius: var(--r-2);
 }
 
 .avatarFallback {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--bg);
   letter-spacing: 0.05em;
   user-select: none;
+}
+
+@keyframes avatarPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--signal) 70%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--signal) 70%, transparent),
+                0 0 0 5px color-mix(in srgb, var(--signal) 18%, transparent);
+  }
 }
 
 .name {
@@ -85,7 +132,8 @@
   font-size: var(--fs-2);
   font-weight: 700;
   color: var(--ink);
-  line-height: 1.2;
+  line-height: var(--lh-tight, 1.2);
+  letter-spacing: -0.02em;
 }
 
 .role {
@@ -93,6 +141,42 @@
   font-size: 13px;
   color: var(--muted);
   line-height: 1.3;
+  min-height: 1.3em;
+}
+
+/* ── Typing animation ── */
+.typingText::after {
+  content: '|';
+  margin-left: 1px;
+  color: var(--signal);
+  opacity: 1;
+  animation: caretBlink 0.7s step-end infinite;
+}
+
+.typingDone::after {
+  animation: caretFade 0.6s ease-out 0.4s forwards;
+}
+
+@keyframes caretBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes caretFade {
+  to { opacity: 0; }
+}
+
+/* ── Screen-reader only utility ── */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .location {
@@ -122,28 +206,46 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border: 1px solid color-mix(in srgb, var(--stroke) 60%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  border: 1px solid var(--glass-2-stroke);
+  border-radius: var(--r-1);
+  background: transparent;
   color: var(--muted);
   font-family: var(--font-body);
   font-size: 12px;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  transition: border-color var(--duration-hover) var(--ease-fluid),
+              background var(--duration-hover) var(--ease-fluid),
+              color var(--duration-hover) var(--ease-fluid),
+              box-shadow var(--duration-hover) var(--ease-fluid);
   white-space: nowrap;
   min-width: 0;
 }
 
 .contactTile:hover,
 .contactTile:focus-visible {
-  border-color: color-mix(in srgb, var(--signal) 50%, transparent);
-  background: color-mix(in srgb, var(--signal) 6%, transparent);
+  border-color: color-mix(in srgb, var(--signal) 40%, transparent);
+  background: var(--glass-3-bg);
+  backdrop-filter: var(--glass-3-blur);
+  -webkit-backdrop-filter: var(--glass-3-blur);
+  box-shadow: var(--glass-3-shadow);
   color: var(--ink);
+  transition-duration: var(--duration-hover);
+  transition-timing-function: var(--ease-fluid);
+}
+
+.contactTile:not(:hover):not(:focus-visible) {
+  transition-duration: var(--duration-hover-out);
+  transition-timing-function: var(--ease-fluid);
+}
+
+.contactTile:active {
+  transform: scale(0.96);
+  transition-duration: var(--duration-micro);
 }
 
 .contactTile:focus-visible {
   outline: 2px solid var(--signal);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 .contactTileRevealed {
@@ -192,7 +294,7 @@
   max-width: 200px;
   line-height: 1.3;
   border-bottom: none !important;
-  animation: fadeInValue 0.15s ease-out;
+  animation: fadeInValue var(--duration-hover) var(--ease-spring);
 }
 
 .tileValue:hover {
@@ -206,6 +308,7 @@
 
 /* ── Controls (right) ── */
 .controls {
+  --load-i: 1;
   display: flex;
   gap: 8px;
   align-items: center;
@@ -218,26 +321,24 @@
   gap: 5px;
   padding: 6px 14px;
   border: 1px solid color-mix(in srgb, var(--signal) 25%, transparent);
-  border-radius: 6px;
-  background: var(--panel);
+  border-radius: var(--r-1);
+  background: transparent;
   color: var(--signal);
   font-family: var(--font-body);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
-  border-bottom: none !important;
-  animation: resumePulseTop 3s ease-in-out infinite;
-  transition: background 0.15s;
+  animation: resumePulseTop 4s var(--ease-in-out, ease-in-out) infinite;
+  transition: background var(--duration-micro) var(--ease-fluid), border-color var(--duration-micro) var(--ease-fluid);
 }
 .downloadBtn:hover {
   animation-play-state: paused;
   border-color: var(--signal) !important;
   color: var(--signal);
-  background: color-mix(in srgb, var(--signal) 8%, transparent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--signal) 20%, transparent);
-  border-bottom: none !important;
+  background: color-mix(in srgb, var(--signal) 6%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--signal) 15%, transparent);
 }
 
 @keyframes resumePulseTop {
@@ -246,14 +347,19 @@
     box-shadow: 0 0 0 0 transparent;
   }
   50% {
-    border-color: color-mix(in srgb, var(--signal) 55%, transparent);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--signal) 12%, transparent);
+    border-color: color-mix(in srgb, var(--signal) 45%, transparent);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--signal) 10%, transparent);
   }
 }
 
 @keyframes cardIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes staggerFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* ── Section heading (shared between Work Experience & credentials) ── */
@@ -262,10 +368,12 @@
   font-size: clamp(16px, 2vw, var(--fs-2));
   font-weight: 700;
   color: var(--ink);
-  letter-spacing: -0.2px;
+  letter-spacing: -0.02em;
+  line-height: var(--lh-tight, 1.2);
   margin: 0;
   padding-bottom: var(--s-3);
-  border-bottom: 1px solid color-mix(in srgb, var(--stroke) 50%, transparent);
+  border-bottom: 1px solid var(--stroke);
+  animation: staggerFadeUp var(--duration-entrance, 0.5s) calc(var(--stagger-lg, 140ms) * 2) var(--ease-spring) both;
 }
 
 /* ── Sticky variant (Work Experience only) ── */
@@ -275,10 +383,10 @@
   z-index: 20;
   padding-top: var(--s-3);
   margin-top: calc(-1 * var(--s-3));
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: box-shadow 0.2s;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  transition: box-shadow var(--duration-fast);
 }
 
 /* ── Experience section wrapper ── */
@@ -378,12 +486,12 @@
   }
 
   .avatar {
-    width: 44px;
-    height: 44px;
+    width: 60px;
+    height: 60px;
   }
 
   .avatarFallback {
-    font-size: 14px;
+    font-size: 20px;
   }
 
   .name {
@@ -435,12 +543,12 @@
   }
 
   .avatar {
-    width: 40px;
-    height: 40px;
+    width: 52px;
+    height: 52px;
   }
 
   .avatarFallback {
-    font-size: 13px;
+    font-size: 17px;
   }
 
   .contactTiles {
@@ -456,8 +564,22 @@
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  .identityCard {
+  .identityCard,
+  .topBar > *,
+  .sectionHeading {
     animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .avatar {
+    animation: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--signal) 70%, transparent);
+  }
+
+  .typingText::after,
+  .typingDone::after {
+    content: none;
   }
 
   .tileValue {
@@ -466,5 +588,9 @@
 
   .downloadBtn {
     animation: none;
+  }
+
+  .contactTile:active {
+    transform: none;
   }
 }

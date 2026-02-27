@@ -4,11 +4,11 @@
   display: inline-flex;
   gap: 2px;
   padding: 3px;
-  border: 1px solid var(--stroke);
-  border-radius: 8px;
-  background: var(--panel);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-2-stroke);
+  border-radius: var(--r-1);
+  background: var(--glass-2-bg);
+  backdrop-filter: var(--glass-2-blur);
+  -webkit-backdrop-filter: var(--glass-2-blur);
 }
 
 .btn {
@@ -22,11 +22,16 @@
   background: transparent;
   color: var(--faint);
   cursor: pointer;
-  transition: color 0.15s, background 0.15s;
+  transition: color var(--duration-fast), background var(--duration-fast);
 }
 
 .btn:hover {
   color: var(--muted);
+}
+
+.btn:active {
+  transform: scale(0.9);
+  transition-duration: var(--duration-xs);
 }
 
 .btn.active {

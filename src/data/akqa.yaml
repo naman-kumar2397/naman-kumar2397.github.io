@@ -37,6 +37,7 @@ impacts:
 projects:
 - id: "akqa-prj-netflix-game-launch"
   title: "Netflix Game Launch Reliability (AI Face-Transforming Game)"
+  summary: "Architected K8s autoscaling and GPU observability for a 50k-user Netflix game launch"
   themes:
   - kubernetes
   - scalability
@@ -63,6 +64,7 @@ projects:
     slug: "akqa-prj-netflix-game-launch"
 - id: "akqa-prj-observability-revamp"
   title: "Enterprise-wide Observability Revamp"
+  summary: "Led cross-client observability uplift — closed monitoring gaps, standardised alerting"
   themes:
   - observability
   - standardization
@@ -84,6 +86,7 @@ projects:
   - "akqa-imp-obs-gaps"
 - id: "akqa-prj-incident-workflow-automation"
   title: Incident Workflow Automation (OpsGenie/Slack/Teams/Jira)
+  summary: "Automated incident coordination across OpsGenie, Slack, Teams, and Jira via AWS Lambda"
   themes:
   - automation
   - "incident-management"
@@ -106,6 +109,7 @@ projects:
   - "akqa-imp-incident-automation"
 - id: "akqa-prj-change-request-standardisation"
   title: "Standardised Change Request Process & Approval Automation"
+  summary: "Standardised change governance and automated approval workflows to reduce deployment risk"
   themes:
   - governance
   - automation

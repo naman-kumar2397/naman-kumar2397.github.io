@@ -1,0 +1,115 @@
+/* GlassSurface — reusable glass material container
+   Tiers: glass-0 (modal) → glass-3 (tooltip)
+   ::before = noise overlay   ::after = specular top-edge sheen */
+
+.surface {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--r-2);
+  overflow: hidden;
+}
+
+/* ── Noise overlay (::before) ── */
+.surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: url("/noise-128.png") repeat;
+  background-size: 128px 128px;
+  opacity: var(--noise-opacity, 0.025);
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: overlay;
+}
+
+/* ── Specular top-edge sheen (::after) ── */
+.surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--glass-specular);
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity var(--duration-hover) var(--ease-fluid);
+}
+
+/* Show specular sheen on hover */
+.surface:hover::after {
+  opacity: 1;
+}
+
+/* ── Tier: glass-0 (full-screen panels / modals) ── */
+.glass0 {
+  background: var(--glass-0-bg);
+  backdrop-filter: var(--glass-0-blur);
+  -webkit-backdrop-filter: var(--glass-0-blur);
+  border: 1px solid var(--glass-0-stroke);
+  box-shadow: var(--glass-0-shadow);
+}
+
+/* ── Tier: glass-1 (section containers) ── */
+.glass1 {
+  background: var(--glass-1-bg);
+  backdrop-filter: var(--glass-1-blur);
+  -webkit-backdrop-filter: var(--glass-1-blur);
+  border: 1px solid var(--glass-1-stroke);
+  box-shadow: var(--glass-1-shadow);
+}
+
+/* ── Tier: glass-2 (interactive cards / tiles) ── */
+.glass2 {
+  background: var(--glass-2-bg);
+  backdrop-filter: var(--glass-2-blur);
+  -webkit-backdrop-filter: var(--glass-2-blur);
+  border: 1px solid var(--glass-2-stroke);
+  box-shadow: var(--glass-2-shadow);
+}
+
+/* ── Tier: glass-3 (small overlays / badges) ── */
+.glass3 {
+  background: var(--glass-3-bg);
+  backdrop-filter: var(--glass-3-blur);
+  -webkit-backdrop-filter: var(--glass-3-blur);
+  border: 1px solid var(--glass-3-stroke);
+  box-shadow: var(--glass-3-shadow);
+}
+
+/* ── No specular (for static/non-interactive surfaces) ── */
+.noSpecular::after {
+  display: none;
+}
+
+/* ── @supports fallback for browsers without backdrop-filter ── */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass0 {
+    background: var(--panel-solid, var(--panel));
+    box-shadow: var(--shadow-float);
+  }
+  .glass1 {
+    background: var(--panel-solid, var(--panel));
+    box-shadow: var(--shadow-1);
+  }
+  .glass2 {
+    background: var(--panel-solid, var(--panel));
+    box-shadow: var(--shadow-1);
+  }
+  .glass3 {
+    background: var(--panel-solid, var(--panel));
+    box-shadow: var(--shadow-1);
+  }
+
+  /* Hide noise overlay on unsupported browsers */
+  .surface::before {
+    display: none;
+  }
+}
+
+/* ── Reduced motion — suppress specular animation ── */
+@media (prefers-reduced-motion: reduce) {
+  .surface::after {
+    transition: none;
+  }
+}

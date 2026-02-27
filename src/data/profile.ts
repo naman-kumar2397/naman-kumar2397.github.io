@@ -21,8 +21,8 @@ export const profile = {
     {
       id: "linkedin" as const,
       label: "LinkedIn",
-      value: "linkedin.com/in/naman-kumar2397",
-      href: "https://linkedin.com/in/naman-kumar2397",
+      value: "linkedin.com/in/-namankumar",
+      href: "https://www.linkedin.com/in/-namankumar/",
     },
     {
       id: "calendar" as const,

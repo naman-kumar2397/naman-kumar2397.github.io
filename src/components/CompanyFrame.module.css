@@ -3,14 +3,25 @@
 .frame {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
+  border: 1px solid var(--glass-1-stroke);
   border-radius: var(--r-3);
-  background: color-mix(in srgb, var(--panel) 85%, transparent);
+  background: var(--glass-1-bg);
   overflow: hidden;
-  box-shadow: var(--shadow-1);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  animation: frameIn 0.5s 0.08s ease-out both;
+  box-shadow: var(--glass-1-shadow);
+  backdrop-filter: var(--glass-1-blur);
+  -webkit-backdrop-filter: var(--glass-1-blur);
+}
+
+/* Scroll-triggered states */
+.frameHidden {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.frameVisible {
+  animation: frameIn var(--duration-entrance, 0.5s)
+             calc(var(--frame-i, 0) * var(--stagger-lg, 140ms))
+             var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
 .header {
@@ -19,8 +30,8 @@
   gap: clamp(8px, 1.5vw, 16px);
   flex-wrap: wrap;
   padding: clamp(14px, 2vw, 20px) clamp(18px, 2.5vw, 28px);
-  border-bottom: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
-  background: color-mix(in srgb, var(--panel) 90%, transparent);
+  border-bottom: 1px solid var(--glass-1-stroke);
+  background: var(--glass-1-bg);
 }
 
 .name {
@@ -28,6 +39,7 @@
   font-size: clamp(18px, 2.2vw, var(--fs-3));
   font-weight: 700;
   color: var(--ink);
+  letter-spacing: -0.02em;
 }
 
 .role {
@@ -52,7 +64,7 @@
 }
 
 @keyframes frameIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -101,7 +113,11 @@
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  .frame {
+  .frame,
+  .frameHidden,
+  .frameVisible {
     animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

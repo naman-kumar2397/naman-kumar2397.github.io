@@ -66,6 +66,7 @@ export const SolutionSchema = z.object({
 export const ProjectSchema = z.object({
   id: z.string().min(2),
   title: z.string().min(4),
+  summary: z.string().optional(),
   themes: z.array(ThemeId).default([]),
   problem: ProblemSchema,
   solution: SolutionSchema,

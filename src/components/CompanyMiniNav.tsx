@@ -6,6 +6,7 @@ import styles from "./CompanyMiniNav.module.css";
 interface Company {
   id: string;
   label: string;
+  projects?: { id: string; title: string }[];
 }
 
 interface NavSection {
@@ -186,6 +187,20 @@ export const CompanyMiniNav = memo(function CompanyMiniNav({
     setIsOpen(false);
   }, []);
 
+  /* ── Handle project click: scroll to project lane + close menu ── */
+  const handleProjectSelect = useCallback((projectId: string) => {
+    const el = document.getElementById(`project-${projectId}`);
+    if (!el) return;
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({
+      behavior: prefersReduced ? "instant" : "smooth",
+      block: "center",
+    });
+
+    setIsOpen(false);
+  }, []);
+
   if (companies.length <= 1 && sections.length === 0) return null;
 
   return (
@@ -307,6 +322,30 @@ export const CompanyMiniNav = memo(function CompanyMiniNav({
                           <span className={styles.dot} aria-hidden="true" />
                           <span className={styles.menuLabel}>{company.label}</span>
                         </button>
+
+                        {/* Project sub-links */}
+                        {company.projects && company.projects.length > 0 && (
+                          <ul className={styles.projectList} role="list">
+                            {company.projects.map((project) => (
+                              <li key={project.id} className={styles.item}>
+                                <button
+                                  className={`${styles.menuItem} ${styles.projectItem}`}
+                                  onClick={() => handleProjectSelect(project.id)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      handleProjectSelect(project.id);
+                                    }
+                                  }}
+                                  tabIndex={isOpen ? 0 : -1}
+                                >
+                                  <span className={styles.projectDash} aria-hidden="true" />
+                                  <span className={styles.menuLabel}>{project.title}</span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </li>
                     );
                   })}
@@ -314,24 +353,24 @@ export const CompanyMiniNav = memo(function CompanyMiniNav({
               )}
             </li>
           ))}
-        </ul>
 
-        {/* ── Download Resume action ── */}
-        <div className={styles.drawerFooter}>
-          <a
-            href="/resume.pdf"
-            download
-            className={`${styles.menuItem} ${styles.resumeLink}`}
-            aria-label="Download resume"
-            tabIndex={isOpen ? 0 : -1}
-            onClick={() => setIsOpen(false)}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M7 1v8m0 0L4 6.5M7 9l3-2.5M2 12h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className={styles.menuLabel}>Download Resume</span>
-          </a>
-        </div>
+          {/* ── Download Resume (inside list) ── */}
+          <li className={`${styles.item} ${styles.resumeItem}`}>
+            <a
+              href="/resume.pdf"
+              download
+              className={`${styles.menuItem} ${styles.resumeLink}`}
+              aria-label="Download resume"
+              tabIndex={isOpen ? 0 : -1}
+              onClick={() => setIsOpen(false)}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M7 1v8m0 0L4 6.5M7 9l3-2.5M2 12h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className={styles.menuLabel}>Download Resume</span>
+            </a>
+          </li>
+        </ul>
       </nav>
     </>
   );

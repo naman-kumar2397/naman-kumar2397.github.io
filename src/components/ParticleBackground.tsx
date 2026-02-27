@@ -4,7 +4,7 @@ import React, { useRef, useEffect } from "react";
 
 /**
  * Subtle particle dust field rendered on a fixed <canvas>.
- * - 60–120 particles based on viewport area.
+ * - 55–130 particles based on viewport area.
  * - Pauses when tab is hidden (Page Visibility API).
  * - Static single frame when prefers-reduced-motion is enabled.
  * - pointer-events: none so it never blocks interaction.
@@ -51,15 +51,15 @@ export function ParticleBackground() {
 
     function createParticles() {
       const area = w * h;
-      // Scale count: ~80 on 1920×1080, clamp to 60–120
-      const count = Math.min(120, Math.max(60, Math.round(area / 25000)));
+      // Scale count: ~95 on 1920×1080, clamp to 55–130
+      const count = Math.min(130, Math.max(55, Math.round(area / 22000)));
       particles = Array.from({ length: count }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.18,
-        vy: (Math.random() - 0.5) * 0.12,
-        r: Math.random() * 1.2 + 0.4,
-        opacity: Math.random() * 0.2 + 0.06,
+        vx: (Math.random() - 0.5) * 0.14,
+        vy: (Math.random() - 0.5) * 0.1,
+        r: Math.random() * 1.4 + 0.5,
+        opacity: Math.random() * 0.18 + 0.08,
       }));
     }
 
@@ -67,8 +67,8 @@ export function ParticleBackground() {
       // Read the current theme from the html element
       const theme = document.documentElement.getAttribute("data-theme");
       return theme === "day"
-        ? "100, 105, 120"   // cool grey for light mode
-        : "200, 210, 230";  // light neutral for dark mode
+        ? "68, 76, 102"    // deeper cool-grey for light mode (better contrast)
+        : "215, 228, 248"; // crisper blue-white for dark mode
     }
 
     function draw() {

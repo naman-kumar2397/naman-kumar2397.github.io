@@ -2,12 +2,22 @@
 
 .strip {
   padding: var(--s-4) var(--s-5);
-  border: 1px solid var(--stroke);
+  border: 1px solid var(--glass-1-stroke);
   border-radius: var(--r-2);
-  background: color-mix(in srgb, var(--panel) 80%, var(--signal) 3%);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  background: var(--glass-1-bg);
+  backdrop-filter: var(--glass-1-blur);
+  -webkit-backdrop-filter: var(--glass-1-blur);
+  box-shadow: var(--glass-1-shadow);
   scroll-margin-top: 60px;
+}
+
+/* Scroll-triggered states */
+.stripHidden { opacity: 0; transform: translateY(10px); }
+.stripVisible { animation: stripIn var(--duration-entrance, 0.5s) var(--ease-out) both; }
+
+@keyframes stripIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── List ── */
@@ -29,6 +39,19 @@
   font-size: var(--fs-0);
   color: var(--ink);
   line-height: 1.45;
+  /* Stagger entrance per nth-child */
+  animation: itemSlide var(--duration-md) var(--ease-out) both;
+}
+.item:nth-child(1) { animation-delay: 0.1s; }
+.item:nth-child(2) { animation-delay: 0.16s; }
+.item:nth-child(3) { animation-delay: 0.22s; }
+.item:nth-child(4) { animation-delay: 0.28s; }
+.item:nth-child(5) { animation-delay: 0.34s; }
+.item:nth-child(n+6) { animation-delay: 0.4s; }
+
+@keyframes itemSlide {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 /* ── Bullet dot ── */
@@ -61,15 +84,16 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
+  font-family: var(--font-mono, var(--font-body));
   font-size: var(--fs-00);
   font-weight: 500;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.01em;
   color: var(--signal);
-  border: 1px solid color-mix(in srgb, var(--signal) 30%, transparent);
-  border-radius: 100px;
-  background: color-mix(in srgb, var(--signal) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--signal) 25%, transparent);
+  border-radius: var(--r-1);
+  background: color-mix(in srgb, var(--signal) 6%, transparent);
   white-space: nowrap;
-  line-height: 1.55;
+  line-height: var(--lh-ui, 1.35);
 }
 
 /* ── Responsive ── */
@@ -103,7 +127,16 @@
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  .strip {
+  .strip,
+  .stripHidden,
+  .stripVisible {
     animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .item {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

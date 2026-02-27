@@ -11,7 +11,7 @@ describe("Arrow component", () => {
     // Check arrow head polygon has green fill (signal-2)
     const polygon = svg?.querySelector("polygon");
     expect(polygon).toBeTruthy();
-    expect(polygon?.getAttribute("fill")).toContain("109, 242, 193");
+    expect(polygon?.getAttribute("fill")).toContain("110, 231, 183");
   });
 
   it("renders with correct semantic colors for solution-result variant", () => {

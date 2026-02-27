@@ -9,11 +9,13 @@
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0);
-  transition: background 0.22s ease-out;
+  transition: background var(--duration-expand) var(--ease-fluid);
 }
 
 .backdropVisible {
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 /* ── Dialog container ── */
@@ -25,16 +27,21 @@
   max-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: var(--glass-0-bg);
+  backdrop-filter: var(--glass-0-blur);
+  -webkit-backdrop-filter: var(--glass-0-blur);
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+  transform: translateY(14px) scale(0.98);
+  transition: opacity var(--duration-collapse) var(--ease-fluid),
+              transform var(--duration-collapse) var(--ease-fluid);
   outline: none;
 }
 
 .dialogVisible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+  transition: opacity var(--duration-expand) var(--ease-spring),
+              transform var(--duration-expand) var(--ease-spring);
 }
 
 /* ── Close button ── */
@@ -46,24 +53,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--stroke) 60%, transparent);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 1px solid var(--glass-2-stroke);
+  border-radius: var(--r-1);
+  background: var(--glass-2-bg);
   color: var(--muted);
   cursor: pointer;
-  box-shadow: var(--shadow-1);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  box-shadow: var(--glass-2-shadow);
+  backdrop-filter: var(--glass-2-blur);
+  -webkit-backdrop-filter: var(--glass-2-blur);
+  transition: border-color var(--duration-fast), color var(--duration-fast);
 }
 
 .closeBtn:hover {
   border-color: var(--signal);
   color: var(--ink);
-  box-shadow: var(--shadow-2);
 }
 
 .closeBtn:focus-visible {
@@ -100,8 +106,8 @@
   font-weight: 700;
   color: var(--ink);
   margin: 0 0 var(--s-5) 0;
-  line-height: 1.15;
-  letter-spacing: -0.5px;
+  line-height: var(--lh-tight, 1.2);
+  letter-spacing: -0.02em;
 }
 
 .meta {
@@ -116,49 +122,73 @@
   gap: var(--s-2);
 }
 
+/* Stagger tag entrance */
+.tags > * {
+  animation: tagIn var(--duration-md) var(--ease-spring) both;
+}
+.tags > :nth-child(1) { animation-delay: 0.2s; }
+.tags > :nth-child(2) { animation-delay: 0.24s; }
+.tags > :nth-child(3) { animation-delay: 0.28s; }
+.tags > :nth-child(4) { animation-delay: 0.32s; }
+.tags > :nth-child(5) { animation-delay: 0.36s; }
+.tags > :nth-child(n+6) { animation-delay: 0.4s; }
+
 .themeTag {
   font-family: var(--font-body);
   font-size: 11px;
   color: var(--signal);
   padding: 3px 12px;
-  border: 1px solid rgba(255, 204, 51, 0.25);
-  border-radius: 100px;
-  background: rgba(255, 204, 51, 0.06);
-  letter-spacing: 0.02em;
+  border: 1px solid color-mix(in srgb, var(--signal) 20%, transparent);
+  border-radius: var(--r-1);
+  background: color-mix(in srgb, var(--signal) 4%, transparent);
+  letter-spacing: 0.01em;
 }
 
 .toolTag {
-  font-family: var(--font-body);
+  font-family: var(--font-mono, var(--font-body));
   font-size: 11px;
   color: var(--signal-2);
   padding: 3px 12px;
-  border: 1px solid rgba(109, 242, 193, 0.25);
-  border-radius: 100px;
-  background: rgba(109, 242, 193, 0.06);
-  letter-spacing: 0.02em;
+  border: 1px solid color-mix(in srgb, var(--signal-2) 20%, transparent);
+  border-radius: var(--r-1);
+  background: color-mix(in srgb, var(--signal-2) 4%, transparent);
+  letter-spacing: 0.01em;
 }
 
 /* ── Content sections ── */
+/* ── Content sections (stagger reveal) ── */
 .content {
   display: flex;
   flex-direction: column;
   gap: clamp(28px, 3vw, 40px);
 }
 
+.content > .section {
+  animation: sectionReveal var(--duration-entrance, 0.5s) var(--ease-out) both;
+}
+.content > .section:nth-child(1) { animation-delay: 0.15s; }
+.content > .section:nth-child(2) { animation-delay: 0.28s; }
+.content > .section:nth-child(3) { animation-delay: 0.38s; }
+.content > .section:nth-child(4) { animation-delay: 0.46s; }
+.content > .section:nth-child(n+5) { animation-delay: 0.52s; }
+
 /* ── Impact Snapshot ── */
 .impactSnapshot {
   margin-bottom: clamp(24px, 3vw, 36px);
   padding: var(--s-5) var(--s-6);
-  border: 1px solid color-mix(in srgb, var(--signal) 18%, transparent);
-  border-radius: var(--r-3);
-  background: color-mix(in srgb, var(--signal) 4%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--signal) 15%, transparent);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--signal) 3%, var(--glass-1-bg));
+  backdrop-filter: var(--glass-1-blur);
+  -webkit-backdrop-filter: var(--glass-1-blur);
+  animation: sectionReveal var(--duration-entrance, 0.5s) 0.1s var(--ease-out) both;
 }
 
 .impactSnapshotHeading {
   font-family: var(--font-display);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--ls-caps, 0.04em);
   text-transform: uppercase;
   color: var(--signal);
   margin: 0 0 var(--s-3) 0;
@@ -206,9 +236,9 @@
   font-weight: 700;
   color: var(--ink);
   margin: 0;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.02em;
   padding-bottom: var(--s-2);
-  border-bottom: 1px solid color-mix(in srgb, var(--stroke) 30%, transparent);
+  border-bottom: 1px solid var(--stroke);
 }
 
 .paragraph {
@@ -223,7 +253,7 @@
   font-family: var(--font-body);
   font-size: var(--fs-1);
   color: var(--muted);
-  line-height: 1.7;
+  line-height: 1.75;
   padding-left: var(--s-5);
   margin: 0;
 }
@@ -293,4 +323,22 @@
   .closeBtn {
     transition: none;
   }
+
+  .tags > *,
+  .impactSnapshot,
+  .content > .section {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* ── Keyframes ── */
+@keyframes tagIn {
+  from { opacity: 0; transform: translateY(4px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sectionReveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

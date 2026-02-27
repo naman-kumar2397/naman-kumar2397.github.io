@@ -5,28 +5,49 @@
     color: var(--ink);
     font-family: var(--font-body);
     font-size: var(--fs-1);
-    letter-spacing: 0.2px;
+    line-height: var(--lh-body);
+    letter-spacing: 0.01em;
     text-rendering: geometricPrecision;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.35s, color 0.35s;
+    transition: background-color var(--duration-slow) var(--ease-out),
+                color var(--duration-slow) var(--ease-out);
     /* Prevent horizontal overflow */
     overflow-x: hidden; /* Fallback for older browsers */
     overflow-x: clip;   /* Modern: allows position:sticky to work */
   }
 
   ::selection {
-    background: rgba(255, 204, 51, 0.25);
+    background: color-mix(in srgb, var(--signal) 25%, transparent);
   }
 
   a {
     color: inherit;
     text-decoration: none;
-    border-bottom: 1px solid rgba(255, 204, 51, 0.35);
+    border-bottom: 1px solid color-mix(in srgb, var(--signal) 30%, transparent);
+    transition: border-color var(--duration-fast);
   }
 
   a:hover {
-    border-bottom-color: rgba(255, 204, 51, 0.9);
+    border-bottom-color: var(--signal);
+  }
+
+  /* Consistent focus ring for all interactive elements */
+  :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+  }
+
+  /* ── Press / active micro-state for buttons ── */
+  button:active:not(:disabled),
+  [role="button"]:active:not(:disabled) {
+    transform: scale(0.97);
+    transition-duration: var(--duration-xs);
+  }
+
+  a[class]:active {
+    transform: scale(0.98);
+    transition-duration: var(--duration-xs);
   }
 
   /* Utility-ish primitives */
@@ -37,19 +58,65 @@
   }
 
   .panel {
-    background: var(--panel);
-    border: 1px solid var(--stroke);
-    border-radius: var(--r-3);
-    box-shadow: var(--shadow-1);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
+    background: var(--glass-1-bg);
+    border: 1px solid var(--glass-1-stroke);
+    border-radius: var(--r-2);
+    box-shadow: var(--glass-1-shadow);
+    backdrop-filter: var(--glass-1-blur);
+    -webkit-backdrop-filter: var(--glass-1-blur);
   }
 
   .h-display {
     font-family: var(--font-display);
-    letter-spacing: -0.2px;
+    letter-spacing: -0.02em;
+    line-height: var(--lh-tight);
   }
 
   .muted { color: var(--muted); }
   .faint { color: var(--faint); }
+
+  /* ── Body background wash (soft radial gradient behind particles) ── */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--signal) 4%, transparent) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 80% 100%, color-mix(in srgb, var(--signal-2) 3%, transparent) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* ── Reduced motion: collapse all durations, remove overshoots ── */
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --ease-spring: ease;
+      --ease-fluid: ease;
+      --ease-bounce: ease;
+      --ease-micro: ease;
+      --ease-out: ease;
+      --ease-out-expo: ease;
+      --ease-out-quart: ease;
+      --duration-xs: 0ms;
+      --duration-fast: 0ms;
+      --duration-md: 50ms;
+      --duration-slow: 50ms;
+      --duration-entrance: 50ms;
+      --duration-expand: 50ms;
+      --duration-collapse: 50ms;
+      --duration-hover: 50ms;
+      --duration-hover-out: 50ms;
+      --duration-micro: 0ms;
+    }
+  }
+
+  /* ── Mobile performance: reduce blur on low-power devices ── */
+  @media (max-width: 768px) {
+    :root {
+      --glass-0-blur: blur(20px) saturate(180%);
+      --glass-1-blur: blur(14px) saturate(170%);
+      --glass-2-blur: blur(10px) saturate(160%);
+      --glass-3-blur: blur(8px) saturate(150%);
+    }
+  }
 }

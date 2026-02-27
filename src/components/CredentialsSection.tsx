@@ -1,3 +1,6 @@
+"use client";
+
+import { useInView } from "@/lib/useInView";
 import type { Certification, Education } from "@/lib/data-loader";
 import styles from "./CredentialsSection.module.css";
 
@@ -21,8 +24,10 @@ const STATUS_CLASS: Record<string, string> = {
 export function CredentialsSection({ certifications, education }: CredentialsSectionProps) {
   if (certifications.length === 0 && education.length === 0) return null;
 
+  const [ref, inView] = useInView(0.1);
+
   return (
-    <div className={styles.credentials}>
+    <div ref={ref} className={`${styles.credentials} ${inView ? styles.credentialsVisible : styles.credentialsHidden}`}>
       {/* ── Certifications ── */}
       {certifications.length > 0 && (
         <section id="certifications" className={styles.section}>

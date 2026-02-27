@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
-import { Arrow } from "@/components/StarLane";
+import { Arrow, ARROW_COLORS } from "@/components/StarLane";
 
 describe("Arrow component", () => {
   it("renders with correct semantic colors for problem-solution variant", () => {
@@ -8,10 +8,10 @@ describe("Arrow component", () => {
     const svg = container.querySelector("svg");
     expect(svg).toBeTruthy();
 
-    // Check arrow head polygon has green fill (signal-2)
+    // Check arrow head polygon has the expected fill from ARROW_COLORS
     const polygon = svg?.querySelector("polygon");
     expect(polygon).toBeTruthy();
-    expect(polygon?.getAttribute("fill")).toContain("110, 231, 183");
+    expect(polygon?.getAttribute("fill")).toBe(ARROW_COLORS["problem-solution"].head);
   });
 
   it("renders with correct semantic colors for solution-result variant", () => {
@@ -19,10 +19,10 @@ describe("Arrow component", () => {
     const svg = container.querySelector("svg");
     expect(svg).toBeTruthy();
 
-    // Check arrow head polygon has blue fill
+    // Check arrow head polygon has the expected fill from ARROW_COLORS
     const polygon = svg?.querySelector("polygon");
     expect(polygon).toBeTruthy();
-    expect(polygon?.getAttribute("fill")).toContain("126, 184, 255");
+    expect(polygon?.getAttribute("fill")).toBe(ARROW_COLORS["solution-result"].head);
   });
 
   it("renders the same output on multiple renders (deterministic)", () => {

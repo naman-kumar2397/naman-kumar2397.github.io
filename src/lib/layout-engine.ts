@@ -140,7 +140,7 @@ export function computeLayout(portfolio: Portfolio): StarLayout {
     return {
       projectId: proj.id,
       projectTitle: proj.title,
-      projectSummary: proj.summary ?? proj.solution.statement.split(/\.\s/)[0] + ".",
+      projectSummary: proj.summary ?? (proj.solution.statement.match(/^[^.!?]+[.!?]/)?.[0] ?? proj.solution.statement),
       deepDiveSlug: proj.deepDive?.enabled ? proj.deepDive.slug : undefined,
       problemId: proj.problem.id,
       problemText: proj.problem.statement,

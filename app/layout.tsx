@@ -3,7 +3,6 @@ import { DM_Sans } from "next/font/google";
 import { Fraunces } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google";
 import { DoodleBackground } from "@/components/DoodleBackground";
-import { ParticleBackground } from "@/components/ParticleBackground";
 import "@/styles/tokens.css";
 import "@/styles/global.css";
 import "./animations.css";
@@ -97,7 +96,6 @@ export default function RootLayout({
     >
       <body>
         <DoodleBackground />
-        <ParticleBackground />
         {children}
       </body>
     </html>

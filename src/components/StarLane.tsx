@@ -80,7 +80,7 @@ interface StarLaneProps {
 /* ── Static Arrow SVG (memoized) ── */
 type ArrowVariant = "problem-solution" | "solution-result";
 
-const ARROW_COLORS: Record<ArrowVariant, { shaft: string; head: string }> = {
+export const ARROW_COLORS: Record<ArrowVariant, { shaft: string; head: string }> = {
   "problem-solution": {
     shaft: "rgba(248, 113, 113, 0.55)",
     head: "rgba(110, 231, 183, 0.65)",

@@ -34,17 +34,21 @@ const CONTACT_ICONS: Record<string, React.ReactNode> = {
 
 /* ── Typing animation hook ── */
 function useTypingText(text: string, speed = 42): { displayed: string; done: boolean } {
-  // Initialize with full text so SSR/static HTML has content; effect resets and types on client
-  const [displayed, setDisplayed] = useState(text);
-  const [done, setDone] = useState(true);
+  // Start empty; the effect types out on client. On SSR/pre-render the text is empty,
+  // which avoids a CLS flash where full text appears then disappears.
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced) return; // keep full static text
+    if (prefersReduced) {
+      // Skip animation; show full text immediately
+      setDisplayed(text);
+      setDone(true);
+      return;
+    }
 
-    // Reset and start typing after page settles
-    setDone(false);
-    setDisplayed("");
+    // Start typing after page load animation settles
     let i = 0;
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {

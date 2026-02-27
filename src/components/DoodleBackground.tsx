@@ -71,15 +71,20 @@ export function DoodleBackground() {
   useEffect(() => {
     let cancelled = false;
 
-    import("css-doodle").then(() => {
-      if (cancelled || !containerRef.current) return;
+    import("css-doodle")
+      .then(() => {
+        if (cancelled || !containerRef.current) return;
 
-      const isDark = resolveTheme();
-      const el = document.createElement("css-doodle");
-      el.innerHTML = getDoodleRules(isDark);
-      containerRef.current.appendChild(el);
-      doodleRef.current = el;
-    });
+        const isDark = resolveTheme();
+        const el = document.createElement("css-doodle");
+        el.innerHTML = getDoodleRules(isDark);
+        containerRef.current.appendChild(el);
+        doodleRef.current = el;
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.warn("Failed to load css-doodle:", err);
+      });
 
     /* Watch for data-theme attribute changes */
     const observer = new MutationObserver(() => {

@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import RepoHeader from '../components/RepoHeader.astro';
+import Readme from '../components/Readme.astro';
+import GitLog from '../components/GitLog.astro';
+import Skills from '../components/Skills.astro';
+import Contact from '../components/Contact.astro';
+import { commits } from '../data/journey';
+---
+<Base title="Naman Kumar | Lead Site Reliability Engineer">
+  <a class="skip" href="#journey">Skip to journey</a>
+  <RepoHeader commitCount={commits.length} />
+  <main class="wrap">
+    <div class="side"><Readme /></div>
+    <div id="journey" class="journey"><GitLog /></div>
+    <div class="rest">
+      <Skills />
+      <Contact />
+    </div>
+  </main>
+  <footer class="foot muted">
+    <span class="mono">HEAD</span> is where I am now. Built with Astro.
+  </footer>
+</Base>
+
+<style>
+  .skip { position: absolute; left: 8px; top: -40px; z-index: 10; background: var(--bg); padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; }
+  .skip:focus { top: 8px; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+  .journey, .rest { min-width: 0; scroll-margin-top: 16px; }
+  .rest { display: grid; gap: 16px; }
+  .foot { max-width: 1280px; margin: 0 auto; padding: 8px 16px 32px; font-size: 12px; }
+  @media (min-width: 768px) { .wrap { padding: 24px 32px; gap: 24px; } .rest { gap: 24px; } .foot { padding: 8px 32px 40px; } }
+  @media (min-width: 1012px) {
+    .wrap { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); grid-template-areas: 'journey side' 'rest side'; align-items: start; }
+    .journey { grid-area: journey; }
+    .rest { grid-area: rest; }
+    .side { grid-area: side; position: sticky; top: 16px; align-self: start; }
+  }
+</style>

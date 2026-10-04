@@ -1,0 +1,29 @@
+---
+import { skills } from '../data/profile';
+---
+<section id="skills" class="box" aria-labelledby="skills-title">
+  <div class="box-head"><h2 id="skills-title" class="mono title">skills.yml</h2></div>
+  <dl class="skills">
+    {skills.map((g) => (
+      <div class="group">
+        <dt>{g.group}</dt>
+        <dd><ul class="topics">{g.items.map((i) => <li class="topic">{i}</li>)}</ul></dd>
+      </div>
+    ))}
+  </dl>
+</section>
+
+<style>
+  .title { font-size: 13px; font-weight: 400; margin: 0; }
+  .skills { margin: 0; }
+  .group { padding: 12px 16px; border-bottom: 1px solid var(--border-muted); }
+  .group:last-child { border-bottom: 0; }
+  dt { font-weight: 600; }
+  dd { margin: 0; }
+  .topics { margin-top: 6px; }
+  @media (min-width: 768px) {
+    .group { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; align-items: start; }
+    dt { padding-top: 6px; }
+    .topics { margin-top: 4px; }
+  }
+</style>

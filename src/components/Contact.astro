@@ -1,0 +1,23 @@
+---
+import { profile } from '../data/profile';
+---
+<section id="contact" class="box" aria-labelledby="contact-title">
+  <div class="box-head"><h2 id="contact-title" class="mono title">CONTACT.md</h2></div>
+  <div class="body">
+    <ul class="list">
+      <li><span class="k muted">Email</span><a href={`mailto:${profile.email}`}>{profile.email}</a></li>
+      <li><span class="k muted">LinkedIn</span><a href={profile.linkedin} rel="noopener">{profile.linkedinLabel}</a></li>
+      <li><span class="k muted">Resume</span><a href="/resume.pdf" download>resume.pdf</a></li>
+      <li><span class="k muted">Location</span><span>{profile.location}</span></li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .title { font-size: 13px; font-weight: 400; margin: 0; }
+  .body { padding: 16px; }
+  p { margin: 0 0 12px; }
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li { display: flex; gap: 12px; padding: 6px 0; flex-wrap: wrap; overflow-wrap: anywhere; }
+  .k { width: 80px; flex: none; }
+</style>

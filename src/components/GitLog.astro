@@ -1,0 +1,167 @@
+---
+import { author, branches, commits, type Branch } from '../data/journey';
+import { computeLayout } from '../lib/layout';
+import type { GraphData } from './graph';
+
+const layout = computeLayout(branches, commits);
+const B = branches as Record<string, Branch>;
+const rows = [...layout.rows].reverse(); // newest first, like git log
+const branchCount = Object.keys(branches).length - 1;
+
+const graphData: GraphData = {
+  rows: layout.rows.map((r) => ({ lane: r.lane, owner: r.owner, colour: B[r.branch].colour, mergeColour: r.commit.kind === 'merge' ? B[r.owner].colour : undefined, kind: r.commit.kind, head: r.isHead })),
+  spans: Object.values(layout.spans).map((s) => ({
+    branch: s.branch,
+    colour: B[s.branch].colour,
+    lane: s.lane,
+    parentLane: B[s.branch].parent ? layout.spans[B[s.branch].parent!].lane : null,
+    start: s.start,
+    end: s.mergeRow ?? s.tip,
+    merged: s.mergeRow !== null,
+  })),
+};
+---
+<section class="box log-box" aria-labelledby="log-title">
+  <div class="box-head">
+    <h2 id="log-title" class="mono head-title">git log --graph --all</h2>
+    <span class="sp"></span>
+    <span class="muted counts">{commits.length} commits<span class="hide-xs"> · {branchCount} branches</span></span>
+  </div>
+  <div class="log-wrap" id="git-log" style={`--lanes:${layout.laneCount}`}>
+    <svg class="graph" aria-hidden="true" focusable="false"></svg>
+    <ol class="log">
+      {rows.map((r) => {
+        const c = r.commit;
+        const own = B[r.owner];
+        const onBranch = B[r.branch];
+        const span = layout.spans[r.owner];
+        const id = `c-${r.hash}`;
+        return (
+          <li class="row" data-row={r.index} data-owner={r.owner} data-kind={c.kind} style={`--c:var(--c-${own.colour})`}>
+            <button class="row-head" type="button" id={`${id}-h`} aria-expanded="false" aria-controls={`${id}-b`}>
+              <span class="msg">
+                <span class="t">{c.message}</span>
+                {r.isHead && <span class="ref head">HEAD -&gt; {onBranch.name}</span>}
+                {!r.isHead && c.kind === 'branch' && <span class="ref">{own.name}</span>}
+              </span>
+              <span class="meta">
+                <span class="hash">{r.hash}</span>
+                {c.date && <span> · {c.date}</span>}
+                <span> · {own.name}</span>
+              </span>
+            </button>
+            <div class="row-body" id={`${id}-b`} role="region" aria-labelledby={`${id}-h`} hidden>
+              <div class="body-in">
+                {c.kind === 'branch' ? (
+                  <article class="card">
+                    <div class="card-head">
+                      <span class="ref">{own.name}</span>
+                      <span class={`state ${span.open ? 'open' : 'merged'}`}>{span.open ? 'Open' : 'Merged'}</span>
+                    </div>
+                    <h3 class="card-title">{own.title}</h3>
+                    <p class="card-org muted">{own.org}{own.period && ` · ${own.period}`}</p>
+                    {own.highlights && <ul class="card-list">{own.highlights.map((h) => <li>{h}</li>)}</ul>}
+                    {own.stack && <ul class="topics" aria-label="Stack">{own.stack.map((t) => <li class="topic">{t}</li>)}</ul>}
+                  </article>
+                ) : (
+                  <pre class="show"><span class="show-commit">commit {r.hash}</span>{r.isHead && <span class="show-ref"> (HEAD -&gt; {onBranch.name})</span>}{'\n'}{r.parentHashes.length > 1 && `Merge: ${r.parentHashes.join(' ')}\n`}{`Author: ${author.name} <${author.email}>\n`}{c.date && `Date:   ${c.date}\n`}{'\n'}{(c.body ?? c.message).split('\n').map((l) => `    ${l}`).join('\n')}</pre>
+                )}
+              </div>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  </div>
+  <script type="application/json" id="git-log-data" set:html={JSON.stringify(graphData)} />
+</section>
+
+<style>
+  .head-title { font-size: 13px; font-weight: 400; margin: 0; white-space: nowrap; }
+  .counts { white-space: nowrap; }
+  @media (max-width: 479px) { .hide-xs { display: none; } }
+  .log-wrap {
+    --x0: 14px;
+    --lane-w: 16px;
+    --gutter: calc(var(--x0) + (var(--lanes) - 1) * var(--lane-w) + 18px);
+    position: relative;
+  }
+  .graph { position: absolute; left: 0; top: 0; width: var(--gutter); height: 100%; pointer-events: none; overflow: visible; z-index: 1; }
+  .log { list-style: none; margin: 0; padding: 0; }
+  .row { border-bottom: 1px solid var(--border-muted); position: relative; }
+  .row:last-child { border-bottom: 0; border-radius: 0 0 6px 6px; }
+  .row:hover, .row:has(> .row-head[aria-expanded='true']) { background: var(--hover); }
+  .row:has(> .row-head[aria-expanded='true']) { box-shadow: inset 2px 0 0 var(--c); }
+
+  .row-head {
+    display: flex; flex-direction: column; justify-content: center;
+    width: 100%; min-height: 56px;
+    padding: 8px 12px 8px var(--gutter);
+    background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  }
+  .row-head:focus-visible { outline-offset: -2px; border-radius: 0; }
+  .msg { display: flex; align-items: center; gap: 8px; min-width: 0; width: 100%; }
+  .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; min-width: 0; }
+  .meta { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .hash { font-family: var(--mono); }
+
+  .ref {
+    font: 500 11px/18px var(--mono);
+    color: var(--c);
+    border: 1px solid currentColor;
+    border-radius: 2em;
+    padding: 0 7px;
+    white-space: nowrap;
+    flex: none;
+  }
+  .msg .ref:not(.head) { display: none; }
+  .ref.head { background: var(--accent); border-color: var(--accent); color: #fff; }
+  @media (prefers-color-scheme: dark) { .ref.head { background: #1f6feb; border-color: #1f6feb; } }
+
+  .row-body { overflow: hidden; }
+  .body-in { padding: 0 12px 16px var(--gutter); }
+
+  .card { border: 1px solid var(--border); border-radius: 6px; background: var(--bg); padding: 12px 16px 16px; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .card-head .ref { white-space: normal; overflow-wrap: anywhere; }
+  .card-title { font-size: 16px; font-weight: 600; margin: 10px 0 0; }
+  .card-org { margin: 2px 0 0; font-size: 13px; }
+  .card-list { padding-left: 20px; margin: 10px 0 0; }
+  .card-list li { margin: 4px 0; }
+
+  .show {
+    margin: 0;
+    padding: 12px 14px;
+    font: 12px/1.6 var(--mono);
+    color: var(--text);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .show-commit { color: var(--c-yellow); }
+  .show-ref { color: var(--c-teal); }
+
+  @media (min-width: 640px) {
+    .msg .ref:not(.head) { display: inline; }
+    .log-wrap { --x0: 20px; --lane-w: 22px; }
+    .row-head { padding-right: 16px; }
+    .body-in { padding-right: 16px; }
+  }
+
+  /* graph elements are created at runtime */
+  .graph :global(.lane) { fill: none; stroke-width: 2.5; stroke-linecap: round; transition: opacity .2s; }
+  .graph :global(.node) { transition: opacity .2s; transform-box: fill-box; transform-origin: center; }
+  .graph :global(.pulse) { fill: none; stroke-width: 2; transform-box: fill-box; transform-origin: center; }
+  .graph:global(.dim) :global(.lane:not(.hl)),
+  .graph:global(.dim) :global(.node:not(.hl)),
+  .graph:global(.dim) :global(.pulse:not(.hl)) { opacity: .2; }
+</style>
+
+<script>
+  import { initGraph } from './graph';
+  const root = document.getElementById('git-log');
+  const data = document.getElementById('git-log-data');
+  if (root && data) initGraph(root, JSON.parse(data.textContent || '{}'));
+</script>

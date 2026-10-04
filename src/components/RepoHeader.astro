@@ -3,73 +3,104 @@ import { profile } from '../data/profile';
 
 interface Props {
   commitCount: number;
+  projectCount: number;
 }
-const { commitCount } = Astro.props;
+const { commitCount, projectCount } = Astro.props;
+const tabs = [
+  { href: '#top', label: 'Overview' },
+  { href: '#experience', label: 'Experience' },
+  { href: '#projects', label: 'Projects', count: projectCount },
+  { href: '#journey', label: 'Journey', count: commitCount },
+  { href: '#skills', label: 'Skills' },
+  { href: '#contact', label: 'Contact' },
+];
 ---
 <header class="topbar">
-  <div class="topbar-in">
-    <span class="mark" aria-hidden="true">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-        <circle cx="4" cy="3" r="1.6" /><circle cx="4" cy="13" r="1.6" /><circle cx="12" cy="5" r="1.6" />
-        <path d="M4 4.6v6.8M12 6.6c0 3-8 2-8 5" />
-      </svg>
-    </span>
-    <p class="crumb"><span>naman-kumar</span> <span class="slash">/</span> <b>journey</b></p>
+  <div class="container topbar-in">
+    <a class="home" href="#top">
+      <span class="mark" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="4" cy="3" r="1.6" /><circle cx="4" cy="13" r="1.6" /><circle cx="12" cy="5" r="1.6" />
+          <path d="M4 4.6v6.8M12 6.6c0 3-8 2-8 5" />
+        </svg>
+      </span>
+      <span class="crumb"><span class="owner">naman-kumar</span> <span class="slash">/</span> <b>journey</b></span>
+    </a>
     <span class="pill">Public</span>
     <span class="sp"></span>
     <nav class="actions" aria-label="Quick links">
-      <a class="btn" href="/resume.pdf" download>Resume</a>
-      <a class="btn hide-sm" href={profile.linkedin} rel="noopener">LinkedIn</a>
-      <a class="btn" href={`mailto:${profile.email}`}>Contact</a>
+      <a class="btn" href="/resume.pdf" download="Naman_Kumar_Resume.pdf">Resume (PDF)</a>
+      <a class="btn" href={profile.linkedin} rel="noopener">LinkedIn</a>
     </nav>
   </div>
-  <nav class="tabs" aria-label="Sections">
-    <div class="tabs-in">
-      <a class="tab" href="#journey" aria-current="true">Journey <span class="count">{commitCount}</span></a>
-      <a class="tab" href="#skills">Skills</a>
-      <a class="tab" href="#contact">Contact</a>
-    </div>
-  </nav>
 </header>
+<nav class="tabs" aria-label="Sections">
+  <div class="container tabs-in">
+    {tabs.map((t, i) => (
+      <a class="tab" href={t.href} aria-current={i === 0 ? 'true' : undefined}>
+        {t.label}{t.count !== undefined && <span class="count"><span class="sr-only">(</span>{t.count}<span class="sr-only"> items)</span></span>}
+      </a>
+    ))}
+  </div>
+</nav>
 
 <style>
-  .topbar { background: var(--panel); border-bottom: 1px solid var(--border); }
-  .topbar-in, .tabs-in { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
-  .topbar-in { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding-top: 16px; padding-bottom: 8px; }
+  .topbar { background: var(--panel); }
+  .topbar-in { display: flex; align-items: center; gap: 12px; padding-top: 14px; padding-bottom: 6px; }
+  .home { display: flex; align-items: center; gap: 10px; color: var(--text); min-width: 0; }
+  .home:hover { text-decoration: none; }
+  .home:hover b { text-decoration: underline; }
   .mark { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); display: grid; place-items: center; color: var(--muted); background: var(--bg); flex: none; }
-  .crumb { margin: 0; font-size: 16px; min-width: 0; }
-  .crumb span { color: var(--accent); }
-  .crumb .slash { color: var(--muted); }
-  .crumb b { font-weight: 600; color: var(--accent); }
-  .pill { font-size: 12px; font-weight: 500; line-height: 18px; border: 1px solid var(--border); border-radius: 2em; padding: 0 7px; color: var(--muted); }
+  .crumb { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .owner { color: var(--text); }
+  .slash { color: var(--muted); }
+  .crumb b { font-weight: 600; }
+  .pill { font-size: 12px; font-weight: 500; line-height: 18px; border: 1px solid var(--border); border-radius: 2em; padding: 0 7px; color: var(--muted); flex: none; }
   .sp { flex: 1; }
-  .actions { display: flex; gap: 8px; }
-  .tabs-in { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .actions { display: none; gap: 8px; }
+
+  .tabs {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .tabs-in { position: relative; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  .tabs-in::-webkit-scrollbar { display: none; }
   .tab {
-    position: relative; display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 8px 10px; margin-bottom: -1px; color: var(--text); white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px;
+    min-height: 48px; padding: 0 10px;
+    color: var(--text); white-space: nowrap;
     border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
   }
   .tab:hover { text-decoration: none; border-bottom-color: var(--border); }
   .tab[aria-current='true'] { font-weight: 600; border-bottom-color: var(--tab-active); }
   .count { background: var(--border-muted); border-radius: 2em; padding: 0 6px; font-size: 12px; font-weight: 500; line-height: 18px; }
-  @media (max-width: 479px) { .hide-sm { display: none; } .actions { width: 100%; } .actions .btn { flex: 1; justify-content: center; } }
-  @media (min-width: 768px) { .topbar-in, .tabs-in { padding-left: 32px; padding-right: 32px; } }
+  @media (min-width: 640px) { .actions { display: flex; } }
 </style>
 
 <script>
-  const tabs = [...document.querySelectorAll<HTMLAnchorElement>('.tab')];
+  const tabs = [...document.querySelectorAll<HTMLAnchorElement>('.tabs .tab')];
   const sections = tabs
-    .map((t) => document.querySelector<HTMLElement>(t.hash))
+    .map((t) => document.getElementById(t.hash.slice(1)))
     .filter((s): s is HTMLElement => !!s);
   const setActive = (id: string) =>
-    tabs.forEach((t) => (t.hash === `#${id}` ? t.setAttribute('aria-current', 'true') : t.removeAttribute('aria-current')));
+    tabs.forEach((t) => {
+      const on = t.hash === `#${id}`;
+      if (on) {
+        t.setAttribute('aria-current', 'true');
+        // Keep the active tab visible in the horizontally scrolling bar (no vertical scroll).
+        const bar = t.parentElement!;
+        if (t.offsetLeft < bar.scrollLeft || t.offsetLeft + t.offsetWidth > bar.scrollLeft + bar.clientWidth)
+          bar.scrollLeft = t.offsetLeft - 16;
+      } else t.removeAttribute('aria-current');
+    });
+  // The section crossing a line ~30% down the viewport is the active one.
   const io = new IntersectionObserver(
     (entries) => {
-      const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-      if (visible[0]) setActive(visible[0].target.id);
+      for (const e of entries) if (e.isIntersecting) setActive(e.target.id);
     },
-    { rootMargin: '-20% 0px -60% 0px' },
+    { rootMargin: '-30% 0px -69% 0px' },
   );
   sections.forEach((s) => io.observe(s));
 </script>

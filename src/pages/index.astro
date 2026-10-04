@@ -1,40 +1,59 @@
 ---
 import Base from '../layouts/Base.astro';
 import RepoHeader from '../components/RepoHeader.astro';
-import Readme from '../components/Readme.astro';
+import Hero from '../components/Hero.astro';
+import Metrics from '../components/Metrics.astro';
+import Experience from '../components/Experience.astro';
+import CaseStudies from '../components/CaseStudies.astro';
 import GitLog from '../components/GitLog.astro';
 import Skills from '../components/Skills.astro';
 import Contact from '../components/Contact.astro';
 import { commits } from '../data/journey';
+import { caseStudies } from '../data/caseStudies';
+import { certification, profile } from '../data/profile';
+
+const site = Astro.site!.toString();
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  url: site,
+  mainEntity: {
+    '@type': 'Person',
+    name: profile.name,
+    jobTitle: profile.role,
+    url: site,
+    email: `mailto:${profile.email}`,
+    image: new URL('/og.png', site).toString(),
+    address: { '@type': 'PostalAddress', addressLocality: 'Melbourne', addressRegion: 'VIC', addressCountry: 'AU' },
+    worksFor: { '@type': 'Organization', name: 'Viable Solutions' },
+    alumniOf: { '@type': 'CollegeOrUniversity', name: 'Manipal University Jaipur' },
+    hasCredential: { '@type': 'EducationalOccupationalCredential', name: certification.split(' (')[0], credentialCategory: 'certification' },
+    knowsAbout: ['Site Reliability Engineering', 'Amazon Web Services', 'Observability', 'Infrastructure as Code', 'Kubernetes', 'Incident management', 'AWS Bedrock'],
+    sameAs: [profile.linkedin],
+  },
+};
 ---
-<Base title="Naman Kumar | Lead Site Reliability Engineer">
-  <a class="skip" href="#journey">Skip to journey</a>
-  <RepoHeader commitCount={commits.length} />
-  <main class="wrap">
-    <div class="side"><Readme /></div>
-    <div id="journey" class="journey"><GitLog /></div>
-    <div class="rest">
-      <Skills />
-      <Contact />
-    </div>
+<Base title="Naman Kumar | Lead Site Reliability Engineer, Melbourne" jsonLd={jsonLd}>
+  <a class="skip" href="#main">Skip to content</a>
+  <RepoHeader commitCount={commits.length} projectCount={caseStudies.length} />
+  <main id="main">
+    <Hero />
+    <Metrics />
+    <Experience />
+    <CaseStudies />
+    <GitLog />
+    <Skills />
+    <Contact />
   </main>
-  <footer class="foot muted">
-    <span class="mono">HEAD</span> is where I am now. Built with Astro.
+  <footer class="container foot">
+    <p><span class="mono">HEAD</span> is where I am now. Built with Astro, no tracking.</p>
+    <p><a href="#top">Back to top</a></p>
   </footer>
 </Base>
 
 <style>
-  .skip { position: absolute; left: 8px; top: -40px; z-index: 10; background: var(--bg); padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; }
+  .skip { position: absolute; left: 8px; top: -48px; z-index: 30; background: var(--bg); padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; }
   .skip:focus { top: 8px; }
-  .wrap { max-width: 1280px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
-  .journey, .rest { min-width: 0; scroll-margin-top: 16px; }
-  .rest { display: grid; gap: 16px; }
-  .foot { max-width: 1280px; margin: 0 auto; padding: 8px 16px 32px; font-size: 12px; }
-  @media (min-width: 768px) { .wrap { padding: 24px 32px; gap: 24px; } .rest { gap: 24px; } .foot { padding: 8px 32px 40px; } }
-  @media (min-width: 1012px) {
-    .wrap { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); grid-template-areas: 'journey side' 'rest side'; align-items: start; }
-    .journey { grid-area: journey; }
-    .rest { grid-area: rest; }
-    .side { grid-area: side; position: sticky; top: 16px; align-self: start; }
-  }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding-top: 32px; padding-bottom: 40px; font-size: 13px; color: var(--muted); }
+  .foot p { margin: 0; }
 </style>

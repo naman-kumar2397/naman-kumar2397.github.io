@@ -1,23 +1,38 @@
 ---
 import { profile } from '../data/profile';
 ---
-<section id="contact" class="box" aria-labelledby="contact-title">
-  <div class="box-head"><h2 id="contact-title" class="mono title">CONTACT.md</h2></div>
-  <div class="body">
+<section id="contact" class="container section" aria-labelledby="contact-title">
+  <div class="card">
+    <div class="intro">
+      <p class="kicker">cat CONTACT.md</p>
+      <h2 id="contact-title">Get in touch</h2>
+      <p class="muted">Email is the fastest way to reach me. I'm based in {profile.location}.</p>
+    </div>
     <ul class="list">
-      <li><span class="k muted">Email</span><a href={`mailto:${profile.email}`}>{profile.email}</a></li>
-      <li><span class="k muted">LinkedIn</span><a href={profile.linkedin} rel="noopener">{profile.linkedinLabel}</a></li>
-      <li><span class="k muted">Resume</span><a href="/resume.pdf" download>resume.pdf</a></li>
-      <li><span class="k muted">Location</span><span>{profile.location}</span></li>
+      <li><span class="k">Email</span><a href={`mailto:${profile.email}`}>{profile.email}</a></li>
+      <li><span class="k">LinkedIn</span><a href={profile.linkedin} rel="noopener">{profile.linkedinLabel}</a></li>
+      <li><span class="k">Resume</span><a href="/resume.pdf" download="Naman_Kumar_Resume.pdf">Naman_Kumar_Resume.pdf</a> <a class="muted small" href="/resume/">(web version)</a></li>
     </ul>
+    <div class="ctas">
+      <a class="btn btn-lg btn-primary" href={`mailto:${profile.email}`}>Email me</a>
+      <a class="btn btn-lg" href={profile.linkedin} rel="noopener">Connect on LinkedIn</a>
+    </div>
   </div>
 </section>
 
 <style>
-  .title { font-size: 13px; font-weight: 400; margin: 0; }
-  .body { padding: 16px; }
-  p { margin: 0 0 12px; }
+  .card { border: 1px solid var(--border); border-radius: 8px; padding: 20px 16px; background: var(--panel); display: grid; gap: 16px; }
+  h2 { font-size: 24px; line-height: 1.25; margin: 0; font-weight: 600; }
+  .intro p:last-child { margin: 6px 0 0; }
   .list { list-style: none; margin: 0; padding: 0; }
-  .list li { display: flex; gap: 12px; padding: 6px 0; flex-wrap: wrap; overflow-wrap: anywhere; }
-  .k { width: 80px; flex: none; }
+  .list li { display: flex; flex-wrap: wrap; gap: 2px 12px; padding: 8px 0; border-top: 1px solid var(--border-muted); overflow-wrap: anywhere; }
+  .k { width: 80px; flex: none; color: var(--muted); }
+  .small { font-size: 13px; }
+  .ctas { display: grid; gap: 8px; }
+  @media (min-width: 560px) { .ctas { display: flex; flex-wrap: wrap; } }
+  @media (min-width: 900px) {
+    .card { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); padding: 28px 32px; align-items: start; column-gap: 40px; }
+    .ctas { grid-column: 1; grid-row: 2; }
+    .list { grid-column: 2; grid-row: 1 / span 2; }
+  }
 </style>

@@ -7,7 +7,7 @@ import type { CommitKind } from '../data/journey';
 
 export interface GraphData {
   /** Oldest first, same indices as the layout. */
-  rows: { lane: number; owner: string; colour: string; mergeColour?: string; kind: CommitKind; head: boolean }[];
+  rows: { lane: number; owner: string; colour: string; mergeColour?: string; kind: CommitKind; head: boolean; marker: 'dot' | 'diamond' }[];
   spans: {
     branch: string;
     colour: string;
@@ -24,7 +24,14 @@ const NS = 'http://www.w3.org/2000/svg';
 const DRAW_MS = 2200;
 const CURVE_MAX = 32;
 
-export function initGraph(root: HTMLElement, data: GraphData): void {
+export interface GraphApi {
+  /** Re-measure and redraw (call after showing/hiding rows). */
+  refresh(): void;
+  /** Branches to keep highlighted while a filter is active; null clears. */
+  setFocus(owners: Set<string> | null): void;
+}
+
+export function initGraph(root: HTMLElement, data: GraphData): GraphApi {
   const svg = root.querySelector<SVGSVGElement>('svg.graph')!;
   const items = new Map<number, HTMLLIElement>();
   root.querySelectorAll<HTMLLIElement>('li.row').forEach((li) => items.set(Number(li.dataset.row), li));
@@ -49,8 +56,8 @@ export function initGraph(root: HTMLElement, data: GraphData): void {
   paths.forEach((p) => svg.appendChild(p));
 
   let pulse: SVGCircleElement | null = null;
-  const nodes = data.rows.map((r) => {
-    const c = el('circle', { class: 'node', r: r.head ? '6' : '4.5' });
+  const nodes: SVGElement[] = data.rows.map((r) => {
+    const c: SVGElement = r.marker === 'diamond' && !r.head ? el('polygon', { class: 'node' }) : el('circle', { class: 'node', r: r.head ? '6' : '4.5' });
     c.dataset.owner = r.owner;
     if (r.head) {
       c.style.fill = 'var(--bg)';
@@ -81,11 +88,16 @@ export function initGraph(root: HTMLElement, data: GraphData): void {
     const lw = px('--lane-w');
     const x = (lane: number) => x0 + lane * lw;
     // Node sits at the centre of the row's header, so it stays beside the title when expanded.
-    const ys = data.rows.map((_, i) => {
+    // Hidden rows (filtered out) collapse onto the top edge of the next visible older row.
+    const ys: number[] = new Array(N);
+    let below = root.offsetHeight;
+    for (let i = 0; i < N; i++) {
       const li = items.get(i)!;
+      if (li.hidden) { ys[i] = below; continue; }
       const head = li.firstElementChild as HTMLElement;
-      return li.offsetTop + head.offsetHeight / 2;
-    });
+      ys[i] = li.offsetTop + head.offsetHeight / 2;
+      below = li.offsetTop;
+    }
     const y = (i: number) => ys[i];
     // Curve height between a node and the next older row.
     const curve = (i: number) => Math.min(CURVE_MAX, (i > 0 ? y(i - 1) - y(i) : CURVE_MAX) * 0.9);
@@ -120,9 +132,18 @@ export function initGraph(root: HTMLElement, data: GraphData): void {
     });
 
     data.rows.forEach((r, i) => {
-      nodes[i].setAttribute('cx', String(x(r.lane)));
-      nodes[i].setAttribute('cy', String(y(i)));
+      const n = nodes[i];
+      const cx = x(r.lane), cy = y(i);
+      n.style.display = items.get(i)!.hidden ? 'none' : '';
+      if (n instanceof SVGPolygonElement) {
+        const d = 5.5;
+        n.setAttribute('points', `${cx},${cy - d} ${cx + d},${cy} ${cx},${cy + d} ${cx - d},${cy}`);
+      } else {
+        n.setAttribute('cx', String(cx));
+        n.setAttribute('cy', String(cy));
+      }
       if (r.head && pulse) {
+        pulse.style.display = n.style.display;
         pulse.setAttribute('cx', String(x(r.lane)));
         pulse.setAttribute('cy', String(y(i)));
       }
@@ -176,9 +197,11 @@ export function initGraph(root: HTMLElement, data: GraphData): void {
   });
 
   // --- hover / focus highlight ----------------------------------------------
+  let focus: Set<string> | null = null;
   const highlight = (owner: string | null) => {
-    svg.classList.toggle('dim', !!owner);
-    svg.querySelectorAll<SVGElement>('[data-owner]').forEach((e) => e.classList.toggle('hl', e.dataset.owner === owner));
+    const on = owner ? new Set([owner]) : focus;
+    svg.classList.toggle('dim', !!on);
+    svg.querySelectorAll<SVGElement>('[data-owner]').forEach((e) => e.classList.toggle('hl', !!on && on.has(e.dataset.owner!)));
   };
   const ownerOf = (t: EventTarget | null) => (t instanceof Element ? t.closest<HTMLElement>('li.row')?.dataset.owner ?? null : null);
   root.addEventListener('pointerover', (e) => highlight(ownerOf(e.target)));
@@ -190,12 +213,13 @@ export function initGraph(root: HTMLElement, data: GraphData): void {
   const heads = [...root.querySelectorAll<HTMLButtonElement>('.row-head')];
   heads.forEach((btn) => btn.addEventListener('click', () => toggle(btn)));
   root.addEventListener('keydown', (e) => {
-    const i = heads.indexOf(e.target as HTMLButtonElement);
+    const visible = heads.filter((h) => !(h.parentElement as HTMLElement).hidden);
+    const i = visible.indexOf(e.target as HTMLButtonElement);
     if (i < 0) return;
-    const next = e.key === 'ArrowDown' ? i + 1 : e.key === 'ArrowUp' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? heads.length - 1 : -1;
-    if (next < 0 || next >= heads.length || next === i) return;
+    const next = e.key === 'ArrowDown' ? i + 1 : e.key === 'ArrowUp' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? visible.length - 1 : -1;
+    if (next < 0 || next >= visible.length || next === i) return;
     e.preventDefault();
-    heads[next].focus();
+    visible[next].focus();
   });
 
   function toggle(btn: HTMLButtonElement) {
@@ -217,4 +241,9 @@ export function initGraph(root: HTMLElement, data: GraphData): void {
     // ResizeObserver keeps the graph attached on every frame of the animation.
     anim.finished.then(() => { if (!opening) body.hidden = true; schedule(); }, () => {});
   }
+
+  return {
+    refresh: () => { draw(); },
+    setFocus(owners) { focus = owners; highlight(null); },
+  };
 }

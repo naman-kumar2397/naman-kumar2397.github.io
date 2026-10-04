@@ -1,6 +1,12 @@
 ---
 /* Print-first resume. `npm run resume:pdf` renders this page to public/resume.pdf. */
-import { accolades, certification, education, experience, profile, projects, skills } from '../data/profile';
+import { accolades, certification, education, experience, profile, projects, resumeSkills as skills } from '../data/profile';
+
+// Same wording as the resume: "Viable Solutions (via Synechron, for Latitude Financial Services)".
+const orgLine = (r: (typeof experience)[number]) => {
+  const extra = [r.via && `via ${r.via}`, r.client && `for ${r.client}`].filter(Boolean).join(', ');
+  return extra ? `${r.employer} (${extra})` : r.employer;
+};
 ---
 <!doctype html>
 <html lang="en">
@@ -36,8 +42,8 @@ import { accolades, certification, education, experience, profile, projects, ski
         {experience.map((r) => (
           <article>
             <div class="role"><h3>{r.title}</h3><span class="period">{r.period}</span></div>
-            <p class="org">{r.org}{r.terms && ` | ${r.terms}`}</p>
-            <ul>{r.points.map(([label, text]) => <li>{label && <b>{label}: </b>}{text}</li>)}</ul>
+            <p class="org">{orgLine(r)}{r.terms && ` | ${r.terms}`}</p>
+            <ul>{r.points.map((p) => <li>{p.label && <b>{p.label}: </b>}{p.text}</li>)}</ul>
           </article>
         ))}
       </section>

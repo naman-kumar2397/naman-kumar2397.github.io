@@ -1,5 +1,7 @@
-// Builds the site, serves it, and prints /resume to public/resume.pdf.
-// Usage: npm run resume:pdf   (set CHROMIUM_PATH if Chromium is not auto-detected)
+// Builds the site, serves it, and renders the static assets that are committed:
+//   /resume/ -> public/resume.pdf
+//   /og/     -> public/og.png (1200x630 social card)
+// Usage: npm run assets   (set CHROMIUM_PATH if Chromium is not auto-detected)
 import { build, preview } from 'astro';
 import { chromium } from 'playwright-core';
 import { existsSync } from 'node:fs';
@@ -15,6 +17,11 @@ try {
   await page.goto('http://localhost:4399/resume/', { waitUntil: 'networkidle' });
   await page.pdf({ path: 'public/resume.pdf', format: 'A4', printBackground: true, preferCSSPageSize: true });
   console.log('wrote public/resume.pdf');
+
+  const og = await browser.newPage({ viewport: { width: 1200, height: 630 } });
+  await og.goto('http://localhost:4399/og/', { waitUntil: 'networkidle' });
+  await og.screenshot({ path: 'public/og.png' });
+  console.log('wrote public/og.png');
 } finally {
   await browser.close();
   await server.stop();

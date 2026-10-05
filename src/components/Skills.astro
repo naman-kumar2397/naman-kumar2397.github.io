@@ -43,7 +43,7 @@ const toolCount = resumeSkills.reduce((n, g) => n + g.items.length, 0);
   @media (hover: hover) and (pointer: fine) {
     .card:hover {
       border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-      box-shadow: 0 2px 8px rgba(9, 105, 218, 0.15);
+      box-shadow: 0 4px 14px -6px var(--glow), var(--shadow);
     }
   }
   h3 { font-size: 16px; margin: 0; font-weight: 600; display: flex; gap: 8px; align-items: baseline; }

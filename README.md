@@ -20,6 +20,8 @@ npm run assets   # builds, then renders /resume -> public/resume.pdf and /og -> 
 
 Overview (hero + metrics) · Experience · Projects (case studies) · Journey (git log with Highlights/Full history and filters) · Skills · Contact. Everything renders without JavaScript; JS adds the graph, the curated view and filters.
 
+Motion: see [docs/MOTION.md](docs/MOTION.md) for the motion tokens, controller contract and inventory.
+
 ## Commands
 
 ```sh

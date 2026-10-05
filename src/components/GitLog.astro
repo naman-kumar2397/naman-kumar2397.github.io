@@ -416,8 +416,7 @@ const graphData: GraphData = {
     companySel.addEventListener('change', () => apply());
     apply(false);
     placeThumb(false);
-    if ('ResizeObserver' in window) new ResizeObserver(() => placeThumb(false)).observe(seg);
-    else window.addEventListener('resize', () => placeThumb(false), { passive: true });
+    new ResizeObserver(() => placeThumb(false)).observe(seg);
 
     // "git log <branch>" links (case studies, project pages via ?branch=): open that branch's first commit.
     const reveal = (branch: string, smooth: boolean) => {

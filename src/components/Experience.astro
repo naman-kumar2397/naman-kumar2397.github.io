@@ -99,7 +99,7 @@ const colour = (id: string) => `var(--c-${(branches as Record<string, Branch>)[i
   .rel dt { font: 12px var(--mono); color: var(--muted); }
   .rel dt::after { content: ':'; }
   .rel dd { margin: 0; font-weight: 600; }
-  .roles { list-style: none; margin: 0; padding: 0; position: relative; --rail-bottom: 100%; }
+  .roles { list-style: none; margin: 0; padding: 0; position: relative; --rail-bottom: 0px; }
   .role { position: relative; padding: 0 0 28px 28px; }
   /* commit rail: ONE track plus ONE fill on the list. --rail-bottom (set by script) stops it at the last node.
      Fill is drawn by scroll position via --progress (defaults to fully drawn without JS or with reduced motion). */
@@ -153,8 +153,7 @@ const colour = (id: string) => `var(--c-${(branches as Record<string, Branch>)[i
       if (last) list.style.setProperty('--rail-bottom', `${Math.max(0, list.offsetHeight - last.offsetTop - NODE_Y)}px`);
     };
     fit();
-    if ('ResizeObserver' in window) new ResizeObserver(fit).observe(list);
-    else window.addEventListener('resize', fit, { passive: true });
+    new ResizeObserver(fit).observe(list);
 
     // Nodes settle in when their card is revealed.
     items.forEach((li) => {

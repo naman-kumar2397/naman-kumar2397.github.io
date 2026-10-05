@@ -5,6 +5,20 @@ import { accolades, certification, education, experience, profile, projects, res
 
 const resumeDescription = `Resume of ${profile.name}, Lead SRE in Melbourne: 7+ years of SRE on AWS, observability, infrastructure as code and incident automation.`;
 
+// The resume page is about the same #person the home page defines.
+const site = Astro.site!.toString();
+const resumeLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  '@id': `${site}resume/#webpage`,
+  url: `${site}resume/`,
+  name: `${profile.name} | Resume`,
+  description: resumeDescription,
+  inLanguage: 'en-AU',
+  isPartOf: { '@id': `${site}#website` },
+  about: { '@id': `${site}#person` },
+};
+
 // Same wording as the resume: "Viable Solutions (via Synechron, for Latitude Financial Services)".
 const orgLine = (r: (typeof experience)[number]) => {
   const extra = [r.via && `via ${r.via}`, r.client && `for ${r.client}`].filter(Boolean).join(', ');
@@ -26,7 +40,15 @@ const orgLine = (r: (typeof experience)[number]) => {
     <meta property="og:title" content="Naman Kumar | Resume" />
     <meta property="og:url" content={new URL('/resume/', Astro.site)} />
     <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Naman Kumar, Lead Site Reliability Engineer" />
+    <meta property="og:site_name" content="Naman Kumar" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Naman Kumar | Resume" />
+    <meta name="twitter:description" content={resumeDescription} />
+    <meta name="twitter:image" content={new URL('/og.png', Astro.site)} />
+    <script type="application/ld+json" set:html={JSON.stringify(resumeLd)} />
     <script is:inline async data-goatcounter={GOATCOUNTER} src="https://gc.zgo.at/count.js"></script>
   </head>
   <body>

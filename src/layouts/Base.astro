@@ -58,6 +58,9 @@ const markdown = sitemapPaths().includes(Astro.url.pathname) ? new URL(mdPath(As
     <meta property="profile:first_name" content="Naman" />
     <meta property="profile:last_name" content="Kumar" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
     {(Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).map((j) => <script type="application/ld+json" set:html={JSON.stringify(j)} />)}
     <script is:inline>
       // Enable entrance/reveal motion before first paint, unless reduced motion is requested.

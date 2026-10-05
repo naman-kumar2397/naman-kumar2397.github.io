@@ -26,6 +26,10 @@ export interface Feature {
   /** Trade-offs need first-hand detail; leave empty (not rendered) until supplied. */
   tradeoffs?: string[];
   confidentiality: string;
+  /** Optional image from a public source, always credited and linked. `file` is in src/assets. */
+  media?: { file: string; alt: string; credit: string; href: string; caption?: string };
+  /** Public write-up of the project, linked from the page header. */
+  publicLink?: { label: string; href: string };
   /** Optional phased history, oldest first. */
   evolution?: { phase: string; when?: string; points: string[] }[];
 }
@@ -171,11 +175,18 @@ export const caseStudies: CaseStudy[] = [
     feature: {
       role: 'SRE lead',
       facts: [
-        { label: 'Where', value: 'AKQA, Lead Site Reliability Engineer' },
+        { label: 'Game', value: 'Up to six players impersonate each other with AI face and voice swapping' },
         { label: 'Peak', value: '50k+ concurrent users in the first 10 minutes' },
-        { label: 'Platform', value: 'Kubernetes with GPU workloads' },
-        { label: 'Monitoring', value: 'Grafana with NVIDIA DCGM GPU metrics' },
+        { label: 'Platform', value: 'Kubernetes with GPU workloads, monitored in Grafana (NVIDIA DCGM)' },
       ],
+      media: {
+        file: 'netflix-its-whats-inside.png',
+        alt: 'A node-based AI workflow that animates a source portrait to follow the expressions of a driving video, with the movement input and the generated output side by side.',
+        credit: 'AKQA',
+        href: 'https://www.akqa.com/work/netflix/its-whats-inside-the-game/',
+        caption: 'From AKQA\'s write-up: a face (right) animated to follow a movement input (left).',
+      },
+      publicLink: { label: 'See the project on AKQA.com', href: 'https://www.akqa.com/work/netflix/its-whats-inside-the-game/' },
       diagram: {
         caption: 'Simplified platform view.',
         columns: [
@@ -192,12 +203,12 @@ export const caseStudies: CaseStudy[] = [
       // TODO: trade-offs (scaling approach, capacity planning, cost vs headroom) — needs first-hand detail.
       confidentiality: 'Infrastructure is described at a high level; capacity figures beyond the public launch number are omitted.',
     },
-    title: 'High-concurrency game launch on Kubernetes',
-    context: 'AKQA · Netflix game launch',
+    title: "It's What's Inside: The Game",
+    context: 'AKQA · for Netflix',
     status: 'Shipped',
     headline: '50k+ concurrent users in the first 10 minutes',
     overview:
-      'SRE lead for the launch of an AI-driven, face-transforming game for Netflix, including the Kubernetes platform it ran on.',
+      "A Netflix game where up to six players impersonate each other using AI face and voice swapping. I led SRE for its launch, including the Kubernetes platform it ran on.",
     problem:
       'A public launch concentrates traffic into the first minutes, and the AI workload depends on GPUs, so the platform had to scale fast and GPU health had to be visible.',
     architecture: {

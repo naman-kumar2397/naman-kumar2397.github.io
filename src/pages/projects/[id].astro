@@ -5,6 +5,10 @@ import Diagram from '../../components/Diagram.astro';
 import { caseStudies, type CaseStudy, type Feature } from '../../data/caseStudies';
 import { branches, commits, type Branch } from '../../data/journey';
 import { profile } from '../../data/profile';
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+const assets = import.meta.glob<{ default: ImageMetadata }>('../../assets/*.{png,jpg,jpeg,webp}', { eager: true });
 
 export function getStaticPaths() {
   const featured = caseStudies.filter((c) => c.feature);
@@ -17,6 +21,8 @@ export function getStaticPaths() {
 interface Props { c: CaseStudy & { feature: Feature }; prev: CaseStudy | null; next: CaseStudy | null }
 const { c, prev, next } = Astro.props;
 const f = c.feature;
+const mediaImg = f.media ? assets[`../../assets/${f.media.file}`]?.default : undefined;
+if (f.media && !mediaImg) throw new Error(`case study media not found: ${f.media.file}`);
 const has = (v?: string | string[]) => !!v && (typeof v === 'string' || v.length > 0);
 const description = `${c.title}: ${c.headline}. Engineering case study by ${profile.name}, ${profile.role}.`;
 const vtCss = caseStudies
@@ -47,12 +53,21 @@ const jsonLd = {
       <h1 style={`view-transition-name:cs-title-${c.id}`}>{c.title}</h1>
       <p class="headline" style="--d:2">{c.headline}</p>
       <p class="overview" style="--d:3">{c.overview}</p>
+      {f.publicLink && <p class="public"><a href={f.publicLink.href} rel="noopener">{f.publicLink.label} <span aria-hidden="true">↗</span></a></p>}
     </header>
+
 
     <dl class="facts" style="--d:4">
       <div><dt>My role</dt><dd>{f.role}</dd></div>
       {f.facts.map((x) => <div><dt>{x.label}</dt><dd>{x.value}</dd></div>)}
     </dl>
+
+    {f.media && mediaImg && (
+      <figure class="media">
+        <Picture src={mediaImg} formats={['avif', 'webp']} widths={[480, 768, 1024]} sizes="(min-width: 1000px) 896px, 100vw" alt={f.media.alt} class="media-img" loading="lazy" />
+        <figcaption>{f.media.caption && <span>{f.media.caption} </span>}<span class="credit">Image: <a href={f.media.href} rel="noopener">{f.media.credit}</a></span></figcaption>
+      </figure>
+    )}
 
     <section class="block" aria-labelledby="arch">
       <h2 id="arch" data-reveal="heading">Architecture</h2>
@@ -132,8 +147,16 @@ const jsonLd = {
   h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.15; letter-spacing: -0.02em; margin: 12px 0 0; font-weight: 650; }
   .headline { font-size: clamp(17px, 4vw, 20px); font-weight: 600; color: var(--accent); margin: 8px 0 0; }
   .overview { font-size: 16px; margin: 12px 0 0; max-width: 70ch; }
-  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 1px; margin: 24px 0 0; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  .facts div { background: var(--panel); padding: 12px 14px; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); margin: 24px 0 0; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  /* Dividers drawn per cell (right and bottom edges), clipped by the rounded container, so a
+     short last row never leaves empty grey filler cells. */
+  .facts div { background: var(--panel); padding: 12px 14px; box-shadow: 1px 0 0 var(--border), 0 1px 0 var(--border); }
+  .public { margin: 10px 0 0; font-size: 14px; }
+  .public a { display: inline-flex; min-height: 32px; align-items: center; gap: 4px; }
+  .media { margin: 24px 0 0; }
+  :global(.media-img) { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); }
+  .media figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .credit { white-space: nowrap; }
   dt { font: 12px/1.5 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
   dd { margin: 2px 0 0; font-weight: 500; }
   .block { margin-top: 32px; }

@@ -4,17 +4,20 @@
 //   overlap    two interactive elements overlap
 //   clipped    text is cut off by its own box (overflow hidden without an ellipsis)
 //   target     an interactive element is smaller than 24x24px (WCAG 2.5.8)
+//   align      a connector line (::after) and its arrowhead (::before) are off-centre (> 0.5px)
 //   overflow   the page scrolls horizontally
 // Usage: npm run build && npm run check:layout [-- --url http://localhost:4321]
 // Exits non-zero if anything is found. Chromium: CHROMIUM_PATH or the Playwright cache.
 import { chromium } from 'playwright-core';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2);
 const urlArg = args.includes('--url') ? args[args.indexOf('--url') + 1] : null;
 const pages = ['/', ...readdirSync('dist/projects', { withFileTypes: true })
   .filter((d) => d.isDirectory() && existsSync(join('dist/projects', d.name, 'index.html')))
+  // skip redirect stubs (meta refresh to a moved page)
+  .filter((d) => !readFileSync(join('dist/projects', d.name, 'index.html'), 'utf8').includes('http-equiv="refresh"'))
   .map((d) => `/projects/${d.name}/`)];
 const widths = [360, 768, 1024, 1366];
 const schemes = ['light', 'dark'];
@@ -125,6 +128,29 @@ function audit() {
       return Math.hypot(cx - nx, cy - ny) < 12 + (or.width < 24 || or.height < 24 ? 12 : 0);
     });
     if (crowded) out.push(['target', `${name(el)} is ${r.width.toFixed(0)}x${r.height.toFixed(0)}px with another target within 24px`]);
+  }
+
+  // align: paired absolutely positioned pseudo-elements (connector line + arrowhead) must share
+  // a centre line across the connector's direction.
+  const pseudoBox = (el, which) => {
+    const cs = getComputedStyle(el, which);
+    if (cs.content === 'none' || cs.content === 'normal' || cs.position !== 'absolute' || cs.display === 'none') return null;
+    const w = parseFloat(cs.width), h = parseFloat(cs.height);
+    if (!(w > 0) || !(h > 0)) return null;
+    const m = new DOMMatrix(cs.transform === 'none' ? undefined : cs.transform);
+    const left = parseFloat(cs.left), top = parseFloat(cs.top);
+    if (Number.isNaN(left) || Number.isNaN(top)) return null;
+    return { cx: left + w / 2 + m.m41, cy: top + h / 2 + m.m42, w, h };
+  };
+  for (const el of document.querySelectorAll('body *')) {
+    if (!visible(el)) continue;
+    const line = pseudoBox(el, '::after'), head = pseudoBox(el, '::before');
+    if (!line || !head) continue;
+    const thin = Math.min(line.w, line.h) <= 4; // only real connector lines
+    if (!thin || Math.max(head.w, head.h) > 16) continue;
+    const horizontal = line.w > line.h;
+    const diff = horizontal ? Math.abs(line.cy - head.cy) : Math.abs(line.cx - head.cx);
+    if (diff > 0.5) out.push(['align', `${name(el)}: arrowhead is ${diff.toFixed(1)}px off the connector line`]);
   }
 
   if (document.documentElement.scrollWidth > innerWidth) out.push(['overflow', `page is ${document.documentElement.scrollWidth}px wide at ${innerWidth}px`]);

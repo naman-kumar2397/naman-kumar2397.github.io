@@ -54,9 +54,10 @@ const { columns, caption, label } = Astro.props;
   }
   .lbl { font-weight: 600; font-size: 14px; line-height: 1.35; }
   .dt { font-size: 13px; color: var(--muted); line-height: 1.4; }
-  /* connectors */
+  /* connectors: line (::after) and arrowhead (::before) are centred on the same axis with the
+     same transform, so they stay aligned at any size and pixel ratio. */
   .stage:not(:last-child)::after {
-    content: ''; position: absolute; left: 50%; bottom: -28px; width: 2px; height: 28px;
+    content: ''; position: absolute; left: 50%; bottom: -28px; width: 2px; height: 28px; transform: translateX(-50%);
     background:
       linear-gradient(transparent, var(--flow-hi), transparent) no-repeat 0 -100% / 100% 50%,
       linear-gradient(var(--border), var(--accent));
@@ -65,14 +66,14 @@ const { columns, caption, label } = Astro.props;
   }
   .dg:not(.in-view) .stage::after { animation-play-state: paused; }
   .stage:not(:last-child)::before {
-    content: ''; position: absolute; left: calc(50% - 4px); bottom: -28px; z-index: 1;
+    content: ''; position: absolute; left: 50%; bottom: -28px; z-index: 1; transform: translateX(-50%);
     border: 5px solid transparent; border-top-color: var(--accent); border-bottom: 0;
   }
   figcaption { font-size: 12px; color: var(--muted); margin-top: 10px; }
   @container dg (min-width: 720px) {
     .stages { grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 32px; align-items: center; }
-    .stage:not(:last-child)::after { left: auto; right: -32px; top: 50%; bottom: auto; width: 32px; height: 2px; animation-name: flow-h;
+    .stage:not(:last-child)::after { left: auto; right: -32px; top: 50%; bottom: auto; width: 32px; height: 2px; transform: translateY(-50%); animation-name: flow-h;
       background: linear-gradient(90deg, transparent, var(--flow-hi), transparent) no-repeat -100% 0 / 50% 100%, linear-gradient(90deg, var(--border), var(--accent)); }
-    .stage:not(:last-child)::before { left: auto; right: -32px; top: calc(50% - 5px); bottom: auto; border: 5px solid transparent; border-left-color: var(--accent); border-right: 0; }
+    .stage:not(:last-child)::before { left: auto; right: -32px; top: 50%; bottom: auto; transform: translateY(-50%); border: 5px solid transparent; border-left-color: var(--accent); border-right: 0; }
   }
 </style>

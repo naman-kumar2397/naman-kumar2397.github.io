@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { mdPath } from '../lib/markdown';
 import { sitemapPaths } from '../lib/sitemap';
+import { GOATCOUNTER } from '../lib/analytics';
 
 interface Props {
   title: string;
@@ -66,6 +67,7 @@ const markdown = sitemapPaths().includes(Astro.url.pathname) ? new URL(mdPath(As
         setTimeout(function () { if (!window.__motionReady) document.documentElement.classList.remove('motion'); }, 2500);
       }
     </script>
+    {!Astro.url.pathname.startsWith('/og/') && <script is:inline async data-goatcounter={GOATCOUNTER} src="https://gc.zgo.at/count.js"></script>}
   </head>
   <body>
     <div id="scroll-progress" aria-hidden="true"></div>

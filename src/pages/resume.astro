@@ -1,5 +1,6 @@
 ---
 /* Print-first resume. `npm run resume:pdf` renders this page to public/resume.pdf. */
+import { GOATCOUNTER } from '../lib/analytics';
 import { accolades, certification, education, experience, profile, projects, resumeSkills as skills } from '../data/profile';
 
 const resumeDescription = `Resume of ${profile.name}, Lead SRE in Melbourne: 7+ years of SRE on AWS, observability, infrastructure as code and incident automation.`;
@@ -26,6 +27,7 @@ const orgLine = (r: (typeof experience)[number]) => {
     <meta property="og:url" content={new URL('/resume/', Astro.site)} />
     <meta property="og:image" content={new URL('/og.png', Astro.site)} />
     <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline async data-goatcounter={GOATCOUNTER} src="https://gc.zgo.at/count.js"></script>
   </head>
   <body>
     <main>

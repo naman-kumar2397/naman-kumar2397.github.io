@@ -39,6 +39,10 @@ npm run check:ai      # after a build: AI crawlers allowed in robots.txt, llms.t
 # All three run in CI on pull requests and gate every deploy to main.
 ```
 
+## Analytics
+
+[GoatCounter](https://www.goatcounter.com): open-source and cookie-free, so no consent banner. Stats at https://namankumar.goatcounter.com. The code lives in `src/lib/analytics.ts`; `/og/` render pages are excluded and localhost is never counted.
+
 ## AI and agentic search
 
 Every indexable page has a Markdown version (`/index.md`, `/resume.md`, `/projects/<id>.md`), linked from the page with `<link rel="alternate" type="text/markdown">`. `/llms.txt` maps the site ([llmstxt.org](https://llmstxt.org)) and `/llms-full.txt` holds everything in one file. All of it is generated from `src/data/` by `src/lib/markdown.ts`, so it never drifts from the HTML. `robots.txt` explicitly allows search, assistant and training crawlers.

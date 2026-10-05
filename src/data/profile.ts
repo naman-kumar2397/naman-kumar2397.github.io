@@ -143,7 +143,7 @@ export const experience: Role[] = [
     employer: 'Cvent',
     period: 'Oct 2019 – Sep 2024',
     headline: 'Co-developed Sev1 automation (20+ min faster response); ~880M logs/week to Datadog',
-    scope: ['70+ ECS clusters', '500+ Chef-managed servers', 'Mentored 4 engineers'],
+    scope: ['70+ ECS clusters', '500+ monthly active servers (Chef)', 'Mentored 4 engineers'],
     stack: ['Datadog', 'Splunk', 'AWS ECS', 'AWS CDK', 'Octopus Deploy', 'PagerDuty', 'Chef'],
     points: [
       { label: 'Incident automation', text: 'Co-developed Sev1 incident response automation (Datadog and Slack triggers orchestrating Jira, Slack, Zoom and PagerDuty), cutting time-to-respond by 20+ minutes.', top: true },
@@ -151,7 +151,7 @@ export const experience: Role[] = [
       { label: 'Observability ownership', text: "Owned SLI/SLO and custom instrumentation standards for Java microservices; led a newly acquired company's move to Datadog (10+ dashboards)." },
       { label: 'Platform scale', text: 'Rolled out ECS Capacity Providers across 70+ clusters with zero downtime.', top: true },
       { label: 'Octopus Deploy', text: 'Built a high-availability model sustaining 99.9% availability and cut self-hosting costs by 30%.', top: true },
-      { label: 'Cloud migration', text: 'Contributed to migrating a Rackspace-hosted product (17 Java microservices, 26 .NET projects, 8 websites) to AWS, and standardised build pipelines for 134 .NET projects onto one pipeline.', top: true },
+      { label: 'Cloud migration', text: 'Contributed to migrating a Rackspace-hosted product (17 Java microservices, 26 .NET projects, 8 websites) to AWS, and standardised build pipelines for 134 .NET projects across Cvent onto one pipeline.', top: true },
       { label: 'IaC', text: 'Early adopter of AWS CDK, consolidating CloudFormation and Terraform stacks into a single CDK stack for multiple applications.' },
       { label: 'Security', text: 'Moved all microservices to non-root, least-privilege containers.' },
       { label: 'Developer productivity', text: 'Embedded with sprint teams to remove bottlenecks, including fixing flaky JUnit/Jest tests that were wasting PR build hours; ran Fargate and Harness POCs.' },

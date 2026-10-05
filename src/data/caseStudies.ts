@@ -100,6 +100,7 @@ export const caseStudies: CaseStudy[] = [
       evolution: [
         {
           phase: 'Prototype: a local multi-agent helper',
+          when: 'March 2026',
           points: [
             'An orchestrator in the IDE dispatching specialist agents for AWS, Datadog, Buildkite and GitHub over MCP.',
             'A structured investigation loop: recall similar past incidents, triage, form 3 to 5 hypotheses, fan out one hypothesis per agent, correlate, confirm, diagnose, then record what was learned.',

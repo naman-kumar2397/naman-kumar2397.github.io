@@ -142,8 +142,7 @@ export const branches = {
     colour: 'coral',
     title: "It's What's Inside: The Game (Netflix)",
     org: 'AKQA',
-    // TODO: project dates not on the resume (falls within Sep 2024 – Apr 2025).
-    period: '',
+    period: 'Launched Nov 2024',
     highlights: [
       'SRE lead for a Netflix game where up to six players impersonate each other with AI face and voice swapping',
       'Kubernetes clusters that scaled to 50k+ concurrent users in the first 10 minutes of launch',
@@ -199,8 +198,7 @@ export const branches = {
     colour: 'teal',
     title: 'Alfred: a multi-agent AI SRE',
     org: 'Latitude Financial Services (client, via Viable Solutions and Synechron)',
-    // TODO: prototype start date not recorded; production since Sep 2026.
-    period: 'Live since Sep 2026',
+    period: 'Prototype Mar 2026 · live since Sep 2026',
     highlights: [
       'Multi-agent incident investigator, designed and built from local prototype to production',
       'Runs on Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent with Datadog, Dynatrace, Buildkite and GitHub specialists',
@@ -218,8 +216,7 @@ export const branches = {
     colour: 'orange',
     title: 'Claude for Developers',
     org: 'Latitude Financial Services (client, via Viable Solutions and Synechron)',
-    // TODO: start date not on the resume.
-    period: '',
+    period: 'Since Sep 2026',
     highlights: [
       'OpenAI-compatible Lambda proxy over Bedrock so GitHub Copilot (BYOK) can use Claude models',
       'Mandatory server-side guardrail',
@@ -264,7 +261,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
   {
     branch: 'cvent', kind: 'commit', date: '',
     message: 'feat: Rackspace to AWS migration, 17 Java + 26 .NET projects',
-    body: 'Contributed to migrating a Rackspace-hosted product (17 Java microservices, 26 .NET projects, 8 websites) to AWS, and standardised build pipelines for 134 .NET projects onto one pipeline.',
+    body: 'Contributed to migrating a Rackspace-hosted product (17 Java microservices, 26 .NET projects, 8 websites) to AWS, and standardised build pipelines for 134 .NET projects across Cvent onto one pipeline.',
   },
   {
     branch: 'cvent', kind: 'commit', date: '2020',
@@ -315,7 +312,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
     body: 'Grafana monitoring of NVIDIA DCGM GPU metrics for the game clusters.',
   },
   {
-    branch: 'akqa', kind: 'merge', source: 'netflix', date: '',
+    branch: 'akqa', kind: 'merge', source: 'netflix', date: 'Nov 2024',
     message: 'Merge: launch held 50k+ concurrent users in the first 10 minutes',
     body: "Merge branch 'project/netflix-game-launch' into work/akqa\n\nKubernetes clusters scaled to 50k+ concurrent users in the first 10 minutes of launch.",
   },
@@ -357,8 +354,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
     message: 'feat: 10-engineer team, follow-the-sun 24x7 support', milestone: true,
     body: 'Lead a team of 10 offshore engineers in India across 80+ AWS accounts. Streamlined intake for all additional workloads through ServiceNow and set up a follow-the-sun model across Melbourne and India for 24x7 support.',
   },
-  // TODO: prototype dates not recorded.
-  { branch: 'ai', kind: 'branch', message: 'Alfred: multi-agent AI SRE prototype', date: '' },
+  { branch: 'ai', kind: 'branch', message: 'Alfred: multi-agent AI SRE prototype', date: 'Mar 2026' },
   {
     branch: 'ai', kind: 'commit', date: '',
     message: 'feat: parallel specialist agents over MCP',
@@ -395,7 +391,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
     body: 'Hosted on Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent alongside Datadog, Dynatrace, Buildkite and GitHub specialists. Available from Slack and Teams, the IDE, pull requests and alerts.',
   },
   { branch: 'latitude', kind: 'merge', source: 'ai', message: "Merge branch 'project/alfred': live in production", date: 'Sep 2026' },
-  { branch: 'bedrock', kind: 'branch', message: 'Claude for developers via a Bedrock proxy', date: '' },
+  { branch: 'bedrock', kind: 'branch', message: 'Claude for developers via a Bedrock proxy', date: 'Sep 2026' },
   {
     branch: 'bedrock', kind: 'commit', date: '',
     message: 'feat: server-side guardrail and per-developer keys',

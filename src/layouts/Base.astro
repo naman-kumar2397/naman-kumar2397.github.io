@@ -72,7 +72,9 @@ const markdown = sitemapPaths().includes(Astro.url.pathname) ? new URL(mdPath(As
     <slot />
     <script>
       import { initMotion } from '../scripts/motion';
+      import { initCursor } from '../scripts/cursor';
       initMotion();
+      initCursor();
     </script>
   </body>
 </html>

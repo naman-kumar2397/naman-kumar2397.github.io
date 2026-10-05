@@ -26,6 +26,9 @@ data-attribute contract (`data-reveal`, `data-reveal-group`, `data-inview`, `dat
 - Scroll progress line (top of viewport), one rAF-batched listener for all scroll effects
 - Native cross-document View Transitions between pages (CSS only)
 - Buttons: hover lift 1px + shadow, press scale .98, visible focus
+- iPadOS-style pointer (`src/scripts/cursor.ts`): a dot that snaps onto small controls (up to 320x72) and
+  takes their shape with a 3px magnetic pull, a text beam over text, the dot over large cards; form fields keep
+  the native cursor. Fine pointer only, off with reduced motion, native cursor until the script runs
 - `<details>`: animated open/close where supported (`::details-content`), rotating chevrons
 
 **Hero**: staggered "coming online" entrance (status, word-masked name, role, statement, pitch, CTAs, photo);
@@ -54,6 +57,6 @@ static wrapped grid without JS or with reduced motion). Logos: Simple Icons (CC0
 - Hidden start states only apply under `html.motion` (set before paint when JS runs and reduced motion is off;
   removed after 2.5s if the controller never starts). No-JS and reduced-motion visitors see everything.
 - `prefers-reduced-motion: reduce`: no entrance, reveals, parallax, tilt, pulses, flow or view transitions.
-- Touch / coarse pointers: no tilt, parallax, cursor glow or hover-only effects.
+- Touch / coarse pointers: no tilt, parallax, cursor glow, custom pointer or hover-only effects.
 - Animations use transform, opacity and filter; continuous effects pause when off-screen.
 - Measured: CLS 0; Lighthouse 100 on all categories; home LCP 1.4s (hero entrance adds about 0.3s by design).

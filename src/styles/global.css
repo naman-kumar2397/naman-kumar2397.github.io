@@ -236,3 +236,20 @@ details[open] > summary .chev { rotate: 90deg; }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
   #scroll-progress { display: none; }
 }
+
+/* iPadOS-style pointer (src/scripts/cursor.ts). Only active once the script adds .has-cursor,
+   so without JS, on touch or with reduced motion the native cursor is untouched. */
+html.has-cursor, html.has-cursor * { cursor: none !important; }
+html.has-cursor :is(input, textarea, select, [contenteditable]) { cursor: auto !important; }
+#cursor {
+  position: fixed; left: 0; top: 0; z-index: 2147483647; pointer-events: none;
+  width: 18px; height: 18px; border-radius: 9px; opacity: 0; will-change: transform;
+  background: color-mix(in srgb, var(--text) 38%, transparent);
+  transition: opacity var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard), scale var(--dur-instant) var(--ease-standard);
+}
+#cursor.on { opacity: 1; }
+#cursor[data-mode='snap'] { background: color-mix(in srgb, var(--text) 9%, transparent); }
+#cursor[data-mode='beam'] { background: color-mix(in srgb, var(--text) 70%, transparent); }
+#cursor[data-mode='native'] { opacity: 0; }
+#cursor.down { scale: .94; }
+@media print { #cursor { display: none; } }

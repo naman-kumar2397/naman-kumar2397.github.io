@@ -159,41 +159,87 @@ export function initGraph(root: HTMLElement, data: GraphData): GraphApi {
   window.addEventListener('resize', schedule);
 
   // --- intro animation (oldest to newest) ----------------------------------
+  // Animations are created paused at t=0: their backwards fill holds the pre-animation state
+  // (undrawn paths, hidden nodes) until the log first scrolls into view, then they all play.
   const at = (i: number) => (N > 1 ? (i / (N - 1)) * DRAW_MS : 0);
+  const intro: Animation[] = [];
   if (!reduce.matches) {
     data.spans.forEach((sp, k) => {
       const start = sp.parentLane === null ? 0 : at(Math.max(sp.start - 1, 0));
       const end = sp.parentLane === null ? DRAW_MS : at(sp.end);
       const p = paths[k];
       p.style.strokeDasharray = '1';
-      p.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], {
+      const a = p.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], {
         duration: Math.max(end - start, 300),
         delay: start,
-        easing: 'cubic-bezier(.4,0,.2,1)',
+        easing: 'cubic-bezier(.65,0,.35,1)',
         fill: 'backwards',
-      }).finished.then(() => { p.style.strokeDasharray = ''; }, () => {});
+      });
+      a.pause();
+      a.finished.then(() => { p.style.strokeDasharray = ''; }, () => {});
+      intro.push(a);
     });
     nodes.forEach((n, i) => {
-      n.animate(
-        [{ transform: 'scale(0)', opacity: 0 }, { transform: 'scale(1.35)', opacity: 1, offset: 0.6 }, { transform: 'scale(1)', opacity: 1 }],
-        { duration: 420, delay: at(i), easing: 'ease-out', fill: 'backwards' },
+      const a = n.animate(
+        [{ transform: 'scale(.5)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }],
+        { duration: 360, delay: at(i), easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' },
       );
+      a.pause();
+      intro.push(a);
     });
   }
-  const startPulse = () => {
-    if (!pulse || reduce.matches) return;
-    pulse.animate(
-      [{ transform: 'scale(1)', opacity: 0.55 }, { transform: 'scale(2.2)', opacity: 0 }],
-      { duration: 2400, iterations: Infinity, easing: 'ease-out', delay: reduce.matches ? 0 : DRAW_MS + 200, fill: 'backwards' },
-    );
-  };
+
+  // HEAD pulse: runs only while the log is on screen.
+  let pulseAnim: Animation | null = null;
+  let onScreen = false;
+  let started = reduce.matches;
   if (pulse) (pulse as SVGCircleElement).style.opacity = '0';
+  const syncPulse = () => {
+    if (!pulseAnim) return;
+    if (onScreen && started) pulseAnim.play();
+    else pulseAnim.pause();
+  };
+  const startPulse = () => {
+    if (!pulse || reduce.matches || pulseAnim) return;
+    pulseAnim = (pulse as SVGCircleElement).animate(
+      [{ transform: 'scale(1)', opacity: 0.55 }, { transform: 'scale(2.2)', opacity: 0 }],
+      { duration: 2400, iterations: Infinity, easing: 'ease-out', delay: DRAW_MS + 200 },
+    );
+    pulseAnim.pause();
+    syncPulse();
+  };
   startPulse();
+
+  const begin = () => {
+    if (started) return;
+    started = true;
+    intro.forEach((a) => a.play());
+    syncPulse();
+  };
+  if ('IntersectionObserver' in window && !reduce.matches) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        onScreen = entries[entries.length - 1].isIntersecting;
+        if (onScreen) begin();
+        syncPulse();
+      },
+      { rootMargin: '0px 0px -12% 0px' },
+    );
+    io.observe(root);
+  } else {
+    onScreen = true;
+    begin();
+  }
+
   reduce.addEventListener('change', () => {
-    svg.getAnimations({ subtree: true }).forEach((a) => a.finish());
-    paths.forEach((p) => (p.style.strokeDasharray = ''));
-    if (reduce.matches) pulse?.getAnimations().forEach((a) => a.cancel());
-    else startPulse();
+    if (reduce.matches) {
+      intro.forEach((a) => { try { a.finish(); } catch { /* already done */ } });
+      paths.forEach((p) => (p.style.strokeDasharray = ''));
+      pulseAnim?.cancel();
+      pulseAnim = null;
+    } else {
+      startPulse();
+    }
   });
 
   // --- hover / focus highlight ----------------------------------------------

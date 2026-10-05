@@ -6,21 +6,21 @@ import { branches, type Branch } from '../data/journey';
 const colour = (id: string) => `var(--c-${(branches as Record<string, Branch>)[id]?.colour ?? 'gray'})`;
 ---
 <section id="experience" class="container section" aria-labelledby="exp-title">
-  <div class="section-head">
+  <div class="section-head" data-reveal="heading">
     <p class="kicker">git log --first-parent main</p>
     <h2 id="exp-title">Experience</h2>
     <p>From cloud automation to leading an SRE team across 80+ AWS accounts. Consulting engagements show the employer, the consulting partner and the client separately.</p>
   </div>
 
-  <div class="overview">
+  <div class="overview" data-reveal="card">
     <h3 id="ov-title" class="ov-title">Career at a glance</h3>
     <table class="ov">
       <thead>
         <tr><th scope="col">Period</th><th scope="col">Role</th><th scope="col">Employer and client</th><th scope="col">Highlight</th></tr>
       </thead>
-      <tbody>
+      <tbody data-reveal-group>
         {experience.map((r) => (
-          <tr style={`--c:${colour(r.branch)}`}>
+          <tr data-reveal="fade" style={`--c:${colour(r.branch)}`}>
             <td class="ov-period mono">{r.period}</td>
             <th scope="row" class="ov-role"><a href={`#role-${r.branch}`}>{r.title}</a></th>
             <td class="ov-org">{r.employer}{r.client && <span class="muted"> for {r.client}</span>}</td>
@@ -31,7 +31,7 @@ const colour = (id: string) => `var(--c-${(branches as Record<string, Branch>)[i
     </table>
   </div>
 
-  <ol class="roles">
+  <ol class="roles" id="exp-roles">
     {experience.map((r, i) => {
       // Three headline points stay visible; the rest (other highlights first) sit behind "More detail".
       const ranked = [...r.points.filter((p) => p.top), ...r.points.filter((p) => !p.top)];
@@ -40,7 +40,7 @@ const colour = (id: string) => `var(--c-${(branches as Record<string, Branch>)[i
       const current = r.period.includes('Present');
       return (
         <li class="role" style={`--c:${colour(r.branch)}`}>
-          <article id={`role-${r.branch}`} aria-labelledby={`role-${i}`}>
+          <article id={`role-${r.branch}`} aria-labelledby={`role-${i}`} data-reveal="card">
             <header class="r-head">
               <div class="r-title">
                 <h3 id={`role-${i}`}>{r.title}</h3>
@@ -59,7 +59,7 @@ const colour = (id: string) => `var(--c-${(branches as Record<string, Branch>)[i
             </ul>
             {more.length > 0 && (
               <details class="more">
-                <summary>More detail <span class="muted">({more.length})</span></summary>
+                <summary>More detail <span class="muted">({more.length})</span> <span class="chev" aria-hidden="true">›</span></summary>
                 <ul class="points">{more.map((p) => <li>{p.label && <b>{p.label}. </b>}{p.text}</li>)}</ul>
               </details>
             )}
@@ -99,13 +99,26 @@ const colour = (id: string) => `var(--c-${(branches as Record<string, Branch>)[i
   .rel dt { font: 12px var(--mono); color: var(--muted); }
   .rel dt::after { content: ':'; }
   .rel dd { margin: 0; font-weight: 600; }
-  .roles { list-style: none; margin: 0; padding: 0; }
+  .roles { list-style: none; margin: 0; padding: 0; position: relative; --rail-bottom: 100%; }
   .role { position: relative; padding: 0 0 28px 28px; }
-  /* commit rail: ties the experience list to the git log */
-  .role::before { content: ''; position: absolute; left: 6px; top: 8px; bottom: -8px; width: 2px; background: var(--border); }
-  .role:last-child::before { display: none; }
-  .role::after { content: ''; position: absolute; left: 0; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--c); }
-  article { border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--bg); box-shadow: var(--shadow); }
+  /* commit rail: ONE track plus ONE fill on the list. --rail-bottom (set by script) stops it at the last node.
+     Fill is drawn by scroll position via --progress (defaults to fully drawn without JS or with reduced motion). */
+  .roles::before, .roles::after { content: ''; position: absolute; left: 6px; top: 11px; bottom: var(--rail-bottom); width: 2px; border-radius: 1px; pointer-events: none; }
+  .roles::before { background: var(--border); }
+  .roles::after { background: var(--accent); transform-origin: 50% 0; transform: scaleY(var(--progress, 1)); will-change: transform; }
+  :global(html.motion) .roles { --progress: 0; }
+  .role::after { content: ''; position: absolute; left: 0; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--c); z-index: 1; box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--c), 0 0 0 4px transparent; transition: box-shadow var(--dur-normal) var(--ease-standard); }
+  :global(html.motion) .role::after { opacity: 0; scale: .9; transition: opacity var(--dur-slow) var(--ease-out), scale var(--dur-slow) var(--ease-out), box-shadow var(--dur-normal) var(--ease-standard); }
+  :global(html.motion) .role.node-in::after { opacity: 1; scale: none; animation: node-settle var(--dur-slow) var(--ease-out) both; }
+  @keyframes node-settle {
+    from { box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--c), 0 0 0 9px color-mix(in srgb, var(--c) 22%, transparent); }
+  }
+  .role.is-active::after { box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--c), 0 0 0 8px color-mix(in srgb, var(--c) 18%, transparent); }
+  article { position: relative; border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--bg); box-shadow: var(--shadow); }
+  /* active role: accent left edge and a soft lift, as opacity-only layers so they never fight the reveal transform */
+  article::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: 8px 0 0 8px; background: var(--c); opacity: 0; transition: opacity var(--dur-normal) var(--ease-standard); pointer-events: none; }
+  article::after { content: ''; position: absolute; inset: -1px; border-radius: 8px; box-shadow: 0 10px 28px -14px color-mix(in srgb, var(--text) 45%, transparent); opacity: 0; transition: opacity var(--dur-normal) var(--ease-standard); pointer-events: none; }
+  .role.is-active article::before, .role.is-active article::after { opacity: 1; }
   .r-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
   .r-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   h3 { font-size: 18px; line-height: 1.3; margin: 0; font-weight: 600; }
@@ -116,6 +129,7 @@ const colour = (id: string) => `var(--c-${(branches as Record<string, Branch>)[i
   .points li::marker { color: var(--c); }
   .more { margin-top: 8px; }
   .more summary { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; color: var(--accent); font-weight: 500; }
+  .more summary .chev { font-size: 1.1em; line-height: 1; }
   .more[open] summary { min-height: 32px; }
   .more .points { margin-top: 0; }
   .tools { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--border-muted); font: 12px/1.6 var(--mono); color: var(--muted); }
@@ -124,3 +138,63 @@ const colour = (id: string) => `var(--c-${(branches as Record<string, Branch>)[i
     .role { padding-left: 36px; }
   }
 </style>
+
+<script>
+  import { onScroll, prefersReducedMotion } from '../scripts/motion';
+
+  const list = document.getElementById('exp-roles');
+  if (list) {
+    const items = [...list.querySelectorAll<HTMLLIElement>(':scope > li.role')];
+    const last = items[items.length - 1];
+    const NODE_Y = 11; // node centre from the top of its li (matches the CSS rail offsets)
+
+    // Stop the rail at the last node. Measured on resize only, never during scroll.
+    const fit = () => {
+      if (last) list.style.setProperty('--rail-bottom', `${Math.max(0, list.offsetHeight - last.offsetTop - NODE_Y)}px`);
+    };
+    fit();
+    if ('ResizeObserver' in window) new ResizeObserver(fit).observe(list);
+    else window.addEventListener('resize', fit, { passive: true });
+
+    // Nodes settle in when their card is revealed.
+    items.forEach((li) => {
+      const art = li.querySelector<HTMLElement>('article');
+      if (!art) return;
+      const mark = () => li.classList.add('node-in');
+      if (art.classList.contains('is-in')) mark();
+      else art.addEventListener('motion:reveal', mark, { once: true });
+    });
+
+    // Active role: the one crossing the viewport centre band.
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) e.target.closest('li.role')?.classList.toggle('is-active', e.isIntersecting);
+        },
+        { rootMargin: '-45% 0px -45% 0px' },
+      );
+      items.forEach((li) => { const a = li.querySelector('article'); if (a) io.observe(a); });
+    }
+
+    // Scroll-linked rail fill: how far the viewport centre has travelled from first to last node.
+    if (last && document.documentElement.classList.contains('motion') && !prefersReducedMotion()) {
+      let prev = -1;
+      onScroll((_y, vh) => {
+        const r = list.getBoundingClientRect();
+        let p: number;
+        if (r.top > vh * 1.5) p = 0;
+        else if (r.bottom < -vh * 0.5) p = 1;
+        else {
+          const start = r.top + NODE_Y;
+          const end = last.getBoundingClientRect().top + NODE_Y;
+          p = end > start ? Math.min(1, Math.max(0, (vh / 2 - start) / (end - start))) : 1;
+        }
+        p = Math.round(p * 1000) / 1000;
+        if (p !== prev) {
+          prev = p;
+          list.style.setProperty('--progress', String(p));
+        }
+      });
+    }
+  }
+</script>

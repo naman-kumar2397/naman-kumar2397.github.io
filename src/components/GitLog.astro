@@ -33,12 +33,12 @@ const graphData: GraphData = {
 };
 ---
 <section id="journey" class="container section" aria-labelledby="journey-title">
-  <div class="section-head">
+  <div class="section-head" data-reveal="heading">
     <p class="kicker">git log --graph --all</p>
     <h2 id="journey-title">Career journey</h2>
     <p>The full story, for the curious: my career as a git history. Each company is a branch off <code>main</code> that merged back when I moved on; projects branch off their company. Select any entry for details.</p>
   </div>
-  <div class="box log-box">
+  <div class="box log-box" data-reveal="card">
   <div class="box-head">
     <span class="mono head-title" aria-hidden="true">~/naman-kumar/journey</span>
     <span class="sp"></span>
@@ -46,6 +46,7 @@ const graphData: GraphData = {
   </div>
   <div class="toolbar" id="log-toolbar" hidden>
     <div class="seg" role="group" aria-label="View">
+      <span class="seg-thumb" aria-hidden="true"></span>
       <button type="button" data-view="highlights" aria-pressed="true">Highlights <span class="n">{highlightsCount}</span></button>
       <button type="button" data-view="full" aria-pressed="false">Full history <span class="n">{commits.length}</span></button>
     </div>
@@ -146,13 +147,20 @@ const graphData: GraphData = {
   .section-head code { font: 13px var(--mono); background: var(--code-bg); border: 1px solid var(--border-muted); border-radius: 6px; padding: 1px 5px; }
   .head-title { font-size: 13px; font-weight: 400; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .toolbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); }
-  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .seg { display: inline-flex; position: relative; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--btn-bg); }
   .seg button {
-    font: 500 13px/1 var(--sans); color: var(--text); background: var(--btn-bg);
+    position: relative; z-index: 1;
+    font: 500 13px/1 var(--sans); color: var(--text); background: transparent;
     border: 0; padding: 0 12px; min-height: 36px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    transition: color var(--dur-normal) var(--ease-in-out);
   }
   .seg button + button { border-left: 1px solid var(--border); }
-  .seg button[aria-pressed='true'] { background: var(--bg); color: var(--accent); box-shadow: inset 0 -2px 0 var(--tab-active); font-weight: 600; }
+  .seg button[aria-pressed='true'] { color: var(--accent); font-weight: 600; }
+  /* one thumb slides between the buttons: 1px-wide box scaled to the button width, moved with transform */
+  .seg-thumb { position: absolute; left: 0; top: 0; bottom: 0; width: 1px; transform-origin: 0 0; transform: translateX(var(--thumb-x, 0px)) scaleX(var(--thumb-w, 0)); background: var(--bg); box-shadow: inset 0 -2px 0 var(--tab-active); pointer-events: none; opacity: 0; }
+  .seg.ready .seg-thumb { opacity: 1; transition: transform var(--dur-normal) var(--ease-in-out); }
+  /* no-JS-measure fallback keeps the old look */
+  .seg:not(.ready) button[aria-pressed='true'] { background: var(--bg); box-shadow: inset 0 -2px 0 var(--tab-active); }
   .seg .n { font-size: 12px; color: var(--muted); }
   .seg button:focus-visible { outline-offset: -3px; }
   .filters { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -167,7 +175,9 @@ const graphData: GraphData = {
   .toolbar[hidden], .expand[hidden] { display: none; }
   .log-clip.collapsed { max-height: 520px; overflow: hidden; position: relative; }
   .log-clip.collapsed::after { content: ''; position: absolute; inset: auto 0 0 0; height: 96px; background: linear-gradient(transparent, var(--bg)); pointer-events: none; z-index: 2; }
+  .seg.ready.snap .seg-thumb { transition: none; }
   .expand { display: flex; justify-content: center; padding: 12px; border-top: 1px solid var(--border-muted); }
+  .row-head { transition: opacity var(--dur-fast) var(--ease-standard); }
   .row.faded > .row-head { opacity: .6; }
   .row.faded:hover > .row-head, .row.faded > .row-head:focus-visible { opacity: 1; }
   .counts { white-space: nowrap; }
@@ -180,7 +190,7 @@ const graphData: GraphData = {
   }
   .graph { position: absolute; left: 0; top: 0; width: var(--gutter); height: 100%; pointer-events: none; overflow: visible; z-index: 1; }
   .log { list-style: none; margin: 0; padding: 0; }
-  .row { border-bottom: 1px solid var(--border-muted); position: relative; }
+  .row { border-bottom: 1px solid var(--border-muted); position: relative; transition: background-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard); }
   .row:last-child { border-bottom: 0; }
   .row:hover, .row:has(> .row-head[aria-expanded='true']) { background: var(--hover); }
   .row:has(> .row-head[aria-expanded='true']) { box-shadow: inset 2px 0 0 var(--c); }
@@ -243,9 +253,13 @@ const graphData: GraphData = {
   }
 
   /* graph elements are created at runtime */
-  .graph :global(.lane) { fill: none; stroke-width: 2.5; stroke-linecap: round; transition: opacity .2s; }
-  .graph :global(.node) { transition: opacity .2s; transform-box: fill-box; transform-origin: center; }
+  .graph :global(.lane) { fill: none; stroke-width: 2.5; stroke-linecap: round; transition: opacity var(--dur-fast) var(--ease-standard); }
+  .graph :global(.node) { transition: opacity var(--dur-fast) var(--ease-standard); transform-box: fill-box; transform-origin: center; }
   .graph :global(.pulse) { fill: none; stroke-width: 2; transform-box: fill-box; transform-origin: center; }
+  /* short cross-fade when the filter or view changes; only the log container is named */
+  .log-clip.vt { view-transition-name: git-log; }
+  :global(::view-transition-group(git-log)) { animation-duration: var(--dur-normal); animation-timing-function: var(--ease-standard); }
+  :global(::view-transition-old(git-log)), :global(::view-transition-new(git-log)) { height: 100%; width: 100%; object-fit: none; object-position: left top; animation-duration: var(--dur-normal); animation-timing-function: var(--ease-standard); }
   .graph:global(.dim) :global(.lane:not(.hl)),
   .graph:global(.dim) :global(.node:not(.hl)),
   .graph:global(.dim) :global(.pulse:not(.hl)) { opacity: .2; }
@@ -253,6 +267,7 @@ const graphData: GraphData = {
 
 <script>
   import { initGraph } from './graph';
+  import { DURATION, prefersReducedMotion } from '../scripts/motion';
   const root = document.getElementById('git-log');
   const data = document.getElementById('git-log-data');
   const toolbar = document.getElementById('log-toolbar');
@@ -273,25 +288,71 @@ const graphData: GraphData = {
     const clip = document.getElementById('log-clip')!;
     const expand = document.getElementById('log-expand')!;
     const expandBtn = expand.querySelector('button')!;
+    let expanding = false;
+    let clipAnims: Animation[] = [];
     const setExpanded = (open: boolean) => {
+      clipAnims.forEach((a) => a.cancel());
+      clipAnims = [];
+      expanding = false;
       clip.classList.toggle('collapsed', !open);
       expand.hidden = open;
       expandBtn.setAttribute('aria-expanded', String(open));
     };
     setExpanded(false);
+    // Animate the clip from its collapsed height to full height, fading the gradient overlay, then drop the class.
+    const expandAnimated = () => {
+      if (expanding) return;
+      const from = clip.offsetHeight;
+      const to = Math.ceil(clip.scrollHeight);
+      if (prefersReducedMotion() || typeof clip.animate !== 'function' || to <= from + 8) {
+        setExpanded(true);
+        return;
+      }
+      expanding = true;
+      expandBtn.setAttribute('aria-expanded', 'true');
+      const opts = { duration: DURATION.slow, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' as FillMode };
+      const grow = clip.animate([{ maxHeight: `${from}px` }, { maxHeight: `${to}px` }], opts);
+      clipAnims = [grow];
+      try {
+        clipAnims.push(clip.animate([{ opacity: 1 }, { opacity: 0 }], { ...opts, pseudoElement: '::after' }));
+      } catch { /* pseudo-element animations unsupported: overlay just disappears at the end */ }
+      grow.finished.then(
+        () => {
+          if (!expanding) return;
+          setExpanded(true);
+          focusFirstHidden();
+        },
+        () => {},
+      );
+    };
+    // Move focus to the first entry that was hidden behind the fade.
+    const focusFirstHidden = () => {
+      const firstHidden = rows.find((r) => !r.hidden && r.offsetTop > 400);
+      firstHidden?.querySelector<HTMLButtonElement>('.row-head')?.focus();
+    };
     // Keyboard users tabbing past the preview get the full log instead of focus vanishing under the fade.
     clip.addEventListener('focusin', (e) => {
       const li = (e.target as HTMLElement).closest<HTMLElement>('li.row');
       if (clip.classList.contains('collapsed') && li && li.offsetTop + li.offsetHeight > clip.clientHeight - 96) setExpanded(true);
     });
-    expandBtn.addEventListener('click', () => {
-      setExpanded(true);
-      // Move focus to the first entry that was hidden behind the fade.
-      const firstHidden = rows.find((r) => !r.hidden && r.offsetTop > 400);
-      firstHidden?.querySelector<HTMLButtonElement>('.row-head')?.focus();
-    });
+    expandBtn.addEventListener('click', expandAnimated);
 
-    function apply() {
+    // Segmented control: one thumb slides under the active button.
+    const seg = toolbar.querySelector<HTMLElement>('.seg')!;
+    const placeThumb = (animate: boolean) => {
+      const active = viewBtns.find((b) => b.getAttribute('aria-pressed') === 'true');
+      if (!active || !active.offsetWidth) return;
+      if (!animate) seg.classList.add('snap');
+      seg.style.setProperty('--thumb-x', `${active.offsetLeft}px`);
+      seg.style.setProperty('--thumb-w', String(active.offsetWidth));
+      seg.classList.add('ready');
+      if (!animate) {
+        void seg.offsetWidth; // commit the snap before transitions come back
+        seg.classList.remove('snap');
+      }
+    };
+
+    function applyNow() {
       const type = typeSel.value;
       const company = companySel.value;
       const filtering = !!(type || company);
@@ -316,16 +377,47 @@ const graphData: GraphData = {
       status.textContent = text;
     }
 
+    // Filter/view changes: cross-fade the log through a short view transition when available,
+    // otherwise fade in only the rows that newly appear. The very first apply is always plain.
+    type VT = { finished: Promise<unknown> };
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => VT };
+    function apply(animate = true) {
+      if (!animate || prefersReducedMotion()) return applyNow();
+      if (typeof doc.startViewTransition === 'function') {
+        clip.classList.add('vt');
+        const done = () => clip.classList.remove('vt');
+        try {
+          const vt = doc.startViewTransition(() => applyNow());
+          vt.finished.then(done, done);
+        } catch {
+          done();
+          applyNow();
+        }
+        return;
+      }
+      const before = new Map(rows.map((li) => [li, li.hidden]));
+      applyNow();
+      for (const li of rows) {
+        if (before.get(li) && !li.hidden) {
+          li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: DURATION.fast, easing: 'cubic-bezier(.2,0,0,1)' });
+        }
+      }
+    }
+
     viewBtns.forEach((b) =>
       b.addEventListener('click', () => {
         view = b.dataset.view as typeof view;
         viewBtns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        placeThumb(true);
         apply();
       }),
     );
-    typeSel.addEventListener('change', apply);
-    companySel.addEventListener('change', apply);
-    apply();
+    typeSel.addEventListener('change', () => apply());
+    companySel.addEventListener('change', () => apply());
+    apply(false);
+    placeThumb(false);
+    if ('ResizeObserver' in window) new ResizeObserver(() => placeThumb(false)).observe(seg);
+    else window.addEventListener('resize', () => placeThumb(false), { passive: true });
 
     // "git log <branch>" links (case studies, project pages via ?branch=): open that branch's first commit.
     const reveal = (branch: string, smooth: boolean) => {
@@ -334,7 +426,7 @@ const graphData: GraphData = {
       typeSel.value = '';
       companySel.value = '';
       setExpanded(true);
-      apply();
+      apply(false);
       const btn = li.querySelector<HTMLButtonElement>('.row-head')!;
       if (btn.getAttribute('aria-expanded') !== 'true') btn.click();
       btn.focus({ preventScroll: true });

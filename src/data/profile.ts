@@ -189,3 +189,23 @@ export const accolades = [
 
 export const education = 'Bachelor of Technology, Manipal University Jaipur (2015 – 2019)';
 export const certification = 'AWS Certified Solutions Architect – Associate (R2XYHRM1JE1E1TKJ), 2019';
+
+/**
+ * Technology carousel (shown while the full inventory is collapsed). Mirrors `resumeSkills`.
+ * `logo` is a key in src/data/logos.ts; entries without one render as text tiles
+ * (AWS and some vendors have no freely licensed mark). Order interleaves logos and text.
+ */
+export const techCarousel: { name: string; logo?: string }[] = [
+  { name: 'AWS' }, { name: 'Kubernetes', logo: 'kubernetes' }, { name: 'ECS' }, { name: 'Docker', logo: 'docker' },
+  { name: 'Fargate' }, { name: 'Terraform', logo: 'terraform' }, { name: 'EC2' }, { name: 'Datadog', logo: 'datadog' },
+  { name: 'Lambda' }, { name: 'Dynatrace', logo: 'dynatrace' }, { name: 'S3' }, { name: 'Grafana', logo: 'grafana' },
+  { name: 'DynamoDB' }, { name: 'Splunk', logo: 'splunk' }, { name: 'DMS' }, { name: 'Sumo Logic', logo: 'sumologic' },
+  { name: 'IAM' }, { name: 'New Relic', logo: 'newrelic' }, { name: 'KMS' }, { name: 'Claude', logo: 'claude' },
+  { name: 'Transit Gateway' }, { name: 'MCP', logo: 'modelcontextprotocol' }, { name: 'Bedrock' }, { name: 'Buildkite', logo: 'buildkite' },
+  { name: 'AWS CDK' }, { name: 'GitLab', logo: 'gitlab' }, { name: 'CloudFormation' }, { name: 'Jenkins', logo: 'jenkins' },
+  { name: 'CloudWatch' }, { name: 'Octopus Deploy', logo: 'octopusdeploy' }, { name: 'Harness' }, { name: 'PagerDuty', logo: 'pagerduty' },
+  { name: 'CrowdStrike' }, { name: 'Opsgenie', logo: 'opsgenie' }, { name: 'Ivanti' }, { name: 'Jira', logo: 'jira' },
+  { name: 'ServiceNow' }, { name: 'Chef', logo: 'chef' }, { name: 'PowerShell' }, { name: 'Ansible', logo: 'ansible' },
+  { name: 'Python', logo: 'python' }, { name: 'TypeScript', logo: 'typescript' }, { name: 'Groovy', logo: 'apachegroovy' },
+  { name: 'Bash', logo: 'gnubash' }, { name: 'GitHub', logo: 'github' }, { name: 'Bitbucket', logo: 'bitbucket' },
+];

@@ -44,3 +44,15 @@ test('no stale ServiceNow claim for the AI assistant', () => {
   const alfred = caseStudies.find((c) => c.id === 'alfred');
   assert.ok(alfred && !JSON.stringify(alfred).includes('ServiceNow'));
 });
+
+import { logos } from '../src/data/logos.ts';
+import { techCarousel, resumeSkills } from '../src/data/profile.ts';
+
+test('carousel logos exist and every carousel entry is in the inventory', () => {
+  const inventory = JSON.stringify(resumeSkills).toLowerCase();
+  for (const t of techCarousel) {
+    if (t.logo) assert.ok(logos[t.logo], `missing logo ${t.logo}`);
+    const key = t.name.toLowerCase().replace(/^bash$/, 'shell').replace(/^groovy$/, 'groovy').replace(/^mcp$/, 'mcp');
+    assert.ok(inventory.includes(key), `${t.name} not in resume inventory`);
+  }
+});

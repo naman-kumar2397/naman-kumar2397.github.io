@@ -1,0 +1,38 @@
+---
+/* 1200x630 social card. `npm run assets` screenshots this to public/og.png. */
+import { profile } from '../../data/profile';
+---
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><meta name="robots" content="noindex" /><title>OG card</title></head>
+  <body>
+    <main class="card">
+      <svg class="graph" width="120" height="630" viewBox="0 0 120 630" aria-hidden="true">
+        <path d="M40 0V630" stroke="#8b949e" stroke-width="4" fill="none" />
+        <path d="M40 520C40 470 80 480 80 430V200C80 150 40 160 40 110" stroke="#3fb950" stroke-width="4" fill="none" />
+        <path d="M40 90C40 60 80 70 80 40V0" stroke="#4493f8" stroke-width="4" fill="none" />
+        <circle cx="80" cy="330" r="9" fill="#3fb950" /><circle cx="40" cy="110" r="9" fill="#0d1117" stroke="#3fb950" stroke-width="4" />
+        <circle cx="80" cy="40" r="12" fill="#0d1117" stroke="#4493f8" stroke-width="5" />
+      </svg>
+      <div class="copy">
+        <p class="ref">HEAD -&gt; work/latitude</p>
+        <h1>{profile.name}</h1>
+        <p class="role">{profile.role} · {profile.location}</p>
+        <p class="lead">{profile.headline}</p>
+        <ul class="m">{profile.metrics.map((m) => <li><b>{m.value}</b><span>{m.label}</span></li>)}</ul>
+      </div>
+    </main>
+  </body>
+</html>
+<style is:global>
+  body { margin: 0; }
+  .card { width: 1200px; height: 630px; display: flex; gap: 40px; background: #0d1117; color: #f0f6fc; font-family: -apple-system, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif; padding: 0 72px 0 32px; box-sizing: border-box; align-items: center; }
+  .graph { flex: none; align-self: stretch; height: 630px; }
+  .ref { display: inline-block; margin: 0; font: 500 22px/34px ui-monospace, Menlo, monospace; background: #1f6feb; border-radius: 99px; padding: 0 16px; }
+  h1 { font-size: 84px; line-height: 1; margin: 22px 0 0; letter-spacing: -2px; }
+  .role { font-size: 32px; color: #4493f8; margin: 14px 0 0; font-weight: 600; }
+  .lead { font-size: 30px; color: #9198a1; margin: 20px 0 0; max-width: 900px; }
+  .m { list-style: none; padding: 0; margin: 36px 0 0; display: flex; gap: 40px; }
+  .m b { display: block; font-size: 40px; }
+  .m span { font-size: 18px; color: #9198a1; }
+</style>

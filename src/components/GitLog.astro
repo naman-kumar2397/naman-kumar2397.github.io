@@ -8,8 +8,19 @@ const B = branches as Record<string, Branch>;
 const rows = [...layout.rows].reverse(); // newest first, like git log
 const branchCount = Object.keys(branches).length - 1;
 
+// Company a row belongs to, for filtering: role branches, and projects via their parent.
+const companyOf = (id: string): string | null => {
+  const b = B[id];
+  if (b.type === 'role') return id;
+  if (b.type === 'project' && b.parent) return companyOf(b.parent);
+  return null;
+};
+const companies = Object.entries(B).filter(([, b]) => b.type === 'role').map(([id, b]) => ({ id, label: b.label }));
+const typeLabel = { trunk: '', education: 'education', role: 'role', project: 'project' } as const;
+const highlightsCount = layout.rows.filter((r) => r.commit.kind !== 'commit' || r.commit.milestone || r.commit.tag).length;
+
 const graphData: GraphData = {
-  rows: layout.rows.map((r) => ({ lane: r.lane, owner: r.owner, colour: B[r.branch].colour, mergeColour: r.commit.kind === 'merge' ? B[r.owner].colour : undefined, kind: r.commit.kind, head: r.isHead })),
+  rows: layout.rows.map((r) => ({ lane: r.lane, owner: r.owner, colour: B[r.branch].colour, mergeColour: r.commit.kind === 'merge' ? B[r.owner].colour : undefined, kind: r.commit.kind, head: r.isHead, marker: r.commit.tag ? 'diamond' : 'dot' })),
   spans: Object.values(layout.spans).map((s) => ({
     branch: s.branch,
     colour: B[s.branch].colour,
@@ -21,12 +32,44 @@ const graphData: GraphData = {
   })),
 };
 ---
-<section class="box log-box" aria-labelledby="log-title">
-  <div class="box-head">
-    <h2 id="log-title" class="mono head-title">git log --graph --all</h2>
-    <span class="sp"></span>
-    <span class="muted counts">{commits.length} commits<span class="hide-xs"> · {branchCount} branches</span></span>
+<section id="journey" class="container section" aria-labelledby="journey-title">
+  <div class="section-head">
+    <p class="kicker">git log --graph --all</p>
+    <h2 id="journey-title">Career journey</h2>
+    <p>My career as a git history. Each company is a branch off <code>main</code> that merged back when I moved on; projects branch off their company. Select any entry for details.</p>
   </div>
+  <div class="box log-box">
+  <div class="box-head">
+    <span class="mono head-title" aria-hidden="true">~/naman-kumar/journey</span>
+    <span class="sp"></span>
+    <span class="muted counts" id="log-count">{commits.length} commits<span class="hide-xs"> · {branchCount} branches</span></span>
+  </div>
+  <div class="toolbar" id="log-toolbar" hidden>
+    <div class="seg" role="group" aria-label="View">
+      <button type="button" data-view="highlights" aria-pressed="true">Highlights <span class="n">{highlightsCount}</span></button>
+      <button type="button" data-view="full" aria-pressed="false">Full history <span class="n">{commits.length}</span></button>
+    </div>
+    <div class="filters">
+      <label>
+        <span class="sr-only">Filter by type</span>
+        <select data-filter="type">
+          <option value="">All types</option>
+          <option value="role">Roles</option>
+          <option value="project">Projects</option>
+          <option value="recognition">Awards and certifications</option>
+          <option value="education">Education</option>
+        </select>
+      </label>
+      <label>
+        <span class="sr-only">Filter by company</span>
+        <select data-filter="company">
+          <option value="">All companies</option>
+          {companies.map((c) => <option value={c.id}>{c.label}</option>)}
+        </select>
+      </label>
+    </div>
+  </div>
+  <p class="sr-only" id="log-status" aria-live="polite"></p>
   <div class="log-wrap" id="git-log" style={`--lanes:${layout.laneCount}`}>
     <svg class="graph" aria-hidden="true" focusable="false"></svg>
     <ol class="log">
@@ -37,7 +80,16 @@ const graphData: GraphData = {
         const span = layout.spans[r.owner];
         const id = `c-${r.hash}`;
         return (
-          <li class="row" data-row={r.index} data-owner={r.owner} data-kind={c.kind} style={`--c:var(--c-${own.colour})`}>
+          <li
+            class="row"
+            data-row={r.index}
+            data-owner={r.owner}
+            data-kind={c.kind}
+            data-type={c.tag ? 'recognition' : own.type}
+            data-company={companyOf(r.owner) ?? ''}
+            data-highlight={c.kind !== 'commit' || c.milestone || c.tag ? '1' : '0'}
+            style={`--c:var(--c-${own.colour})`}
+          >
             <button class="row-head" type="button" id={`${id}-h`} aria-expanded="false" aria-controls={`${id}-b`}>
               <span class="msg">
                 <span class="t">{c.message}</span>
@@ -45,6 +97,8 @@ const graphData: GraphData = {
                 {!r.isHead && c.kind === 'branch' && <span class="ref">{own.name}</span>}
               </span>
               <span class="meta">
+                {c.tag && <span class="kind">{c.tag === 'cert' ? 'certification' : 'award'}</span>}
+                {!c.tag && c.kind === 'branch' && typeLabel[own.type] && <span class="kind">{typeLabel[own.type]}</span>}
                 <span class="hash">{r.hash}</span>
                 {c.date && <span> · {c.date}</span>}
                 <span> · {own.name}</span>
@@ -73,11 +127,41 @@ const graphData: GraphData = {
       })}
     </ol>
   </div>
+  <ul class="legend" aria-label="Legend">
+    <li><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="var(--c-gray)" /></svg>Commit</li>
+    <li><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4" fill="none" stroke="var(--c-gray)" stroke-width="2" /></svg>Merge (moved on)</li>
+    <li><svg width="12" height="12" aria-hidden="true"><path d="M6 0.8 11.2 6 6 11.2 0.8 6Z" fill="var(--c-gray)" /></svg>Award or certification</li>
+    <li><span class="ref head">HEAD</span>Where I am now</li>
+  </ul>
+  </div>
   <script type="application/json" id="git-log-data" set:html={JSON.stringify(graphData)} />
 </section>
 
 <style>
-  .head-title { font-size: 13px; font-weight: 400; margin: 0; white-space: nowrap; }
+  .section-head code { font: 13px var(--mono); background: var(--code-bg); border: 1px solid var(--border-muted); border-radius: 6px; padding: 1px 5px; }
+  .head-title { font-size: 13px; font-weight: 400; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .seg button {
+    font: 500 13px/1 var(--sans); color: var(--text); background: var(--btn-bg);
+    border: 0; padding: 0 12px; min-height: 36px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button[aria-pressed='true'] { background: var(--bg); color: var(--accent); box-shadow: inset 0 -2px 0 var(--tab-active); font-weight: 600; }
+  .seg .n { font-size: 12px; color: var(--muted); }
+  .seg button:focus-visible { outline-offset: -3px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+  select {
+    font: 13px var(--sans); color: var(--text); background: var(--btn-bg);
+    border: 1px solid var(--border); border-radius: 6px; min-height: 36px; padding: 0 8px; max-width: 100%;
+  }
+  .legend { list-style: none; margin: 0; padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 6px 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); background: var(--panel); border-radius: 0 0 6px 6px; }
+  .legend li { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .ref.head { font-size: 10px; line-height: 16px; padding: 0 6px; }
+  .kind { font: 11px/16px var(--mono); color: var(--c); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; margin-right: 6px; }
+  .toolbar[hidden] { display: none; }
+  .row.faded > .row-head { opacity: .6; }
+  .row.faded:hover > .row-head, .row.faded > .row-head:focus-visible { opacity: 1; }
   .counts { white-space: nowrap; }
   @media (max-width: 479px) { .hide-xs { display: none; } }
   .log-wrap {
@@ -89,7 +173,7 @@ const graphData: GraphData = {
   .graph { position: absolute; left: 0; top: 0; width: var(--gutter); height: 100%; pointer-events: none; overflow: visible; z-index: 1; }
   .log { list-style: none; margin: 0; padding: 0; }
   .row { border-bottom: 1px solid var(--border-muted); position: relative; }
-  .row:last-child { border-bottom: 0; border-radius: 0 0 6px 6px; }
+  .row:last-child { border-bottom: 0; }
   .row:hover, .row:has(> .row-head[aria-expanded='true']) { background: var(--hover); }
   .row:has(> .row-head[aria-expanded='true']) { box-shadow: inset 2px 0 0 var(--c); }
 
@@ -163,5 +247,70 @@ const graphData: GraphData = {
   import { initGraph } from './graph';
   const root = document.getElementById('git-log');
   const data = document.getElementById('git-log-data');
-  if (root && data) initGraph(root, JSON.parse(data.textContent || '{}'));
+  const toolbar = document.getElementById('log-toolbar');
+  if (root && data && toolbar) {
+    const graph = initGraph(root, JSON.parse(data.textContent || '{}'));
+    const rows = [...root.querySelectorAll<HTMLLIElement>('li.row')];
+    const status = document.getElementById('log-status')!;
+    const count = document.getElementById('log-count')!;
+    const viewBtns = [...toolbar.querySelectorAll<HTMLButtonElement>('[data-view]')];
+    const typeSel = toolbar.querySelector<HTMLSelectElement>('[data-filter="type"]')!;
+    const companySel = toolbar.querySelector<HTMLSelectElement>('[data-filter="company"]')!;
+    let view: 'highlights' | 'full' = 'highlights';
+
+    // Without JS the full history renders; the curated view is progressive enhancement.
+    toolbar.hidden = false;
+
+    function apply() {
+      const type = typeSel.value;
+      const company = companySel.value;
+      const filtering = !!(type || company);
+      const matched = new Set<string>();
+      let shown = 0;
+      for (const li of rows) {
+        const d = li.dataset;
+        const matches = (!type || d.type === type) && (!company || d.company === company);
+        // Branch and merge rows hold the graph together, so they fade instead of disappearing.
+        const structural = d.kind !== 'commit';
+        const inView = view === 'full' || d.highlight === '1';
+        const visible = (inView || (filtering && matches)) && (matches || structural);
+        li.hidden = !visible;
+        li.classList.toggle('faded', visible && filtering && !matches);
+        if (visible) shown++;
+        if (filtering && matches) matched.add(d.owner!);
+      }
+      graph.setFocus(filtering ? matched : null);
+      graph.refresh();
+      const text = `Showing ${shown} of ${rows.length} commits`;
+      count.textContent = text;
+      status.textContent = text;
+    }
+
+    viewBtns.forEach((b) =>
+      b.addEventListener('click', () => {
+        view = b.dataset.view as typeof view;
+        viewBtns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        apply();
+      }),
+    );
+    typeSel.addEventListener('change', apply);
+    companySel.addEventListener('change', apply);
+    apply();
+
+    // "git log <branch>" links from the case studies: open the branch's first commit.
+    document.querySelectorAll<HTMLAnchorElement>('a[data-branch]').forEach((a) =>
+      a.addEventListener('click', (e) => {
+        const li = rows.find((r) => r.dataset.owner === a.dataset.branch && r.dataset.kind === 'branch');
+        if (!li) return;
+        e.preventDefault();
+        typeSel.value = '';
+        companySel.value = '';
+        apply();
+        const btn = li.querySelector<HTMLButtonElement>('.row-head')!;
+        if (btn.getAttribute('aria-expanded') !== 'true') btn.click();
+        btn.focus({ preventScroll: true });
+        btn.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      }),
+    );
+  }
 </script>

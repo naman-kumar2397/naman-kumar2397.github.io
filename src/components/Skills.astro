@@ -1,29 +1,27 @@
 ---
 import { skills } from '../data/profile';
 ---
-<section id="skills" class="box" aria-labelledby="skills-title">
-  <div class="box-head"><h2 id="skills-title" class="mono title">skills.yml</h2></div>
-  <dl class="skills">
+<section id="skills" class="container section" aria-labelledby="skills-title">
+  <div class="section-head">
+    <p class="kicker">cat skills.yml</p>
+    <h2 id="skills-title">Skills</h2>
+    <p>Grouped by capability, each backed by work described above.</p>
+  </div>
+  <ul class="grid">
     {skills.map((g) => (
-      <div class="group">
-        <dt>{g.group}</dt>
-        <dd><ul class="topics">{g.items.map((i) => <li class="topic">{i}</li>)}</ul></dd>
-      </div>
+      <li class="card">
+        <h3>{g.group}</h3>
+        <p class="ev">{g.evidence}</p>
+        <p class="items">{g.items.join(' · ')}</p>
+      </li>
     ))}
-  </dl>
+  </ul>
 </section>
 
 <style>
-  .title { font-size: 13px; font-weight: 400; margin: 0; }
-  .skills { margin: 0; }
-  .group { padding: 12px 16px; border-bottom: 1px solid var(--border-muted); }
-  .group:last-child { border-bottom: 0; }
-  dt { font-weight: 600; }
-  dd { margin: 0; }
-  .topics { margin-top: 6px; }
-  @media (min-width: 768px) {
-    .group { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; align-items: start; }
-    dt { padding-top: 6px; }
-    .topics { margin-top: 4px; }
-  }
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+  .card { border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; background: var(--bg); }
+  h3 { font-size: 15px; margin: 0; font-weight: 600; }
+  .ev { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+  .items { font: 13px/1.7 var(--mono); margin: 10px 0 0; }
 </style>

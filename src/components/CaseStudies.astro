@@ -1,0 +1,84 @@
+---
+import { caseStudies } from '../data/caseStudies';
+import Flow from './Flow.astro';
+
+const sections = [
+  ['problem', 'Problem'],
+  ['decisions', 'Engineering decisions'],
+  ['implementation', 'Implementation'],
+  ['reliability', 'Reliability and security'],
+  ['outcomes', 'Outcomes'],
+  ['lessons', 'Lessons learned'],
+] as const;
+---
+<section id="projects" class="container section" aria-labelledby="projects-title">
+  <div class="section-head">
+    <p class="kicker">ls projects/</p>
+    <h2 id="projects-title">Engineering case studies</h2>
+    <p>Selected work, kept at a high level. Client-specific details are intentionally left out.</p>
+  </div>
+  <ul class="cases">
+    {caseStudies.map((c) => (
+      <li class="case">
+        <article aria-labelledby={`cs-${c.id}`}>
+          <div class="c-top">
+            <span class={`state ${c.status === 'Shipped' ? 'merged' : 'open'}`}>{c.status}</span>
+            <span class="ctx">{c.context}</span>
+          </div>
+          <h3 id={`cs-${c.id}`}>{c.title}</h3>
+          <p class="headline">{c.headline}</p>
+          <p class="overview">{c.overview}</p>
+          {c.architecture && (
+            <div class="arch" style={`--steps:${c.architecture.steps.length}`}>
+              <h4 class="sub">Architecture</h4>
+              <Flow steps={c.architecture.steps} caption={c.architecture.caption} label={`${c.title}: architecture, step by step`} />
+            </div>
+          )}
+          <details class="deep">
+            <summary>Read the case study</summary>
+            <div class="deep-in">
+              {sections.map(([key, title]) => {
+                const v = c[key];
+                if (!v || (Array.isArray(v) && v.length === 0)) return null;
+                return (
+                  <section>
+                    <h4 class="sub">{title}</h4>
+                    {typeof v === 'string' ? <p>{v}</p> : <ul>{v.map((x) => <li>{x}</li>)}</ul>}
+                  </section>
+                );
+              })}
+            </div>
+          </details>
+          <div class="c-foot">
+            <ul class="stack" aria-label="Technologies">{c.stack.map((t) => <li class="topic">{t}</li>)}</ul>
+            {c.branch && <a class="to-log mono" href="#journey" data-branch={c.branch}>git log {c.branch}</a>}
+          </div>
+        </article>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .cases { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+  article { container: case / inline-size; border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--bg); box-shadow: var(--shadow); }
+  .c-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .ctx { font-size: 13px; color: var(--muted); }
+  h3 { font-size: 20px; line-height: 1.3; margin: 10px 0 0; font-weight: 600; letter-spacing: -0.01em; }
+  .headline { margin: 4px 0 0; font-weight: 600; color: var(--accent); }
+  .overview { margin: 8px 0 0; max-width: 75ch; }
+  .sub { font: 600 12px/1.5 var(--mono); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 8px; }
+  .arch { margin-top: 16px; }
+  .deep { margin-top: 12px; border-top: 1px solid var(--border-muted); }
+  .deep summary { display: flex; align-items: center; min-height: 44px; color: var(--accent); font-weight: 500; }
+  .deep-in { display: grid; gap: 16px; padding: 4px 0 4px; }
+  .deep-in p { margin: 0; max-width: 75ch; }
+  .deep-in ul { margin: 0; padding-left: 20px; }
+  .deep-in li { margin: 4px 0; }
+  .c-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-muted); }
+  .to-log { font-size: 12px; display: inline-flex; align-items: center; min-height: 32px; }
+  @media (min-width: 768px) {
+    article { padding: 20px 24px; }
+    @container case (min-width: 760px) { .deep-in { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; } }
+  }
+</style>

@@ -1,0 +1,48 @@
+---
+/* Accessible architecture flow: an ordered list styled as a diagram. */
+import type { FlowStep } from '../data/caseStudies';
+interface Props { steps: FlowStep[]; caption: string; label: string }
+const { steps, caption, label } = Astro.props;
+---
+<figure class="flow-fig">
+  <ol class="flow" aria-label={label}>
+    {steps.map((s, i) => (
+      <li class="step">
+        <span class="n mono" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+        <span class="lbl">{s.label}</span>
+        {s.detail && <span class="dt">{s.detail}</span>}
+      </li>
+    ))}
+  </ol>
+  <figcaption>{caption}</figcaption>
+</figure>
+
+<style>
+  .flow-fig { margin: 0; }
+  .flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
+  .step {
+    position: relative; display: grid; gap: 2px;
+    border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px 10px 44px;
+    background: var(--panel);
+  }
+  .n { position: absolute; left: 12px; top: 11px; font-size: 12px; color: var(--accent); }
+  .lbl { font-weight: 600; font-size: 14px; line-height: 1.35; }
+  .dt { font-size: 13px; color: var(--muted); line-height: 1.4; }
+  /* connector */
+  .step:not(:last-child)::after {
+    content: ''; position: absolute; left: 22px; bottom: -22px; height: 22px; width: 2px;
+    background: linear-gradient(var(--border), var(--accent));
+  }
+  .step:not(:last-child)::before {
+    content: ''; position: absolute; left: 18px; bottom: -6px; z-index: 1;
+    border: 5px solid transparent; border-top-color: var(--accent); border-bottom: 0;
+  }
+  figcaption { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  @container case (min-width: 760px) {
+    .flow { grid-template-columns: repeat(var(--steps, 4), minmax(0, 1fr)); gap: 24px; }
+    .step { padding: 12px; align-content: start; }
+    .n { position: static; }
+    .step:not(:last-child)::after { left: auto; right: -24px; top: 50%; bottom: auto; width: 24px; height: 2px; background: linear-gradient(90deg, var(--border), var(--accent)); }
+    .step:not(:last-child)::before { left: auto; right: -8px; top: calc(50% - 4px); bottom: auto; border: 5px solid transparent; border-left-color: var(--accent); border-right: 0; }
+  }
+</style>

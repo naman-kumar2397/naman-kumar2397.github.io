@@ -13,9 +13,14 @@ export type BranchColour =
   | 'gray' | 'yellow' | 'pink' | 'green' | 'purple'
   | 'coral' | 'red' | 'blue' | 'teal' | 'orange';
 
+export type BranchType = 'trunk' | 'education' | 'role' | 'project';
+
 export interface Branch {
   /** Ref name shown in pills, e.g. `work/cvent`. */
   name: string;
+  type: BranchType;
+  /** Short label for filters, e.g. "Cvent". */
+  label: string;
   /** Branch this one forks from and merges back into. Only `main` has none. */
   parent?: string;
   colour: BranchColour;
@@ -40,6 +45,10 @@ export interface Commit {
   date: string;
   /** Long description for the git-show view. Falls back to `message`. */
   body?: string;
+  /** Awards and certifications get their own marker and filter. */
+  tag?: 'award' | 'cert';
+  /** Plain commits shown in the curated "Highlights" view. Branches and merges always show. */
+  milestone?: boolean;
 }
 
 export const author = {
@@ -48,10 +57,12 @@ export const author = {
 };
 
 export const branches = {
-  main: { name: 'main', colour: 'gray' },
+  main: { name: 'main', type: 'trunk', label: 'main', colour: 'gray' },
 
   edu: {
     name: 'edu/btech-manipal',
+    type: 'education',
+    label: 'Education',
     parent: 'main',
     colour: 'yellow',
     title: 'Bachelor of Technology',
@@ -66,6 +77,8 @@ export const branches = {
 
   infraguard: {
     name: 'work/infraguard',
+    type: 'role',
+    label: 'Infraguard',
     parent: 'main',
     colour: 'pink',
     title: 'Cloud Automation Associate',
@@ -81,6 +94,8 @@ export const branches = {
 
   cvent: {
     name: 'work/cvent',
+    type: 'role',
+    label: 'Cvent',
     parent: 'main',
     colour: 'green',
     title: 'Senior Site Reliability Engineer',
@@ -103,6 +118,8 @@ export const branches = {
 
   akqa: {
     name: 'work/akqa',
+    type: 'role',
+    label: 'AKQA',
     parent: 'main',
     colour: 'purple',
     title: 'Lead Site Reliability Engineer',
@@ -119,6 +136,8 @@ export const branches = {
 
   netflix: {
     name: 'project/netflix-game-launch',
+    type: 'project',
+    label: 'Netflix launch',
     parent: 'akqa',
     colour: 'coral',
     title: 'Netflix Game Launch',
@@ -135,6 +154,8 @@ export const branches = {
 
   cit: {
     name: 'work/ci-and-t',
+    type: 'role',
+    label: 'CI&T',
     parent: 'main',
     colour: 'red',
     title: 'DevOps Lead Consultant',
@@ -150,6 +171,8 @@ export const branches = {
 
   latitude: {
     name: 'work/latitude',
+    type: 'role',
+    label: 'Latitude',
     parent: 'main',
     colour: 'blue',
     title: 'Lead Site Reliability Engineer',
@@ -170,6 +193,8 @@ export const branches = {
 
   ai: {
     name: 'project/ai-incident-assistant',
+    type: 'project',
+    label: 'AI assistant',
     parent: 'latitude',
     colour: 'teal',
     title: 'AI Incident Management Assistant',
@@ -186,6 +211,8 @@ export const branches = {
 
   bedrock: {
     name: 'project/claude-bedrock-proxy',
+    type: 'project',
+    label: 'Bedrock proxy',
     parent: 'latitude',
     colour: 'orange',
     title: 'Claude for Developers',
@@ -208,7 +235,7 @@ export type BranchId = keyof typeof branches;
  * where the resume gives no dates the order is approximate (see TODOs).
  */
 export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
-  { branch: 'main', kind: 'commit', message: 'init: hello, world', date: '2015' },
+  { branch: 'main', kind: 'commit', message: 'init: hello, world', date: '2015', milestone: true },
 
   { branch: 'edu', kind: 'branch', message: 'Started B.Tech at Manipal University Jaipur', date: '2015' },
 
@@ -225,7 +252,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
   },
   {
     branch: 'edu', kind: 'commit', date: '2019',
-    message: 'feat: AWS Certified Solutions Architect – Associate',
+    message: 'feat: AWS Certified Solutions Architect – Associate', tag: 'cert',
   },
   { branch: 'main', kind: 'merge', source: 'edu', message: "Merge branch 'edu/btech-manipal'", date: '2019' },
 
@@ -240,7 +267,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
   },
   {
     branch: 'cvent', kind: 'commit', date: '2020',
-    message: 'award: Cvent Hero (Agility)',
+    message: 'award: Cvent Hero (Agility)', tag: 'award',
   },
   {
     branch: 'cvent', kind: 'commit', date: '',
@@ -249,7 +276,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
   },
   {
     branch: 'cvent', kind: 'commit', date: '2021',
-    message: 'award: Q3 Quarterly Award for the Harness POC',
+    message: 'award: Q3 Quarterly Award for the Harness POC', tag: 'award',
     body: 'Q3 Quarterly Award: Harness POC, monitoring-embedded deployment pipelines.',
   },
   {
@@ -264,16 +291,16 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
   },
   {
     branch: 'cvent', kind: 'commit', date: '2023',
-    message: 'award: Q1 Quarterly Award (Ownership, Innovation, Customer Success)',
+    message: 'award: Q1 Quarterly Award (Ownership, Innovation, Customer Success)', tag: 'award',
   },
   {
     branch: 'cvent', kind: 'commit', date: '',
-    message: 'feat: ~880M log events/week from Splunk to Datadog',
+    message: 'feat: ~880M log events/week from Splunk to Datadog', milestone: true,
     body: 'Migrated ~880M log events per week from Splunk to Datadog, unifying logs, metrics and traces on one platform.',
   },
   {
     branch: 'cvent', kind: 'commit', date: '',
-    message: 'feat: Sev1 incident automation, 20+ min faster response',
+    message: 'feat: Sev1 incident automation, 20+ min faster response', milestone: true,
     body: 'Co-developed Sev1 incident response automation (Datadog and Slack triggers orchestrating Jira, Slack, Zoom and PagerDuty), cutting time-to-respond by 20+ minutes.',
   },
   { branch: 'main', kind: 'merge', source: 'cvent', message: "Merge branch 'work/cvent'", date: 'Sep 2024' },
@@ -326,7 +353,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
   // TODO: Latitude commits below are undated on the resume; order is approximate.
   {
     branch: 'latitude', kind: 'commit', date: '',
-    message: 'feat: 10-engineer team, follow-the-sun 24x7 support',
+    message: 'feat: 10-engineer team, follow-the-sun 24x7 support', milestone: true,
     body: 'Lead a team of 10 offshore engineers in India across 80+ AWS accounts. Streamlined intake for all additional workloads through ServiceNow and set up a follow-the-sun model for 24x7 support.',
   },
   { branch: 'ai', kind: 'branch', message: 'AI incident assistant on Bedrock with Claude', date: '' },
@@ -338,7 +365,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
   { branch: 'latitude', kind: 'merge', source: 'ai', message: "Merge branch 'project/ai-incident-assistant'", date: '' },
   {
     branch: 'latitude', kind: 'commit', date: '',
-    message: 'feat: zero-touch ECS upgrades to CIS-hardened AL2023',
+    message: 'feat: zero-touch ECS upgrades to CIS-hardened AL2023', milestone: true,
     body: 'Automated ECS cluster upgrades across all environments with zero manual intervention, moving clusters to CIS-hardened Amazon Linux 2023 AMIs.',
   },
   {
@@ -369,7 +396,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
   },
   {
     branch: 'latitude', kind: 'commit', date: '',
-    message: 'feat: active/passive failover cluster for Control-M',
+    message: 'feat: active/passive failover cluster for Control-M', milestone: true,
     body: 'Designed a 2-node active/passive Windows Failover Cluster on shared EBS io2 Multi-Attach to replace single-server Control-M staging hosts across Test, Pre-Prod and Prod.',
   },
 ];

@@ -19,6 +19,10 @@
   --btn-bg: #f6f8fa;
   --btn-hover: #eff2f5;
   --code-bg: #f6f8fa;
+  --primary-bg: #1f883d;
+  --primary-hover: #1c8139;
+  --shadow: 0 1px 0 rgba(31,35,40,.04), 0 1px 3px rgba(31,35,40,.06);
+  --header-h: 49px;
 
   --c-gray: #6e7781;
   --c-yellow: #9a6700;
@@ -55,6 +59,9 @@
     --btn-bg: #212830;
     --btn-hover: #262c36;
     --code-bg: #151b23;
+    --primary-bg: #238636;
+    --primary-hover: #29903b;
+    --shadow: 0 0 0 1px rgba(1,4,9,.2), 0 2px 6px rgba(1,4,9,.35);
 
     --c-gray: #8b949e;
     --c-yellow: #d29922;
@@ -70,12 +77,12 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: 16px; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: calc(var(--header-h) + 16px); scroll-behavior: smooth; }
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 14px/1.5 var(--sans);
+  font: 15px/1.55 var(--sans);
   overflow-x: hidden;
 }
 a { color: var(--accent); text-decoration: none; }
@@ -99,6 +106,32 @@ a:hover { text-decoration: underline; }
   white-space: nowrap;
 }
 .btn:hover { background: var(--btn-hover); text-decoration: none; }
+.btn-lg { font-size: 14px; padding: 9px 16px; min-height: 44px; justify-content: center; }
+.btn-primary { background: var(--primary-bg); border-color: rgba(31,35,40,.15); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+
+.container { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+.section { padding: 40px 0 0; scroll-margin-top: var(--header-h); }
+.section-head { margin: 0 0 16px; }
+.kicker { font: 12px/1.5 var(--mono); color: var(--muted); margin: 0 0 4px; }
+.section-head h2 { font-size: 24px; line-height: 1.25; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+.section-head p { color: var(--muted); margin: 6px 0 0; max-width: 68ch; }
+.chip {
+  display: inline-block;
+  font: 12px/18px var(--mono);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 2em;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+.stack { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+details > summary { cursor: pointer; }
+@media (min-width: 768px) {
+  .container { padding: 0 32px; }
+  .section { padding-top: 56px; }
+  .section-head h2 { font-size: 28px; }
+}
 
 .box { border: 1px solid var(--border); border-radius: 6px; background: var(--bg); min-width: 0; }
 .box-head {

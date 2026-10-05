@@ -1,0 +1,68 @@
+---
+import { Picture } from 'astro:assets';
+import photo from '../assets/profile.jpg';
+import { profile } from '../data/profile';
+import { branches } from '../data/journey';
+---
+<section id="top" class="hero" aria-labelledby="hero-name">
+  <div class="container hero-in">
+    <div class="copy">
+      <p class="status">
+        <span class="ref">HEAD -&gt; {branches.latitude.name}</span>
+        <span class="muted">{profile.current.role}, {profile.current.where} <span class="via">({profile.current.note})</span></span>
+      </p>
+      <h1 id="hero-name">{profile.name}</h1>
+      <p class="role">{profile.role} <span class="muted loc"><span class="dot" aria-hidden="true">· </span>{profile.location}</span></p>
+      <p class="lead">{profile.headline}</p>
+      <p class="pitch">{profile.pitch}</p>
+      <div class="ctas">
+        <a class="btn btn-lg btn-primary" href="/resume.pdf" download="Naman_Kumar_Resume.pdf">Download resume (PDF)</a>
+        <a class="btn btn-lg" href="#projects">Explore engineering projects</a>
+        <a class="btn btn-lg" href="#contact">Contact me</a>
+      </div>
+    </div>
+    <div class="photo-wrap">
+    <Picture
+      src={photo}
+      formats={['avif', 'webp']}
+      widths={[144, 288, 432]}
+      sizes="(min-width: 900px) 216px, 80px"
+      alt={`Portrait of ${profile.name}`}
+      class="photo"
+      loading="eager"
+      fetchpriority="high"
+    />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero { border-bottom: 1px solid var(--border-muted); }
+  .hero-in { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding-top: 24px; padding-bottom: 36px; }
+  .copy { min-width: 0; }
+  .status { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 16px; font-size: 13px; }
+  .ref {
+    font: 500 12px/20px var(--mono); color: #fff; background: #0969da;
+    border-radius: 2em; padding: 0 8px; white-space: nowrap;
+  }
+  @media (prefers-color-scheme: dark) { .ref { background: #1f6feb; } }
+  .via { white-space: nowrap; }
+  h1 { font-size: clamp(36px, 9vw, 56px); line-height: 1.05; letter-spacing: -0.025em; font-weight: 650; margin: 0; }
+  .role { font-size: clamp(17px, 4.4vw, 20px); font-weight: 600; margin: 10px 0 0; color: var(--accent); }
+  .role .muted { font-weight: 400; }
+  @media (max-width: 559px) { .loc { display: block; font-size: 16px; margin-top: 2px; } .dot { display: none; } }
+  .lead { font-size: clamp(20px, 5vw, 26px); line-height: 1.3; letter-spacing: -0.01em; font-weight: 500; margin: 20px 0 0; max-width: 36ch; text-wrap: balance; }
+  .pitch { font-size: 16px; color: var(--muted); margin: 12px 0 0; max-width: 62ch; }
+  .ctas { display: grid; gap: 8px; margin-top: 24px; }
+  .photo-wrap { grid-row: 1; line-height: 0; }
+  :global(.photo) {
+    width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+    border: 1px solid var(--border); box-shadow: var(--shadow); background: var(--panel);
+  }
+  @media (min-width: 560px) { .ctas { display: flex; flex-wrap: wrap; } }
+  @media (min-width: 900px) {
+    .hero-in { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 48px; padding-top: 56px; padding-bottom: 56px; }
+    .photo-wrap { grid-row: auto; grid-column: 2; }
+    :global(.photo) { width: 216px; height: 216px; }
+  }
+</style>

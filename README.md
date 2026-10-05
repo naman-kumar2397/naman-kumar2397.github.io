@@ -4,20 +4,27 @@ Personal site: a career told as `git log --graph`. Astro + TypeScript, static ou
 
 ## Editing content
 
-- `src/data/journey.ts` — branches and commits (oldest first). Lanes, spans, Open/Merged state and HEAD are computed in `src/lib/layout.ts`. Blank dates are unknown and marked `TODO`.
-- `src/data/profile.ts` — README card, skills, contact and the resume.
+All content is typed data; components only render it. Every claim must be traceable to the resume.
 
-After changing resume content, regenerate the PDF and commit it:
+- `src/data/profile.ts`: hero copy, impact metrics, experience (`top: true` marks the 3 to 5 headline points per role), skills and the full resume used by the PDF.
+- `src/data/caseStudies.ts`: flagship case studies. Sections without source material stay empty (`TODO`) and are not rendered.
+- `src/data/journey.ts`: the git log. Branches and commits, oldest first. Lanes, spans, Open/Merged state and HEAD are computed in `src/lib/layout.ts`. `milestone: true` puts a commit in the curated Highlights view; `tag` marks awards and certifications. Blank dates are unknown and marked `TODO`.
+
+After changing resume or headline content, regenerate the committed assets:
 
 ```sh
-npm run resume:pdf   # builds, prints /resume to public/resume.pdf (needs Chromium; set CHROMIUM_PATH)
+npm run assets   # builds, then renders /resume -> public/resume.pdf and /og -> public/og.png (needs Chromium; set CHROMIUM_PATH)
 ```
+
+## Page structure
+
+Overview (hero + metrics) · Experience · Projects (case studies) · Journey (git log with Highlights/Full history and filters) · Skills · Contact. Everything renders without JavaScript; JS adds the graph, the curated view and filters.
 
 ## Commands
 
 ```sh
 npm install
 npm run dev       # http://localhost:4321
-npm test          # layout engine tests
+npm test          # layout engine and content checks
 npm run build     # astro check + static build to dist/
 ```

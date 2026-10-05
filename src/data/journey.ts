@@ -192,21 +192,22 @@ export const branches = {
   },
 
   ai: {
-    name: 'project/ai-incident-assistant',
+    name: 'project/alfred',
     type: 'project',
-    label: 'AI assistant',
+    label: 'Alfred',
     parent: 'latitude',
     colour: 'teal',
-    title: 'AI Incident Management Assistant',
+    title: 'Alfred: a multi-agent AI SRE',
     org: 'Latitude Financial Services',
-    // TODO: project dates not on the resume.
-    period: '',
+    // TODO: prototype start date not recorded; production since Sep 2026.
+    period: 'Live since Sep 2026',
     highlights: [
-      'Conversational AI on AWS Bedrock powered by Claude',
-      'Connected to ServiceNow, Dynatrace and Datadog MCP servers',
-      'Surfaces business-impact traces and mitigation hints for faster resolution',
+      'Multi-agent incident investigator, designed and built from local prototype to production',
+      'Runs on Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent with Datadog, Dynatrace, Buildkite and GitHub specialists',
+      'Read-only in three layers; learns from every investigation',
+      'Dependency graph posts blast-radius comments on pull requests',
     ],
-    stack: ['aws-bedrock', 'claude', 'mcp', 'servicenow', 'dynatrace', 'datadog'],
+    stack: ['bedrock-agentcore', 'aws-devops-agent', 'mcp', 'datadog', 'dynatrace', 'buildkite', 'github'],
   },
 
   bedrock: {
@@ -356,13 +357,13 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
     message: 'feat: 10-engineer team, follow-the-sun 24x7 support', milestone: true,
     body: 'Lead a team of 10 offshore engineers in India across 80+ AWS accounts. Streamlined intake for all additional workloads through ServiceNow and set up a follow-the-sun model for 24x7 support.',
   },
-  { branch: 'ai', kind: 'branch', message: 'AI incident assistant on Bedrock with Claude', date: '' },
+  // TODO: prototype dates not recorded.
+  { branch: 'ai', kind: 'branch', message: 'Alfred: multi-agent AI SRE prototype', date: '' },
   {
     branch: 'ai', kind: 'commit', date: '',
-    message: 'feat: ServiceNow, Dynatrace and Datadog MCP servers',
-    body: 'Connected the assistant to ServiceNow, Dynatrace and Datadog MCP servers, surfacing business-impact traces and mitigation hints for faster resolution.',
+    message: 'feat: parallel specialist agents over MCP',
+    body: 'An orchestrator dispatching read-only specialist agents for AWS, Datadog, Buildkite and GitHub over MCP, with a knowledge base that grows from every investigation.',
   },
-  { branch: 'latitude', kind: 'merge', source: 'ai', message: "Merge branch 'project/ai-incident-assistant'", date: '' },
   {
     branch: 'latitude', kind: 'commit', date: '',
     message: 'feat: zero-touch ECS upgrades to CIS-hardened AL2023', milestone: true,
@@ -383,6 +384,17 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
     message: 'feat: 20M+ events/week from Sumo Logic to Datadog',
     body: 'Migrating 20M+ log events per week from Sumo Logic to Datadog, including Grok parsing pipelines for payment logs and transaction-orphan detection monitors, for single-pane dashboards and lower MTTR.',
   },
+  {
+    branch: 'ai', kind: 'commit', date: '',
+    message: 'feat: dependency graph for pull-request blast radius',
+    body: 'A deterministic dependency graph decides what a change reaches; the model maps the diff, ranks risk and explains it. Every report declares its blind spots.',
+  },
+  {
+    branch: 'ai', kind: 'commit', date: 'Sep 2026', milestone: true,
+    message: 'feat: productionise on Bedrock AgentCore with AWS DevOps Agent',
+    body: 'Hosted on Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent alongside Datadog, Dynatrace, Buildkite and GitHub specialists. Available from Slack and Teams, the IDE, pull requests and alerts.',
+  },
+  { branch: 'latitude', kind: 'merge', source: 'ai', message: "Merge branch 'project/alfred': live in production", date: 'Sep 2026' },
   { branch: 'bedrock', kind: 'branch', message: 'Claude for developers via a Bedrock proxy', date: '' },
   {
     branch: 'bedrock', kind: 'commit', date: '',

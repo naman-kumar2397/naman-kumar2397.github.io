@@ -35,7 +35,7 @@ export const capabilities: { group: string; evidence: string; key: string[] }[] 
   { group: 'Cloud Architecture on AWS', evidence: '80+ AWS accounts supported; 70+ ECS clusters; Rackspace to AWS migration', key: ['ECS / Fargate', 'Lambda', 'IAM', 'Kubernetes'] },
   { group: 'Infrastructure as Code and Platform', evidence: 'ClickOps to IaC, CloudFormation to Terraform, Octopus Deploy HA at 99.9%', key: ['Terraform', 'AWS CDK', 'CloudFormation', 'CI/CD'] },
   { group: 'Technical Leadership', evidence: 'Leads 10 engineers with a follow-the-sun 24x7 model; mentored 4 engineers', key: ['Team leadership', 'Support models', 'Change management', 'Mentoring'] },
-  { group: 'AI-assisted Operations', evidence: 'AI incident assistant and a governed Claude proxy on AWS Bedrock', key: ['AWS Bedrock', 'Claude', 'MCP', 'Guardrails'] },
+  { group: 'AI-assisted Operations', evidence: 'Alfred, a multi-agent AI SRE live on Bedrock AgentCore; a governed Claude proxy on Bedrock', key: ['Bedrock AgentCore', 'Claude', 'MCP', 'Guardrails'] },
 ];
 
 /** Full technology inventory, as on the resume. Used by the Skills inventory and the PDF. */
@@ -93,8 +93,8 @@ export const experience: Role[] = [
     stack: ['AWS', 'ECS Fargate', 'Datadog', 'Dynatrace', 'ServiceNow', 'CrowdStrike', 'Terraform', 'Bedrock'],
     points: [
       { label: 'Team leadership', text: 'Lead a team of 10 offshore engineers in India, bridging client expectations and offshore delivery for infrastructure support across 80+ AWS accounts.', top: true },
-      { label: 'Support model', text: 'Streamlined intake for all additional workloads through ServiceNow and set up a follow-the-sun model for 24x7 support.', top: true },
-      { label: 'AI incident assistant', text: 'Built a conversational AI on AWS Bedrock (Claude) connected to ServiceNow, Dynatrace and Datadog MCP servers, surfacing business-impact traces and mitigation hints for faster resolution.' },
+      { label: 'Support model', text: 'Streamlined intake for all additional workloads through ServiceNow and set up a follow-the-sun model for 24x7 support.' },
+      { label: 'AI SRE (Alfred)', text: 'Designed and built a multi-agent incident investigator, now live in production on Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent with Datadog, Dynatrace, Buildkite and GitHub, with dependency-graph blast radius on pull requests.', top: true },
       { label: 'Claude for developers', text: 'Building an OpenAI-compatible Lambda proxy over Bedrock so GitHub Copilot (BYOK) can use Claude models, with a mandatory server-side guardrail and per-developer keys for cost attribution.' },
       { label: 'ECS upgrade automation', text: 'Automated ECS cluster upgrades across all environments with zero manual intervention, moving clusters to CIS-hardened Amazon Linux 2023 AMIs.', top: true },
       { label: 'Patch automation', text: 'Removed ClickOps from monthly patching by introducing Ivanti Security Controls; designed the networking and architecture the team built on.' },

@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import RepoHeader from '../../components/RepoHeader.astro';
 import Diagram from '../../components/Diagram.astro';
 import { caseStudies, type CaseStudy, type Feature } from '../../data/caseStudies';
-import { commits } from '../../data/journey';
+import { branches, commits, type Branch } from '../../data/journey';
 import { profile } from '../../data/profile';
 
 export function getStaticPaths() {
@@ -102,7 +102,7 @@ const jsonLd = {
 
     <p class="note muted" data-reveal="fade">{f.confidentiality}</p>
 
-    {c.branch && <p><a class="mono log-link" href={`/?branch=${c.branch}#journey`}>git log {c.branch}: see this in the career journey</a></p>}
+    {c.branch && <p><a class="mono log-link" href={`/?branch=${c.branch}#journey`}>git log {(branches as Record<string, Branch>)[c.branch]?.name ?? c.branch}: see this in the career journey</a></p>}
 
     <aside class="cta" aria-labelledby="cta-h" data-reveal="card">
       <h2 id="cta-h">Want the details behind this?</h2>

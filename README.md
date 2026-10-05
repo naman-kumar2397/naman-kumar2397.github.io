@@ -29,4 +29,7 @@ npm install
 npm run dev       # http://localhost:4321
 npm test          # layout engine and content checks
 npm run build     # astro check + static build to dist/
+npm run check:layout  # after a build: renders every page at 4 widths x 2 themes and flags
+                      # elements touching dividers, overlapping controls, clipped text,
+                      # small tap targets and horizontal overflow (also runs on every PR)
 ```

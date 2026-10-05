@@ -17,6 +17,8 @@ const vtCss = caseStudies
   .filter((c) => c.feature)
   .map((c) => `::view-transition-group(cs-title-${c.id}){animation-duration:var(--dur-slow);animation-timing-function:var(--ease-out);}`)
   .join('');
+import { branches, type Branch } from '../data/journey';
+const branchName = (id: string) => (branches as Record<string, Branch>)[id]?.name ?? id;
 ---
 <section id="projects" class="container section" aria-labelledby="projects-title">
   <div class="section-head" data-reveal="heading">
@@ -64,7 +66,7 @@ const vtCss = caseStudies
           )}
           <div class="c-foot">
             <ul class="stack" aria-label="Technologies">{c.stack.map((t) => <li class="topic">{t}</li>)}</ul>
-            {c.branch && <a class="to-log mono" href={`?branch=${c.branch}#journey`} data-branch={c.branch}><span class="u">git log {c.branch}</span></a>}
+            {c.branch && <a class="to-log mono" href={`?branch=${c.branch}#journey`} data-branch={c.branch}><span class="u">git log {branchName(c.branch)}</span></a>}
           </div>
         </article>
       </li>
@@ -81,7 +83,7 @@ const vtCss = caseStudies
     .featured article { display: flex; flex-direction: column; height: 100%; }
     .featured .c-foot { margin-top: auto; }
   }
-  .read { margin: 14px 0 0; }
+  .read { margin: 14px 0 12px; } /* bottom margin keeps the button off the divider when the card is the tallest */
   .read .btn { color: var(--accent); }
   .read .arrow { display: inline-block; transition: transform var(--dur-fast) var(--ease-out); }
   .read .btn:hover .arrow, .read .btn:focus-visible .arrow { transform: translateX(3px); }

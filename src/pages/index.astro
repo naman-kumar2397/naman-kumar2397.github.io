@@ -11,28 +11,52 @@ import Contact from '../components/Contact.astro';
 import { commits } from '../data/journey';
 import { caseStudies } from '../data/caseStudies';
 import { certification, profile } from '../data/profile';
+import { getImage } from 'astro:assets';
+import photo from '../assets/profile.jpg';
 
 const site = Astro.site!.toString();
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'ProfilePage',
-  url: site,
-  mainEntity: {
-    '@type': 'Person',
-    name: profile.name,
-    jobTitle: profile.role,
-    description: profile.pitch,
+// One connected graph: the site, this profile page and the person they are about share @ids,
+// and case-study Articles point their author at the same #person.
+const personId = `${site}#person`;
+const photoUrl = new URL((await getImage({ src: photo, width: 400, format: 'jpg' })).src, site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${site}#website`,
     url: site,
-    email: `mailto:${profile.email}`,
-    image: new URL('/og.png', site).toString(),
-    address: { '@type': 'PostalAddress', addressLocality: 'Melbourne', addressRegion: 'VIC', addressCountry: 'AU' },
-    worksFor: { '@type': 'Organization', name: 'Viable Solutions' },
-    alumniOf: { '@type': 'CollegeOrUniversity', name: 'Manipal University Jaipur' },
-    hasCredential: { '@type': 'EducationalOccupationalCredential', name: certification.split(' (')[0], credentialCategory: 'certification' },
-    knowsAbout: ['Site Reliability Engineering', 'Amazon Web Services', 'Observability', 'Infrastructure as Code', 'Kubernetes', 'Incident management', 'AWS Bedrock'],
-    sameAs: [profile.linkedin],
+    name: profile.name,
+    description: `Portfolio of ${profile.name}, ${profile.role} in ${profile.location}.`,
+    inLanguage: 'en-AU',
+    author: { '@id': personId },
+    publisher: { '@id': personId },
   },
-};
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    '@id': `${site}#profilepage`,
+    url: site,
+    name: `${profile.name} | ${profile.role}`,
+    isPartOf: { '@id': `${site}#website` },
+    inLanguage: 'en-AU',
+    mainEntity: {
+      '@type': 'Person',
+      '@id': personId,
+      name: profile.name,
+      jobTitle: profile.role,
+      description: profile.pitch,
+      url: site,
+      email: `mailto:${profile.email}`,
+      image: photoUrl,
+      address: { '@type': 'PostalAddress', addressLocality: 'Melbourne', addressRegion: 'VIC', addressCountry: 'AU' },
+      worksFor: { '@type': 'Organization', name: 'Viable Solutions' },
+      alumniOf: { '@type': 'CollegeOrUniversity', name: 'Manipal University Jaipur' },
+      hasCredential: { '@type': 'EducationalOccupationalCredential', name: certification.split(' (')[0], credentialCategory: 'certification' },
+      knowsAbout: ['Site Reliability Engineering', 'Amazon Web Services', 'Observability', 'Infrastructure as Code', 'Kubernetes', 'Incident management', 'AWS Bedrock'],
+      sameAs: [profile.linkedin],
+    },
+  },
+];
 ---
 <Base title="Naman Kumar | Lead Site Reliability Engineer, Melbourne" jsonLd={jsonLd}>
   <a class="skip" href="#main">Skip to content</a>

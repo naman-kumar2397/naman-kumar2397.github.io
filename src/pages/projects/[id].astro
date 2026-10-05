@@ -43,7 +43,9 @@ const jsonLd = [
       image: new URL(`/social/${c.id}.png`, site).toString(),
       url: pageUrl,
       mainEntityOfPage: pageUrl,
-      author: { '@type': 'Person', name: profile.name, url: site, jobTitle: profile.role },
+      author: { '@type': 'Person', '@id': `${site}#person`, name: profile.name, url: site, jobTitle: profile.role },
+      isPartOf: { '@id': `${site}#website` },
+      inLanguage: 'en-AU',
       about: c.stack,
     },
     {

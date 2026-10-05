@@ -19,6 +19,10 @@ const { c, prev, next } = Astro.props;
 const f = c.feature;
 const has = (v?: string | string[]) => !!v && (typeof v === 'string' || v.length > 0);
 const description = `${c.title}: ${c.headline}. Engineering case study by ${profile.name}, ${profile.role}.`;
+const vtCss = caseStudies
+  .filter((x) => x.feature)
+  .map((x) => `::view-transition-group(cs-title-${x.id}){animation-duration:var(--dur-slow);animation-timing-function:var(--ease-out);}`)
+  .join('');
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
@@ -32,34 +36,35 @@ const jsonLd = {
   <a class="skip" href="#main">Skip to content</a>
   <RepoHeader commitCount={commits.length} projectCount={caseStudies.length} path={['projects', c.id]} current="Projects" />
   <main id="main" class="container cs">
-    <p class="back"><a href="/#projects">Back to all projects</a></p>
+    <style is:inline set:html={vtCss}></style>
+    <p class="back" style="--d:0"><a href="/#projects">Back to all projects</a></p>
 
     <header class="cs-head">
-      <div class="meta">
+      <div class="meta" style="--d:1">
         <span class={`state ${c.status === 'Shipped' ? 'merged' : 'open'}`}>{c.status}</span>
         <span class="muted">{c.context}</span>
       </div>
-      <h1>{c.title}</h1>
-      <p class="headline">{c.headline}</p>
-      <p class="overview">{c.overview}</p>
+      <h1 style={`view-transition-name:cs-title-${c.id}`}>{c.title}</h1>
+      <p class="headline" style="--d:2">{c.headline}</p>
+      <p class="overview" style="--d:3">{c.overview}</p>
     </header>
 
-    <dl class="facts">
+    <dl class="facts" style="--d:4">
       <div><dt>My role</dt><dd>{f.role}</dd></div>
       {f.facts.map((x) => <div><dt>{x.label}</dt><dd>{x.value}</dd></div>)}
     </dl>
 
     <section class="block" aria-labelledby="arch">
-      <h2 id="arch">Architecture</h2>
+      <h2 id="arch" data-reveal="heading">Architecture</h2>
       <Diagram columns={f.diagram.columns} caption={f.diagram.caption} label={`${c.title} architecture, by stage`} />
     </section>
 
     {f.evolution && (
       <section class="block" aria-labelledby="evo">
-        <h2 id="evo">How it evolved</h2>
-        <ol class="evo">
+        <h2 id="evo" data-reveal="heading">How it evolved</h2>
+        <ol class="evo" data-reveal-group>
           {f.evolution.map((e) => (
-            <li>
+            <li data-reveal="up">
               <h3>{e.phase}{e.when && <span class="when mono"> · {e.when}</span>}</h3>
               <ul>{e.points.map((x) => <li>{x}</li>)}</ul>
             </li>
@@ -70,47 +75,47 @@ const jsonLd = {
 
     <div class="grid">
       {has(c.problem) && (
-        <section class="block" aria-labelledby="problem"><h2 id="problem">Problem</h2><p>{c.problem}</p></section>
+        <section class="block" aria-labelledby="problem" data-reveal="up"><h2 id="problem">Problem</h2><p>{c.problem}</p></section>
       )}
-      <section class="block" aria-labelledby="contrib">
+      <section class="block" aria-labelledby="contrib" data-reveal="up">
         <h2 id="contrib">My contribution</h2>
         <ul>{f.contributions.map((x) => <li>{x}</li>)}</ul>
       </section>
       {has(c.decisions) && (
-        <section class="block" aria-labelledby="decisions"><h2 id="decisions">Engineering decisions</h2><ul>{c.decisions!.map((x) => <li>{x}</li>)}</ul></section>
+        <section class="block" aria-labelledby="decisions" data-reveal="up"><h2 id="decisions">Engineering decisions</h2><ul>{c.decisions!.map((x) => <li>{x}</li>)}</ul></section>
       )}
       {has(f.tradeoffs) && (
-        <section class="block" aria-labelledby="tradeoffs"><h2 id="tradeoffs">Trade-offs</h2><ul>{f.tradeoffs!.map((x) => <li>{x}</li>)}</ul></section>
+        <section class="block" aria-labelledby="tradeoffs" data-reveal="up"><h2 id="tradeoffs">Trade-offs</h2><ul>{f.tradeoffs!.map((x) => <li>{x}</li>)}</ul></section>
       )}
       {has(c.reliability) && (
-        <section class="block" aria-labelledby="rel"><h2 id="rel">Reliability and security</h2><ul>{c.reliability!.map((x) => <li>{x}</li>)}</ul></section>
+        <section class="block" aria-labelledby="rel" data-reveal="up"><h2 id="rel">Reliability and security</h2><ul>{c.reliability!.map((x) => <li>{x}</li>)}</ul></section>
       )}
       {has(c.outcomes) && (
-        <section class="block outcomes" aria-labelledby="out"><h2 id="out">Verified outcomes</h2><ul>{c.outcomes!.map((x) => <li>{x}</li>)}</ul></section>
+        <section class="block outcomes" aria-labelledby="out" data-reveal="up"><h2 id="out">Verified outcomes</h2><ul>{c.outcomes!.map((x) => <li>{x}</li>)}</ul></section>
       )}
     </div>
 
     <section class="block" aria-labelledby="stack-h">
-      <h2 id="stack-h">Stack</h2>
+      <h2 id="stack-h" data-reveal="heading">Stack</h2>
       <ul class="stack">{c.stack.map((t) => <li class="topic">{t}</li>)}</ul>
     </section>
 
-    <p class="note muted">{f.confidentiality}</p>
+    <p class="note muted" data-reveal="fade">{f.confidentiality}</p>
 
     {c.branch && <p><a class="mono log-link" href={`/?branch=${c.branch}#journey`}>git log {c.branch}: see this in the career journey</a></p>}
 
-    <aside class="cta" aria-labelledby="cta-h">
+    <aside class="cta" aria-labelledby="cta-h" data-reveal="card">
       <h2 id="cta-h">Want the details behind this?</h2>
       <p class="muted">Happy to walk through the architecture and decisions in a conversation.</p>
       <div class="ctas">
-        <a class="btn btn-lg btn-primary" href={`mailto:${profile.email}`}>Email me</a>
-        <a class="btn btn-lg" href="/resume.pdf" download="Naman_Kumar_Resume.pdf">Download resume (PDF)</a>
+        <a class="btn btn-lg btn-primary" href={`mailto:${profile.email}`}>Email me<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-lg" href="/resume.pdf" download="Naman_Kumar_Resume.pdf">Download resume (PDF)<span class="arrow arrow-d" aria-hidden="true">↓</span></a>
       </div>
     </aside>
 
-    <nav class="pager" aria-label="More case studies">
-      {prev ? <a href={`/projects/${prev.id}/`} rel="prev"><span class="muted">Previous</span>{prev.title}</a> : <span></span>}
-      {next ? <a href={`/projects/${next.id}/`} rel="next" class="nx"><span class="muted">Next</span>{next.title}</a> : <span></span>}
+    <nav class="pager" aria-label="More case studies" data-reveal="up">
+      {prev ? <a href={`/projects/${prev.id}/`} rel="prev"><span class="muted"><span class="pa pa-l" aria-hidden="true">←</span>Previous</span>{prev.title}</a> : <span></span>}
+      {next ? <a href={`/projects/${next.id}/`} rel="next" class="nx"><span class="muted">Next<span class="pa pa-r" aria-hidden="true">→</span></span>{next.title}</a> : <span></span>}
     </nav>
   </main>
   <footer class="container foot"><a href="/">naman-kumar2397.github.io</a></footer>
@@ -153,8 +158,47 @@ const jsonLd = {
   .cta p { margin: 4px 0 0; }
   .ctas { display: grid; gap: 8px; margin-top: 14px; }
   .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
-  .pager a { display: grid; gap: 2px; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; min-height: 44px; font-weight: 600; }
+  .pager a {
+    display: grid; gap: 2px; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; min-height: 44px; font-weight: 600;
+    transition: transform var(--dur-normal) var(--ease-out), box-shadow var(--dur-normal) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard);
+  }
   .pager a:hover { text-decoration: none; border-color: var(--accent); }
+  .pa { display: inline-block; transition: transform var(--dur-fast) var(--ease-out); }
+  .pa-l { margin-right: 6px; }
+  .pa-r { margin-left: 6px; }
+  .btn .arrow { display: inline-block; transition: transform var(--dur-fast) var(--ease-out); }
+  .btn:hover .arrow, .btn:focus-visible .arrow { transform: translateX(3px); }
+  .btn:hover .arrow-d, .btn:focus-visible .arrow-d { transform: translateY(2px); }
+  .cta { transition: box-shadow var(--dur-normal) var(--ease-standard), border-color var(--dur-normal) var(--ease-standard); }
+  :global(html.motion) .cta[data-reveal] {
+    transition:
+      opacity var(--dur-reveal) var(--ease-out), translate var(--dur-reveal) var(--ease-out),
+      scale var(--dur-reveal) var(--ease-out), filter var(--dur-reveal) var(--ease-out),
+      box-shadow var(--dur-normal) var(--ease-standard), border-color var(--dur-normal) var(--ease-standard);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .pager a:hover { transform: translateY(-2px); box-shadow: var(--shadow), 0 10px 24px -12px rgba(1, 4, 9, .28); }
+    .pager a:hover .pa-l { transform: translateX(-3px); }
+    .pager a:hover .pa-r { transform: translateX(3px); }
+    .cta:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); box-shadow: var(--shadow), 0 14px 32px -14px rgba(1, 4, 9, .25); }
+  }
+  .pager a:focus-visible .pa-l { transform: translateX(-3px); }
+  .pager a:focus-visible .pa-r { transform: translateX(3px); }
+
+  /* Entrance on load (JS + motion allowed only). */
+  @keyframes cs-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes cs-fade { from { opacity: 0; } to { opacity: 1; } }
+  :global(html.motion) .back, :global(html.motion) .meta, :global(html.motion) .cs-head .headline,
+  :global(html.motion) .cs-head .overview, :global(html.motion) .facts {
+    animation: cs-in var(--dur-reveal) var(--ease-out) both;
+    animation-delay: calc(var(--d, 0) * 60ms);
+  }
+  /* h1 only fades: its position morphs from the home-page card title (view transition). */
+  :global(html.motion) h1 { animation: cs-fade var(--dur-normal) var(--ease-out) both; animation-delay: 60ms; }
+
+  /* Evolution timeline dots scale in with their row. */
+  :global(html.motion) .evo > li::after { scale: 0; transition: scale var(--dur-slow) var(--ease-out) 120ms; }
+  :global(html.motion) .evo > li.is-in::after { scale: 1; }
   .pager span.muted { font-size: 12px; font-weight: 400; }
   .nx { text-align: right; }
   .foot { padding-top: 24px; padding-bottom: 40px; font-size: 13px; }

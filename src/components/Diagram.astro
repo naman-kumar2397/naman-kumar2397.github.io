@@ -8,10 +8,10 @@ import type { DiagramColumn } from '../data/caseStudies';
 interface Props { columns: DiagramColumn[]; caption: string; label: string }
 const { columns, caption, label } = Astro.props;
 ---
-<figure class="dg" style={`--cols:${columns.length}`}>
-  <ol class="stages" aria-label={label}>
+<figure class="dg" style={`--cols:${columns.length}`} data-inview>
+  <ol class="stages" aria-label={label} data-reveal-group>
     {columns.map((c, i) => (
-      <li class="stage">
+      <li class="stage" data-reveal="scale" style={`--i:${i}`}>
         <p class="st-title mono"><span aria-hidden="true">{String(i + 1).padStart(2, '0')} </span>{c.title}</p>
         <ul class="nodes">
           {c.nodes.map((n) => (
@@ -28,19 +28,42 @@ const { columns, caption, label } = Astro.props;
 </figure>
 
 <style>
-  .dg { margin: 0; container: dg / inline-size; }
+  .dg { margin: 0; container: dg / inline-size; --flow-hi: color-mix(in srgb, var(--accent) 70%, #fff); }
+  @keyframes flow-v { 0% { background-position: 0 -100%, 0 0; } 60%, 100% { background-position: 0 200%, 0 0; } }
+  @keyframes flow-h { 0% { background-position: -100% 0, 0 0; } 60%, 100% { background-position: 200% 0, 0 0; } }
   .stages { list-style: none; margin: 0; padding: 0; display: grid; gap: 28px; }
-  .stage { position: relative; border: 1px dashed var(--border); border-radius: 8px; padding: 10px; background: var(--bg); }
+  .stage {
+    position: relative; border: 1px dashed var(--border); border-radius: 8px; padding: 10px; background: var(--bg);
+    transition: border-color var(--dur-normal) var(--ease-standard);
+  }
+  :global(html.motion) .stage[data-reveal] {
+    transition:
+      opacity var(--dur-reveal) var(--ease-out),
+      scale var(--dur-reveal) var(--ease-out),
+      border-color var(--dur-normal) var(--ease-standard);
+  }
   .st-title { margin: 0 0 8px; font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
   .nodes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-  .node { display: grid; gap: 1px; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; background: var(--panel); }
+  .node {
+    display: grid; gap: 1px; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; background: var(--panel);
+    transition: transform var(--dur-normal) var(--ease-out), box-shadow var(--dur-normal) var(--ease-standard), border-color var(--dur-normal) var(--ease-standard);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .node:hover { transform: translateY(-1px); border-color: var(--accent); box-shadow: var(--shadow), 0 6px 16px -8px rgba(1, 4, 9, .3); }
+    .stage:has(.node:hover) { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+  }
   .lbl { font-weight: 600; font-size: 14px; line-height: 1.35; }
   .dt { font-size: 13px; color: var(--muted); line-height: 1.4; }
   /* connectors */
   .stage:not(:last-child)::after {
     content: ''; position: absolute; left: 50%; bottom: -28px; width: 2px; height: 28px;
-    background: linear-gradient(var(--border), var(--accent));
+    background:
+      linear-gradient(transparent, var(--flow-hi), transparent) no-repeat 0 -100% / 100% 50%,
+      linear-gradient(var(--border), var(--accent));
+    animation: flow-v 2.8s var(--ease-in-out) infinite;
+    animation-delay: calc(var(--i, 0) * 0.5s);
   }
+  .dg:not(.in-view) .stage::after { animation-play-state: paused; }
   .stage:not(:last-child)::before {
     content: ''; position: absolute; left: calc(50% - 4px); bottom: -28px; z-index: 1;
     border: 5px solid transparent; border-top-color: var(--accent); border-bottom: 0;
@@ -48,7 +71,8 @@ const { columns, caption, label } = Astro.props;
   figcaption { font-size: 12px; color: var(--muted); margin-top: 10px; }
   @container dg (min-width: 720px) {
     .stages { grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 32px; align-items: center; }
-    .stage:not(:last-child)::after { left: auto; right: -32px; top: 50%; bottom: auto; width: 32px; height: 2px; background: linear-gradient(90deg, var(--border), var(--accent)); }
+    .stage:not(:last-child)::after { left: auto; right: -32px; top: 50%; bottom: auto; width: 32px; height: 2px; animation-name: flow-h;
+      background: linear-gradient(90deg, transparent, var(--flow-hi), transparent) no-repeat -100% 0 / 50% 100%, linear-gradient(90deg, var(--border), var(--accent)); }
     .stage:not(:last-child)::before { left: auto; right: -32px; top: calc(50% - 5px); bottom: auto; border: 5px solid transparent; border-left-color: var(--accent); border-right: 0; }
   }
 </style>

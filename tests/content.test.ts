@@ -22,3 +22,18 @@ test('no phone number in site content', () => {
   const all = JSON.stringify({ branches, caseStudies, experience, profile });
   assert.doesNotMatch(all, /\+61|439\s?077/);
 });
+
+import { readFileSync } from 'node:fs';
+
+test('sitemap lists every flagship case study page', () => {
+  const xml = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
+  for (const c of caseStudies.filter((x) => x.feature)) assert.match(xml, new RegExp(`/projects/${c.id}/`));
+});
+
+test('flagship pages have a diagram, contributions and verified outcomes', () => {
+  for (const c of caseStudies.filter((x) => x.feature)) {
+    assert.ok(c.feature!.diagram.columns.length >= 3, c.id);
+    assert.ok(c.feature!.contributions.length > 0, c.id);
+    assert.ok((c.outcomes ?? []).length > 0, c.id);
+  }
+});

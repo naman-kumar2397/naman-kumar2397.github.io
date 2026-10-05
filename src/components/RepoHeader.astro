@@ -4,27 +4,34 @@ import { profile } from '../data/profile';
 interface Props {
   commitCount: number;
   projectCount: number;
+  /** Extra breadcrumb segments on sub-pages, e.g. ['projects', 'ai-incident-assistant']. */
+  path?: string[];
+  /** Tab to mark current on sub-pages. */
+  current?: string;
 }
-const { commitCount, projectCount } = Astro.props;
+const { commitCount, projectCount, path = [], current } = Astro.props;
+const onHome = path.length === 0;
+const base = onHome ? '' : '/';
 const tabs = [
-  { href: '#top', label: 'Overview' },
-  { href: '#experience', label: 'Experience' },
-  { href: '#projects', label: 'Projects', count: projectCount },
-  { href: '#journey', label: 'Journey', count: commitCount },
-  { href: '#skills', label: 'Skills' },
-  { href: '#contact', label: 'Contact' },
+  { href: `${base}#top`, label: 'Overview' },
+  { href: `${base}#experience`, label: 'Experience' },
+  { href: `${base}#projects`, label: 'Projects', count: projectCount },
+  { href: `${base}#skills`, label: 'Skills' },
+  { href: `${base}#journey`, label: 'Journey', count: commitCount },
+  { href: `${base}#contact`, label: 'Contact' },
 ];
+const isCurrent = (label: string, i: number) => (onHome ? i === 0 : label === current);
 ---
 <header class="topbar">
   <div class="container topbar-in">
-    <a class="home" href="#top">
+    <a class="home" href={onHome ? '#top' : '/'}>
       <span class="mark" aria-hidden="true">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="4" cy="3" r="1.6" /><circle cx="4" cy="13" r="1.6" /><circle cx="12" cy="5" r="1.6" />
           <path d="M4 4.6v6.8M12 6.6c0 3-8 2-8 5" />
         </svg>
       </span>
-      <span class="crumb"><span class="owner">naman-kumar</span> <span class="slash">/</span> <b>journey</b></span>
+      <span class="crumb"><span class="owner">naman-kumar</span> <span class="slash">/</span> {onHome ? <b>journey</b> : <span class="owner">journey</span>}{path.map((seg, i) => <> <span class="slash">/</span> {i === path.length - 1 ? <b>{seg}</b> : <span class="owner">{seg}</span>}</>)}</span>
     </a>
     <span class="pill">Public</span>
     <span class="sp"></span>
@@ -37,7 +44,7 @@ const tabs = [
 <nav class="tabs" aria-label="Sections">
   <div class="container tabs-in">
     {tabs.map((t, i) => (
-      <a class="tab" href={t.href} aria-current={i === 0 ? 'true' : undefined}>
+      <a class="tab" href={t.href} aria-current={isCurrent(t.label, i) ? (onHome ? 'true' : 'page') : undefined}>
         {t.label}{t.count !== undefined && <span class="count"><span class="sr-only">(</span>{t.count}<span class="sr-only"> items)</span></span>}
       </a>
     ))}
@@ -74,13 +81,14 @@ const tabs = [
     margin-bottom: -1px;
   }
   .tab:hover { text-decoration: none; border-bottom-color: var(--border); }
-  .tab[aria-current='true'] { font-weight: 600; border-bottom-color: var(--tab-active); }
+  .tab[aria-current] { font-weight: 600; border-bottom-color: var(--tab-active); }
   .count { background: var(--border-muted); border-radius: 2em; padding: 0 6px; font-size: 12px; font-weight: 500; line-height: 18px; }
   @media (min-width: 640px) { .actions { display: flex; } }
 </style>
 
 <script>
-  const tabs = [...document.querySelectorAll<HTMLAnchorElement>('.tabs .tab')];
+  // Scroll-spy only on the home page (tab links there are in-page hashes).
+  const tabs = location.pathname === '/' ? [...document.querySelectorAll<HTMLAnchorElement>('.tabs .tab')] : [];
   const sections = tabs
     .map((t) => document.getElementById(t.hash.slice(1)))
     .filter((s): s is HTMLElement => !!s);

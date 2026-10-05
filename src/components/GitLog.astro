@@ -36,7 +36,7 @@ const graphData: GraphData = {
   <div class="section-head">
     <p class="kicker">git log --graph --all</p>
     <h2 id="journey-title">Career journey</h2>
-    <p>My career as a git history. Each company is a branch off <code>main</code> that merged back when I moved on; projects branch off their company. Select any entry for details.</p>
+    <p>The full story, for the curious: my career as a git history. Each company is a branch off <code>main</code> that merged back when I moved on; projects branch off their company. Select any entry for details.</p>
   </div>
   <div class="box log-box">
   <div class="box-head">
@@ -70,6 +70,7 @@ const graphData: GraphData = {
     </div>
   </div>
   <p class="sr-only" id="log-status" aria-live="polite"></p>
+  <div class="log-clip" id="log-clip">
   <div class="log-wrap" id="git-log" style={`--lanes:${layout.laneCount}`}>
     <svg class="graph" aria-hidden="true" focusable="false"></svg>
     <ol class="log">
@@ -127,6 +128,10 @@ const graphData: GraphData = {
       })}
     </ol>
   </div>
+  </div>
+  <div class="expand" id="log-expand" hidden>
+    <button type="button" class="btn btn-lg" aria-controls="log-clip" aria-expanded="false">Show the full career log</button>
+  </div>
   <ul class="legend" aria-label="Legend">
     <li><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="var(--c-gray)" /></svg>Commit</li>
     <li><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4" fill="none" stroke="var(--c-gray)" stroke-width="2" /></svg>Merge (moved on)</li>
@@ -159,7 +164,10 @@ const graphData: GraphData = {
   .legend li { display: inline-flex; align-items: center; gap: 6px; }
   .legend .ref.head { font-size: 10px; line-height: 16px; padding: 0 6px; }
   .kind { font: 11px/16px var(--mono); color: var(--c); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; margin-right: 6px; }
-  .toolbar[hidden] { display: none; }
+  .toolbar[hidden], .expand[hidden] { display: none; }
+  .log-clip.collapsed { max-height: 520px; overflow: hidden; position: relative; }
+  .log-clip.collapsed::after { content: ''; position: absolute; inset: auto 0 0 0; height: 96px; background: linear-gradient(transparent, var(--bg)); pointer-events: none; z-index: 2; }
+  .expand { display: flex; justify-content: center; padding: 12px; border-top: 1px solid var(--border-muted); }
   .row.faded > .row-head { opacity: .6; }
   .row.faded:hover > .row-head, .row.faded > .row-head:focus-visible { opacity: 1; }
   .counts { white-space: nowrap; }
@@ -261,6 +269,28 @@ const graphData: GraphData = {
     // Without JS the full history renders; the curated view is progressive enhancement.
     toolbar.hidden = false;
 
+    // The log is secondary: show a preview until the visitor asks for more.
+    const clip = document.getElementById('log-clip')!;
+    const expand = document.getElementById('log-expand')!;
+    const expandBtn = expand.querySelector('button')!;
+    const setExpanded = (open: boolean) => {
+      clip.classList.toggle('collapsed', !open);
+      expand.hidden = open;
+      expandBtn.setAttribute('aria-expanded', String(open));
+    };
+    setExpanded(false);
+    // Keyboard users tabbing past the preview get the full log instead of focus vanishing under the fade.
+    clip.addEventListener('focusin', (e) => {
+      const li = (e.target as HTMLElement).closest<HTMLElement>('li.row');
+      if (clip.classList.contains('collapsed') && li && li.offsetTop + li.offsetHeight > clip.clientHeight - 96) setExpanded(true);
+    });
+    expandBtn.addEventListener('click', () => {
+      setExpanded(true);
+      // Move focus to the first entry that was hidden behind the fade.
+      const firstHidden = rows.find((r) => !r.hidden && r.offsetTop > 400);
+      firstHidden?.querySelector<HTMLButtonElement>('.row-head')?.focus();
+    });
+
     function apply() {
       const type = typeSel.value;
       const company = companySel.value;
@@ -297,20 +327,27 @@ const graphData: GraphData = {
     companySel.addEventListener('change', apply);
     apply();
 
-    // "git log <branch>" links from the case studies: open the branch's first commit.
+    // "git log <branch>" links (case studies, project pages via ?branch=): open that branch's first commit.
+    const reveal = (branch: string, smooth: boolean) => {
+      const li = rows.find((r) => r.dataset.owner === branch && r.dataset.kind === 'branch');
+      if (!li) return false;
+      typeSel.value = '';
+      companySel.value = '';
+      setExpanded(true);
+      apply();
+      const btn = li.querySelector<HTMLButtonElement>('.row-head')!;
+      if (btn.getAttribute('aria-expanded') !== 'true') btn.click();
+      btn.focus({ preventScroll: true });
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      btn.scrollIntoView({ block: 'center', behavior: smooth && !reduce ? 'smooth' : 'auto' });
+      return true;
+    };
     document.querySelectorAll<HTMLAnchorElement>('a[data-branch]').forEach((a) =>
       a.addEventListener('click', (e) => {
-        const li = rows.find((r) => r.dataset.owner === a.dataset.branch && r.dataset.kind === 'branch');
-        if (!li) return;
-        e.preventDefault();
-        typeSel.value = '';
-        companySel.value = '';
-        apply();
-        const btn = li.querySelector<HTMLButtonElement>('.row-head')!;
-        if (btn.getAttribute('aria-expanded') !== 'true') btn.click();
-        btn.focus({ preventScroll: true });
-        btn.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        if (reveal(a.dataset.branch!, true)) e.preventDefault();
       }),
     );
+    const wanted = new URLSearchParams(location.search).get('branch');
+    if (wanted) requestAnimationFrame(() => reveal(wanted, false));
   }
 </script>

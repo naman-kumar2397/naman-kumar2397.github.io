@@ -4,33 +4,43 @@ import { branches, type Branch } from '../data/journey';
 
 // Same colours as the branches in the git log.
 const colour = (id: string) => `var(--c-${(branches as Record<string, Branch>)[id]?.colour ?? 'gray'})`;
-const progression = [...experience].reverse();
-const short = (period: string) => period.replace(/[A-Z][a-z]{2} /g, '');
 ---
 <section id="experience" class="container section" aria-labelledby="exp-title">
   <div class="section-head">
     <p class="kicker">git log --first-parent main</p>
     <h2 id="exp-title">Experience</h2>
-    <p>From cloud automation to leading an SRE team across 80+ AWS accounts.</p>
+    <p>From cloud automation to leading an SRE team across 80+ AWS accounts. Consulting engagements show the employer, the consulting partner and the client separately.</p>
   </div>
 
-  <ol class="progression" aria-label="Career progression, oldest first">
-    {progression.map((r) => (
-      <li style={`--c:${colour(r.branch)}`}>
-        <span class="p-title">{r.title}</span>
-        <span class="p-meta">{r.employer} · {short(r.period)}</span>
-      </li>
-    ))}
-  </ol>
+  <div class="overview">
+    <h3 id="ov-title" class="ov-title">Career at a glance</h3>
+    <table class="ov">
+      <thead>
+        <tr><th scope="col">Period</th><th scope="col">Role</th><th scope="col">Employer and client</th><th scope="col">Highlight</th></tr>
+      </thead>
+      <tbody>
+        {experience.map((r) => (
+          <tr style={`--c:${colour(r.branch)}`}>
+            <td class="ov-period mono">{r.period}</td>
+            <th scope="row" class="ov-role"><a href={`#role-${r.branch}`}>{r.title}</a></th>
+            <td class="ov-org">{r.employer}{r.client && <span class="muted"> for {r.client}</span>}</td>
+            <td class="ov-hl">{r.headline}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
 
   <ol class="roles">
     {experience.map((r, i) => {
-      const top = r.points.filter((p) => p.top);
-      const more = r.points.filter((p) => !p.top);
+      // Three headline points stay visible; the rest (other highlights first) sit behind "More detail".
+      const ranked = [...r.points.filter((p) => p.top), ...r.points.filter((p) => !p.top)];
+      const top = ranked.slice(0, 3);
+      const more = ranked.slice(3);
       const current = r.period.includes('Present');
       return (
         <li class="role" style={`--c:${colour(r.branch)}`}>
-          <article aria-labelledby={`role-${i}`}>
+          <article id={`role-${r.branch}`} aria-labelledby={`role-${i}`}>
             <header class="r-head">
               <div class="r-title">
                 <h3 id={`role-${i}`}>{r.title}</h3>
@@ -38,12 +48,11 @@ const short = (period: string) => period.replace(/[A-Z][a-z]{2} /g, '');
               </div>
               <p class="period mono">{r.period}</p>
             </header>
-            <p class="org">
-              <b>{r.employer}</b>
-              {r.via && <span> · via {r.via}</span>}
-              {r.client && <span> · Client: <b>{r.client}</b></span>}
-              {r.terms && <span class="muted"> · {r.terms}</span>}
-            </p>
+            <dl class="rel">
+              <div><dt>Employer</dt><dd>{r.employer}{r.terms && <span class="muted"> ({r.terms.toLowerCase()})</span>}</dd></div>
+              {r.via && <div><dt>Consulting partner</dt><dd>{r.via}</dd></div>}
+              {r.client && <div><dt>Client</dt><dd>{r.client}</dd></div>}
+            </dl>
             <ul class="scope stack" aria-label="Scope">{r.scope.map((s) => <li class="chip">{s}</li>)}</ul>
             <ul class="points">
               {top.map((p) => <li>{p.label && <b>{p.label}. </b>}{p.text}</li>)}
@@ -63,11 +72,33 @@ const short = (period: string) => period.replace(/[A-Z][a-z]{2} /g, '');
 </section>
 
 <style>
-  .progression { list-style: none; margin: 0 0 24px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 8px; }
-  .progression li { border: 1px solid var(--border); border-top: 3px solid var(--c); border-radius: 6px; padding: 8px 10px; background: var(--panel); min-width: 0; }
-  .p-title { display: block; font-size: 13px; font-weight: 600; line-height: 1.3; }
-  .p-meta { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
-
+  .overview { margin: 0 0 28px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg); box-shadow: var(--shadow); }
+  .ov-title { font: 600 12px/1.5 var(--mono); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0; padding: 10px 14px; background: var(--panel); border-bottom: 1px solid var(--border); }
+  .ov { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .ov thead { display: none; }
+  .ov tr { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 14px 12px 18px; border-top: 1px solid var(--border-muted); position: relative; }
+  .ov tbody tr:first-child { border-top: 0; }
+  .ov tr::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--c); }
+  .ov th, .ov td { padding: 0; text-align: left; font-weight: inherit; }
+  .ov-role { grid-column: 1; grid-row: 1; font-weight: 600 !important; }
+  .ov-period { grid-column: 2; grid-row: 1; font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .ov-org { grid-column: 1 / -1; }
+  .ov-hl { grid-column: 1 / -1; color: var(--muted); font-size: 13px; }
+  @media (min-width: 900px) {
+    .ov thead { display: table-header-group; }
+    .ov thead th { font: 12px var(--mono); color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--panel); }
+    .ov tr { display: table-row; }
+    .ov tbody td, .ov tbody th { padding: 10px 12px; border-top: 1px solid var(--border-muted); vertical-align: top; }
+    .ov tbody tr:first-child td, .ov tbody tr:first-child th { border-top: 0; }
+    .ov tbody td:first-child { box-shadow: inset 3px 0 0 var(--c); padding-left: 16px; }
+    .ov tr::before { display: none; }
+    .ov-hl { font-size: 14px; }
+  }
+  .rel { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 8px 0 0; font-size: 14px; }
+  .rel div { display: flex; gap: 6px; align-items: baseline; }
+  .rel dt { font: 12px var(--mono); color: var(--muted); }
+  .rel dt::after { content: ':'; }
+  .rel dd { margin: 0; font-weight: 600; }
   .roles { list-style: none; margin: 0; padding: 0; }
   .role { position: relative; padding: 0 0 28px 28px; }
   /* commit rail: ties the experience list to the git log */
@@ -79,7 +110,6 @@ const short = (period: string) => period.replace(/[A-Z][a-z]{2} /g, '');
   .r-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   h3 { font-size: 18px; line-height: 1.3; margin: 0; font-weight: 600; }
   .period { margin: 0; font-size: 13px; color: var(--muted); white-space: nowrap; }
-  .org { margin: 4px 0 0; }
   .scope { margin-top: 10px; }
   .points { margin: 12px 0 0; padding-left: 20px; }
   .points li { margin: 6px 0; }

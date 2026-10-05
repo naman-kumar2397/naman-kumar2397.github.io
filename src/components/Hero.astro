@@ -9,7 +9,7 @@ import { branches } from '../data/journey';
     <div class="copy">
       <p class="status">
         <span class="ref">HEAD -&gt; {branches.latitude.name}</span>
-        <span class="muted">{profile.current.role}, {profile.current.where} <span class="via">({profile.current.note})</span></span>
+        <span class="muted">{profile.current.role} at {profile.current.employer}, for client {profile.current.client}</span>
       </p>
       <h1 id="hero-name">{profile.name}</h1>
       <p class="role">{profile.role} <span class="muted loc"><span class="dot" aria-hidden="true">· </span>{profile.location}</span></p>
@@ -46,7 +46,6 @@ import { branches } from '../data/journey';
     border-radius: 2em; padding: 0 8px; white-space: nowrap;
   }
   @media (prefers-color-scheme: dark) { .ref { background: #1f6feb; } }
-  .via { white-space: nowrap; }
   h1 { font-size: clamp(36px, 9vw, 56px); line-height: 1.05; letter-spacing: -0.025em; font-weight: 650; margin: 0; }
   .role { font-size: clamp(17px, 4.4vw, 20px); font-weight: 600; margin: 10px 0 0; color: var(--accent); }
   .role .muted { font-weight: 400; }

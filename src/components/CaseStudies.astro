@@ -10,16 +10,18 @@ const sections = [
   ['outcomes', 'Outcomes'],
   ['lessons', 'Lessons learned'],
 ] as const;
+// Flagships (with their own page) first.
+const ordered = [...caseStudies].sort((a, b) => Number(!!b.feature) - Number(!!a.feature));
 ---
 <section id="projects" class="container section" aria-labelledby="projects-title">
   <div class="section-head">
     <p class="kicker">ls projects/</p>
     <h2 id="projects-title">Engineering case studies</h2>
-    <p>Selected work, kept at a high level. Client-specific details are intentionally left out.</p>
+    <p>Three flagship projects with full write-ups, plus current work in progress. Client-specific details are intentionally left out.</p>
   </div>
   <ul class="cases">
-    {caseStudies.map((c) => (
-      <li class="case">
+    {ordered.map((c) => (
+      <li class={c.feature ? 'case featured' : 'case'}>
         <article aria-labelledby={`cs-${c.id}`}>
           <div class="c-top">
             <span class={`state ${c.status === 'Shipped' ? 'merged' : 'open'}`}>{c.status}</span>
@@ -28,30 +30,36 @@ const sections = [
           <h3 id={`cs-${c.id}`}>{c.title}</h3>
           <p class="headline">{c.headline}</p>
           <p class="overview">{c.overview}</p>
-          {c.architecture && (
-            <div class="arch" style={`--steps:${c.architecture.steps.length}`}>
-              <h4 class="sub">Architecture</h4>
-              <Flow steps={c.architecture.steps} caption={c.architecture.caption} label={`${c.title}: architecture, step by step`} />
-            </div>
+          {c.feature ? (
+            <p class="read"><a class="btn btn-lg" href={`/projects/${c.id}/`}>Read the case study<span class="sr-only">: {c.title}</span></a></p>
+          ) : (
+            <>
+              {c.architecture && (
+                <div class="arch" style={`--steps:${c.architecture.steps.length}`}>
+                  <h4 class="sub">Architecture</h4>
+                  <Flow steps={c.architecture.steps} caption={c.architecture.caption} label={`${c.title}: architecture, step by step`} />
+                </div>
+              )}
+              <details class="deep">
+                <summary>More detail</summary>
+                <div class="deep-in">
+                  {sections.map(([key, title]) => {
+                    const v = c[key];
+                    if (!v || (Array.isArray(v) && v.length === 0)) return null;
+                    return (
+                      <section>
+                        <h4 class="sub">{title}</h4>
+                        {typeof v === 'string' ? <p>{v}</p> : <ul>{v.map((x) => <li>{x}</li>)}</ul>}
+                      </section>
+                    );
+                  })}
+                </div>
+              </details>
+            </>
           )}
-          <details class="deep">
-            <summary>Read the case study</summary>
-            <div class="deep-in">
-              {sections.map(([key, title]) => {
-                const v = c[key];
-                if (!v || (Array.isArray(v) && v.length === 0)) return null;
-                return (
-                  <section>
-                    <h4 class="sub">{title}</h4>
-                    {typeof v === 'string' ? <p>{v}</p> : <ul>{v.map((x) => <li>{x}</li>)}</ul>}
-                  </section>
-                );
-              })}
-            </div>
-          </details>
           <div class="c-foot">
             <ul class="stack" aria-label="Technologies">{c.stack.map((t) => <li class="topic">{t}</li>)}</ul>
-            {c.branch && <a class="to-log mono" href="#journey" data-branch={c.branch}>git log {c.branch}</a>}
+            {c.branch && <a class="to-log mono" href={`?branch=${c.branch}#journey`} data-branch={c.branch}>git log {c.branch}</a>}
           </div>
         </article>
       </li>
@@ -61,6 +69,14 @@ const sections = [
 
 <style>
   .cases { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+  @media (min-width: 900px) {
+    .cases { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .case:not(.featured) { grid-column: 1 / -1; }
+    .featured article { display: flex; flex-direction: column; height: 100%; }
+    .featured .c-foot { margin-top: auto; }
+  }
+  .read { margin: 14px 0 0; }
+  .read .btn { color: var(--accent); }
   article { container: case / inline-size; border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--bg); box-shadow: var(--shadow); }
   .c-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
   .ctx { font-size: 13px; color: var(--muted); }

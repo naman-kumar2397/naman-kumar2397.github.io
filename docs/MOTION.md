@@ -46,7 +46,9 @@ travelling along connectors (only while on screen); node hover highlight
 **Git log**: graph draws in when it first scrolls into view; HEAD pulse only while visible; sliding segmented
 control; filter changes via View Transitions with fade fallback; animated expand of the full log
 
-**Skills / Contact / Footer**: staggered reveals, hover states, underline sweeps
+**Skills / Contact / Footer**: staggered reveals, hover states, underline sweeps; technology logo carousel
+while the inventory is collapsed (80s loop, pauses on hover/focus, pause button for WCAG 2.2.2, stops off-screen,
+static wrapped grid without JS or with reduced motion). Logos: Simple Icons (CC0), vendored in `src/data/logos.ts`.
 
 ## Guarantees
 - Hidden start states only apply under `html.motion` (set before paint when JS runs and reduced motion is off;

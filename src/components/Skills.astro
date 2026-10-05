@@ -1,6 +1,21 @@
 ---
-import { capabilities, resumeSkills } from '../data/profile';
+import { capabilities, resumeSkills, techCarousel } from '../data/profile';
+import { logos } from '../data/logos';
 const toolCount = resumeSkills.reduce((n, g) => n + g.items.length, 0);
+
+// Brand colour on hover; see brandDark below for the dark-mode adjustment.
+const luminance = (hex: string) => {
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const tiles = techCarousel.map((t) => {
+  const logo = t.logo ? logos[t.logo] : undefined;
+  // Dark mode: near-black marks use the text colour; other dim marks are lifted toward white.
+  const l = logo ? luminance(logo.hex) : 0;
+  const brandDark = !logo ? undefined : l < 0.03 ? 'var(--text)' : l < 0.25 ? `color-mix(in srgb, #${logo.hex} 55%, #fff)` : `#${logo.hex}`;
+  return { name: t.name, key: t.logo, logo, brand: logo ? `#${logo.hex}` : undefined, brandDark };
+});
+const usedLogos = [...new Set(techCarousel.filter((t) => t.logo).map((t) => t.logo!))];
 ---
 <section id="skills" class="container section" aria-labelledby="skills-title">
   <div class="section-head" data-reveal="heading">
@@ -17,15 +32,54 @@ const toolCount = resumeSkills.reduce((n, g) => n + g.items.length, 0);
       </li>
     ))}
   </ol>
-  <details class="inventory">
-    <summary><span class="chev" aria-hidden="true">›</span>Full technology inventory <span class="muted">({toolCount} entries)</span></summary>
-    <dl>
-      {resumeSkills.map((g) => (
-        <div><dt>{g.group}</dt><dd>{g.items.join(', ')}</dd></div>
-      ))}
-    </dl>
-  </details>
+  <div class="inventory">
+    <details>
+      <summary><span class="chev" aria-hidden="true">›</span>Full technology inventory <span class="muted">({toolCount} entries)</span></summary>
+      <dl>
+        {resumeSkills.map((g) => (
+          <div><dt>{g.group}</dt><dd>{g.items.join(', ')}</dd></div>
+        ))}
+      </dl>
+    </details>
+
+    <!-- Logo carousel, shown while the inventory is collapsed. Each mark is defined once and reused. -->
+    <div class="marquee" data-inview>
+      <svg width="0" height="0" class="defs" aria-hidden="true" focusable="false">
+        {usedLogos.map((k) => <symbol id={`logo-${k}`} viewBox="0 0 24 24"><path d={logos[k].path} /></symbol>)}
+      </svg>
+      <button type="button" class="mq-toggle" aria-pressed="false" hidden>
+        <span class="mq-icon" aria-hidden="true"></span><span class="sr-only">Pause technology carousel</span>
+      </button>
+      <div class="mq-viewport">
+        {[0, 1].map((copy) => (
+          <ul class="mq-track" aria-label={copy === 0 ? 'Technologies' : undefined} aria-hidden={copy === 1 ? 'true' : undefined}>
+            {tiles.map((t) => (
+              <li class={t.logo ? 'tile' : 'tile text'} style={t.brand ? `--brand:${t.brand};--brand-dark:${t.brandDark}` : undefined}>
+                {t.logo && <svg class="mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href={`#logo-${t.key}`} /></svg>}
+                <span class="name">{t.name}</span>
+              </li>
+            ))}
+          </ul>
+        ))}
+      </div>
+    </div>
+  </div>
 </section>
+
+<script>
+  // Pause control for the carousel (WCAG 2.2.2). Only relevant when motion is on.
+  document.querySelectorAll<HTMLElement>('#skills .marquee').forEach((mq) => {
+    const btn = mq.querySelector<HTMLButtonElement>('.mq-toggle');
+    if (!btn || !document.documentElement.classList.contains('motion')) return;
+    btn.hidden = false;
+    const label = btn.querySelector('.sr-only')!;
+    btn.addEventListener('click', () => {
+      const paused = mq.classList.toggle('paused');
+      btn.setAttribute('aria-pressed', String(paused));
+      label.textContent = paused ? 'Play technology carousel' : 'Pause technology carousel';
+    });
+  });
+</script>
 
 <style>
   .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
@@ -54,11 +108,59 @@ const toolCount = resumeSkills.reduce((n, g) => n + g.items.length, 0);
     }
   }
   .ev { font-size: 14px; color: var(--muted); margin: 0; }
-  .inventory { margin-top: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
+  .inventory { margin-top: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); overflow: hidden; }
   .inventory summary { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; font-weight: 500; color: var(--accent); }
   .inventory dl { margin: 0; padding: 4px 16px 12px; display: grid; gap: 6px; }
-  .inventory div { display: grid; gap: 0 16px; font-size: 13px; }
+  .inventory dl > div { display: grid; gap: 0 16px; font-size: 13px; }
   .inventory dt { font-weight: 600; }
   .inventory dd { margin: 0; font-family: var(--mono); font-size: 12px; color: var(--muted); }
-  @media (min-width: 768px) { .inventory div { grid-template-columns: 240px minmax(0, 1fr); } }
+  @media (min-width: 768px) { .inventory dl > div { grid-template-columns: 240px minmax(0, 1fr); } }
+
+  /* ---- Technology carousel ---- */
+  .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .marquee { position: relative; border-top: 1px solid var(--border-muted); padding: 12px 0; }
+  .inventory:has(details[open]) .marquee { display: none; }
+  .mq-viewport { display: flex; overflow: hidden; }
+  .mq-track { list-style: none; margin: 0; padding: 0 6px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .mq-track[aria-hidden='true'] { display: none; }
+  .tile {
+    display: inline-flex; align-items: center; gap: 8px; flex: none;
+    height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); color: var(--muted); font-size: 13px; font-weight: 500; white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard);
+  }
+  .tile.text .name { font-family: var(--mono); font-size: 12px; }
+  .mark { width: 18px; height: 18px; fill: currentColor; flex: none; }
+  @media (hover: hover) and (pointer: fine) {
+    .tile:not(.text):hover { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, var(--border)); }
+    .tile.text:hover { color: var(--text); }
+  }
+  @media (prefers-color-scheme: dark) {
+    @media (hover: hover) and (pointer: fine) {
+      .tile:not(.text):hover { color: var(--brand-dark); border-color: color-mix(in srgb, var(--brand-dark) 40%, var(--border)); }
+    }
+  }
+
+  /* Moving only when motion is on (JS + no reduced motion); otherwise a static wrapped grid. */
+  :global(html.motion) .mq-viewport {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+  }
+  :global(html.motion) .mq-track { flex-wrap: nowrap; justify-content: flex-start; padding: 0 4px; animation: mq-scroll 80s linear infinite; animation-play-state: paused; }
+  :global(html.motion) .mq-track[aria-hidden='true'] { display: flex; }
+  :global(html.motion) .marquee.in-view:not(.paused):not(:hover):not(:focus-within) .mq-track { animation-play-state: running; }
+  @keyframes mq-scroll { to { transform: translateX(-100%); } }
+
+  .mq-toggle {
+    position: absolute; right: 8px; top: 50%; translate: 0 -50%; z-index: 1;
+    width: 32px; height: 32px; display: grid; place-items: center; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 50%; background: var(--bg); color: var(--muted);
+    transition: color var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard);
+  }
+  .mq-toggle:hover { color: var(--text); border-color: var(--accent); }
+  .mq-toggle[hidden] { display: none; }
+  /* pause glyph (two bars) / play glyph (triangle) drawn in CSS */
+  .mq-icon { width: 10px; height: 10px; background: linear-gradient(90deg, currentColor 0 35%, transparent 35% 65%, currentColor 65%); }
+  .mq-toggle[aria-pressed='true'] .mq-icon { background: currentColor; clip-path: polygon(15% 0, 100% 50%, 15% 100%); }
+  :global(html.motion) .mq-viewport { margin-right: 44px; }
 </style>

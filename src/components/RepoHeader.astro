@@ -48,6 +48,7 @@ const isCurrent = (label: string, i: number) => (onHome ? i === 0 : label === cu
         {t.label}{t.count !== undefined && <span class="count"><span class="sr-only">(</span>{t.count}<span class="sr-only"> items)</span></span>}
       </a>
     ))}
+    <span class="indicator" aria-hidden="true"></span>
   </div>
 </nav>
 
@@ -82,27 +83,60 @@ const isCurrent = (label: string, i: number) => (onHome ? i === 0 : label === cu
   }
   .tab:hover { text-decoration: none; border-bottom-color: var(--border); }
   .tab[aria-current] { font-weight: 600; border-bottom-color: var(--tab-active); }
+  /* One shared indicator slides to the active tab (script adds .has-indicator). */
+  .indicator {
+    position: absolute; left: 0; bottom: 0; width: 100px; height: 2px;
+    background: var(--tab-active); border-radius: 2px 2px 0 0;
+    transform-origin: 0 50%; transform: translateX(0) scaleX(0); opacity: 0;
+    pointer-events: none;
+  }
+  .indicator.ready { opacity: 1; }
+  .indicator.animate { transition: transform var(--dur-normal) var(--ease-in-out); }
+  .tabs-in.has-indicator .tab[aria-current] { border-bottom-color: transparent; }
+  .tabs-in.has-indicator .tab[aria-current]:hover { border-bottom-color: transparent; }
   .count { background: var(--border-muted); border-radius: 2em; padding: 0 6px; font-size: 12px; font-weight: 500; line-height: 18px; }
   @media (min-width: 640px) { .actions { display: flex; } }
 </style>
 
 <script>
+  const bar = document.querySelector<HTMLElement>('.tabs-in');
+  const ind = bar?.querySelector<HTMLElement>('.indicator');
+  const home = location.pathname === '/';
+  const tabs = [...document.querySelectorAll<HTMLAnchorElement>('.tabs .tab')];
+
+  const place = (animate: boolean) => {
+    if (!bar || !ind) return;
+    const t = bar.querySelector<HTMLElement>('.tab[aria-current]');
+    if (!t) return;
+    ind.classList.toggle('animate', animate);
+    ind.style.transform = `translateX(${t.offsetLeft}px) scaleX(${t.offsetWidth / 100})`;
+    bar.classList.add('has-indicator');
+    ind.classList.add('ready');
+  };
+  // Initial placement without animation; enable transitions from the next frame on.
+  place(false);
+  // Re-measure on bar resize (and after fonts change widths) without animating.
+  if (bar && 'ResizeObserver' in window) new ResizeObserver(() => place(false)).observe(bar);
+  if (document.fonts?.ready) document.fonts.ready.then(() => place(false));
+
   // Scroll-spy only on the home page (tab links there are in-page hashes).
-  const tabs = location.pathname === '/' ? [...document.querySelectorAll<HTMLAnchorElement>('.tabs .tab')] : [];
-  const sections = tabs
+  const spyTabs = home ? tabs : [];
+  const sections = spyTabs
     .map((t) => document.getElementById(t.hash.slice(1)))
     .filter((s): s is HTMLElement => !!s);
-  const setActive = (id: string) =>
-    tabs.forEach((t) => {
+  const setActive = (id: string) => {
+    spyTabs.forEach((t) => {
       const on = t.hash === `#${id}`;
       if (on) {
         t.setAttribute('aria-current', 'true');
         // Keep the active tab visible in the horizontally scrolling bar (no vertical scroll).
-        const bar = t.parentElement!;
-        if (t.offsetLeft < bar.scrollLeft || t.offsetLeft + t.offsetWidth > bar.scrollLeft + bar.clientWidth)
-          bar.scrollLeft = t.offsetLeft - 16;
+        const b = t.parentElement!;
+        if (t.offsetLeft < b.scrollLeft || t.offsetLeft + t.offsetWidth > b.scrollLeft + b.clientWidth)
+          b.scrollLeft = t.offsetLeft - 16;
       } else t.removeAttribute('aria-current');
     });
+    place(true);
+  };
   // The section crossing a line ~30% down the viewport is the active one.
   const io = new IntersectionObserver(
     (entries) => {

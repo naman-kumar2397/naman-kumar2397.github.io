@@ -3,10 +3,10 @@ import { profile } from '../data/profile';
 ---
 <section class="container section metrics-sec" aria-labelledby="impact-title">
   <h2 id="impact-title" class="sr-only">Impact at a glance</h2>
-  <ul class="metrics">
+  <ul class="metrics" data-reveal-group>
     {profile.metrics.map((m) => (
-      <li class="metric">
-        <p class="value">{m.value}</p>
+      <li class="metric" data-reveal="card">
+        <p class="value" data-count style={`min-width:${m.value.length + 1}ch`}>{m.value}</p>
         <p class="label">{m.label}</p>
         <p class="context">{m.context}</p>
       </li>
@@ -19,8 +19,10 @@ import { profile } from '../data/profile';
   .metrics { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
   .metric { border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--bg); box-shadow: var(--shadow); position: relative; overflow: hidden; }
   .metric::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--accent); opacity: .85; }
+  :global(html.motion) .metric::before { transform: scaleY(0); transform-origin: top; transition: transform var(--dur-slow) var(--ease-out) 160ms; }
+  :global(html.motion) .metric.is-in::before { transform: scaleY(1); }
   p { margin: 0; }
-  .value { font-size: 32px; line-height: 1.1; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .value { display: inline-block; font-size: 32px; line-height: 1.1; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
   .label { font-weight: 600; margin-top: 4px; }
   .context { font-size: 13px; color: var(--muted); margin-top: 6px; }
   @media (min-width: 1000px) { .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

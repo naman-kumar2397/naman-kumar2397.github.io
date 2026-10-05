@@ -9,6 +9,8 @@ export const profile = {
   location: 'Melbourne, VIC',
   email: 'naman.kumar2397@gmail.com',
   linkedin: 'https://www.linkedin.com/in/-namankumar/',
+  /** Used only in structured data (sameAs), not shown on the page. */
+  github: 'https://github.com/naman-kumar2397',
   linkedinLabel: 'linkedin.com/in/-namankumar',
   summary:
     'Lead Site Reliability Engineer with 7+ years of hands-on experience designing, scaling and automating large-scale distributed systems on AWS. Currently leading a team of 10 engineers supporting 80+ AWS accounts for a major financial services client. Proven track record in cutting incident response times, consolidating observability platforms, and moving ClickOps estates to Infrastructure as Code. Now focused on AI-driven operations, including LLM-powered incident tooling and secure enterprise adoption of Claude on AWS Bedrock.',
@@ -93,12 +95,12 @@ export const experience: Role[] = [
     stack: ['AWS', 'ECS Fargate', 'Datadog', 'Dynatrace', 'ServiceNow', 'CrowdStrike', 'Terraform', 'Bedrock'],
     points: [
       { label: 'Team leadership', text: 'Lead a team of 10 offshore engineers in India, bridging client expectations and offshore delivery for infrastructure support across 80+ AWS accounts.', top: true },
-      { label: 'Support model', text: 'Streamlined intake for all additional workloads through ServiceNow and set up a follow-the-sun model for 24x7 support.' },
+      { label: 'Support model', text: 'Streamlined intake for all additional workloads through ServiceNow and set up a follow-the-sun model across Melbourne and India for 24x7 support.' },
       { label: 'AI SRE (Alfred)', text: 'Designed and built a multi-agent incident investigator, now live in production on Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent with Datadog, Dynatrace, Buildkite and GitHub, with dependency-graph blast radius on pull requests.', top: true },
       { label: 'Claude for developers', text: 'Building an OpenAI-compatible Lambda proxy over Bedrock so GitHub Copilot (BYOK) can use Claude models, with a mandatory server-side guardrail and per-developer keys for cost attribution.' },
       { label: 'ECS upgrade automation', text: 'Automated ECS cluster upgrades across all environments with zero manual intervention, moving clusters to CIS-hardened Amazon Linux 2023 AMIs.', top: true },
       { label: 'Patch automation', text: 'Removed ClickOps from monthly patching by introducing Ivanti Security Controls; designed the networking and architecture the team built on.' },
-      { label: 'Observability consolidation', text: 'Migrating 20M+ log events per week from Sumo Logic to Datadog, including Grok parsing pipelines for payment logs and transaction-orphan detection monitors, for single-pane dashboards and lower MTTR.', top: true },
+      { label: 'Observability consolidation', text: 'Migrated 20M+ log events per week from Sumo Logic to Datadog, including Grok parsing pipelines for payment logs and transaction-orphan detection monitors, for single-pane dashboards and lower MTTR.', top: true },
       { label: 'Security', text: 'Rolled out CrowdStrike Falcon sensor injection for ECS Fargate workloads using the init-container model.', top: true },
       { label: 'High availability', text: 'Designed a 2-node active/passive Windows Failover Cluster on shared EBS io2 Multi-Attach to replace single-server Control-M staging hosts across Test, Pre-Prod and Prod.' },
       { label: 'IaC adoption', text: 'Moving AWS accounts inherited from a previous vendor from ClickOps to CloudFormation and Terraform.' },
@@ -188,7 +190,7 @@ export const accolades = [
 ];
 
 export const education = 'Bachelor of Technology, Manipal University Jaipur (2015 – 2019)';
-export const certification = 'AWS Certified Solutions Architect – Associate (R2XYHRM1JE1E1TKJ), 2019';
+export const certification = 'AWS Certified Solutions Architect – Associate (R2XYHRM1JE1E1TKJ), earned 2019';
 
 /**
  * Technology carousel (shown while the full inventory is collapsed). Mirrors `resumeSkills`.

@@ -10,7 +10,7 @@ import Skills from '../components/Skills.astro';
 import Contact from '../components/Contact.astro';
 import { commits } from '../data/journey';
 import { caseStudies } from '../data/caseStudies';
-import { certification, profile } from '../data/profile';
+import { profile } from '../data/profile';
 import { getImage } from 'astro:assets';
 import photo from '../assets/profile.jpg';
 
@@ -51,9 +51,8 @@ const jsonLd = [
       address: { '@type': 'PostalAddress', addressLocality: 'Melbourne', addressRegion: 'VIC', addressCountry: 'AU' },
       worksFor: { '@type': 'Organization', name: 'Viable Solutions' },
       alumniOf: { '@type': 'CollegeOrUniversity', name: 'Manipal University Jaipur' },
-      hasCredential: { '@type': 'EducationalOccupationalCredential', name: certification.split(' (')[0], credentialCategory: 'certification' },
-      knowsAbout: ['Site Reliability Engineering', 'Amazon Web Services', 'Observability', 'Infrastructure as Code', 'Kubernetes', 'Incident management', 'AWS Bedrock'],
-      sameAs: [profile.linkedin],
+      knowsAbout: ['Site Reliability Engineering', 'Amazon Web Services', 'Observability', 'Infrastructure as Code', 'Kubernetes', 'Incident management', 'AWS Bedrock', 'DevOps', 'Platform engineering', 'Cloud infrastructure', 'AI-assisted operations'],
+      sameAs: [profile.linkedin, profile.github],
     },
   },
 ];

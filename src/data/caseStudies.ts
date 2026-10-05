@@ -63,7 +63,7 @@ export const caseStudies: CaseStudy[] = [
     feature: {
       role: 'Designed and built it, from prototype to production',
       facts: [
-        { label: 'Where', value: 'Latitude Financial Services, as Lead SRE at Viable Solutions' },
+        { label: 'Where', value: 'Latitude Financial Services (client), as Lead SRE at Viable Solutions via Synechron' },
         { label: 'Status', value: 'Live in production since September 2026' },
         { label: 'Platform', value: 'Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent' },
       ],
@@ -130,7 +130,7 @@ export const caseStudies: CaseStudy[] = [
       confidentiality: 'The production code is internal to the client. This page describes public AWS services and design principles only; no client data, systems or incidents are shown.',
     },
     title: 'Alfred: a multi-agent AI SRE',
-    context: 'Latitude Financial Services · as Lead SRE at Viable Solutions',
+    context: 'Latitude Financial Services (client, via Viable Solutions and Synechron)',
     status: 'Shipped',
     headline: 'Live in production on Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent',
     overview:
@@ -176,7 +176,7 @@ export const caseStudies: CaseStudy[] = [
       role: 'SRE lead',
       facts: [
         { label: 'Game', value: 'Up to six players impersonate each other with AI face and voice swapping' },
-        { label: 'Peak', value: '50k+ concurrent users in the first 10 minutes' },
+        { label: 'Launch', value: '50k+ concurrent users in the first 10 minutes' },
         { label: 'Platform', value: 'Kubernetes with GPU workloads, monitored in Grafana (NVIDIA DCGM)' },
       ],
       media: {
@@ -238,10 +238,10 @@ export const caseStudies: CaseStudy[] = [
   {
     id: 'observability-migrations',
     feature: {
-      role: 'Migrated at Cvent; migrating at Latitude',
+      role: 'Migrated at Cvent and at Latitude',
       facts: [
         { label: 'Cvent', value: '~880M log events per week, Splunk to Datadog (completed)' },
-        { label: 'Latitude', value: '20M+ log events per week, Sumo Logic to Datadog (in progress)' },
+        { label: 'Latitude', value: '20M+ log events per week, Sumo Logic to Datadog (completed)' },
         { label: 'Standards', value: 'SLI/SLO and instrumentation standards for Java microservices' },
         { label: 'Also', value: "Moved a newly acquired company to Datadog (10+ dashboards)" },
       ],
@@ -258,17 +258,17 @@ export const caseStudies: CaseStudy[] = [
         'Cvent: migrated ~880M log events per week from Splunk to Datadog.',
         'Cvent: owned SLI/SLO and custom instrumentation standards for Java microservices.',
         "Cvent: led a newly acquired company's move to Datadog (10+ dashboards).",
-        'Latitude: migrating 20M+ log events per week from Sumo Logic to Datadog, including Grok parsing pipelines and detection monitors.',
+        'Latitude: migrated 20M+ log events per week from Sumo Logic to Datadog, including Grok parsing pipelines and detection monitors.',
       ],
       // TODO: trade-offs (cutover strategy, dual-running, cost, retention) — needs first-hand detail.
       confidentiality: 'Pipelines and monitors are described by purpose only; log content and client system names are omitted.',
     },
     title: 'Large-scale observability migrations',
     context: 'Cvent (Splunk to Datadog) · Latitude (Sumo Logic to Datadog)',
-    status: 'In progress',
-    headline: '~880M log events per week moved; 20M+ per week in flight',
+    status: 'Shipped',
+    headline: '~880M and 20M+ log events per week moved to Datadog',
     overview:
-      'Two log platform migrations to Datadog at two employers: one completed at Cvent, one under way at Latitude Financial Services.',
+      'Two log platform migrations to Datadog, both completed: one at Cvent, and one at Latitude Financial Services (client, via Viable Solutions and Synechron).',
     problem:
       'Logs, metrics and traces split across platforms make incidents slower to diagnose. Both migrations consolidate them for single-pane dashboards.',
     architecture: {
@@ -283,7 +283,7 @@ export const caseStudies: CaseStudy[] = [
     implementation: [
       'Cvent: migrated ~880M log events per week from Splunk to Datadog, unifying logs, metrics and traces on one platform.',
       "Cvent: owned SLI/SLO and custom instrumentation standards for Java microservices, and led a newly acquired company's move to Datadog (10+ dashboards).",
-      'Latitude: migrating 20M+ log events per week from Sumo Logic to Datadog, with Grok parsing pipelines for payment logs.',
+      'Latitude: migrated 20M+ log events per week from Sumo Logic to Datadog, with Grok parsing pipelines for payment logs.',
     ],
     decisions: [
       'One platform for logs, metrics and traces instead of separate tools.',
@@ -293,8 +293,9 @@ export const caseStudies: CaseStudy[] = [
     reliability: ['Detection monitors for anomalies in payment transaction flows (Latitude).'],
     outcomes: [
       'Cvent: logs, metrics and traces on one platform.',
-      'Latitude: aiming for single-pane dashboards and lower MTTR.',
+      'Latitude: migration complete; 20M+ log events per week now on Datadog.',
     ],
+    // TODO: measured effect at Latitude (e.g. MTTR before/after) when available.
     // TODO: decisions/trade-offs (cutover strategy, cost) and lessons learned not on the resume.
     stack: ['Datadog', 'Splunk', 'Sumo Logic', 'Grok parsing', 'SLIs/SLOs'],
     branch: 'cvent',
@@ -302,7 +303,7 @@ export const caseStudies: CaseStudy[] = [
   {
     id: 'claude-bedrock-proxy',
     title: 'Claude for developers via a Bedrock proxy',
-    context: 'Latitude Financial Services · via Viable Solutions',
+    context: 'Latitude Financial Services (client, via Viable Solutions and Synechron)',
     status: 'In progress',
     headline: 'GitHub Copilot on Claude, with guardrails and per-developer cost attribution',
     overview:

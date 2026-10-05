@@ -183,7 +183,7 @@ export const branches = {
       'ServiceNow intake for all additional workloads and a follow-the-sun 24x7 support model',
       'Zero-touch ECS cluster upgrades to CIS-hardened Amazon Linux 2023 AMIs',
       'Removed ClickOps from monthly patching with Ivanti Security Controls',
-      'Migrating 20M+ log events per week from Sumo Logic to Datadog',
+      'Migrated 20M+ log events per week from Sumo Logic to Datadog',
       'CrowdStrike Falcon sensor injection for ECS Fargate',
       'Active/passive Windows Failover Cluster for Control-M staging hosts',
       'Moving inherited AWS accounts from ClickOps to CloudFormation and Terraform',
@@ -198,7 +198,7 @@ export const branches = {
     parent: 'latitude',
     colour: 'teal',
     title: 'Alfred: a multi-agent AI SRE',
-    org: 'Latitude Financial Services',
+    org: 'Latitude Financial Services (client, via Viable Solutions and Synechron)',
     // TODO: prototype start date not recorded; production since Sep 2026.
     period: 'Live since Sep 2026',
     highlights: [
@@ -217,7 +217,7 @@ export const branches = {
     parent: 'latitude',
     colour: 'orange',
     title: 'Claude for Developers',
-    org: 'Latitude Financial Services',
+    org: 'Latitude Financial Services (client, via Viable Solutions and Synechron)',
     // TODO: start date not on the resume.
     period: '',
     highlights: [
@@ -350,12 +350,12 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
   },
   { branch: 'main', kind: 'merge', source: 'cit', message: "Merge branch 'work/ci-and-t'", date: 'Jun 2025' },
 
-  { branch: 'latitude', kind: 'branch', message: 'Joined as Lead SRE for Latitude Financial Services', date: 'Aug 2025' },
+  { branch: 'latitude', kind: 'branch', message: 'Joined Viable Solutions (via Synechron) as Lead SRE for Latitude Financial Services', date: 'Aug 2025' },
   // TODO: Latitude commits below are undated on the resume; order is approximate.
   {
     branch: 'latitude', kind: 'commit', date: '',
     message: 'feat: 10-engineer team, follow-the-sun 24x7 support', milestone: true,
-    body: 'Lead a team of 10 offshore engineers in India across 80+ AWS accounts. Streamlined intake for all additional workloads through ServiceNow and set up a follow-the-sun model for 24x7 support.',
+    body: 'Lead a team of 10 offshore engineers in India across 80+ AWS accounts. Streamlined intake for all additional workloads through ServiceNow and set up a follow-the-sun model across Melbourne and India for 24x7 support.',
   },
   // TODO: prototype dates not recorded.
   { branch: 'ai', kind: 'branch', message: 'Alfred: multi-agent AI SRE prototype', date: '' },
@@ -382,7 +382,7 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
   {
     branch: 'latitude', kind: 'commit', date: '',
     message: 'feat: 20M+ events/week from Sumo Logic to Datadog',
-    body: 'Migrating 20M+ log events per week from Sumo Logic to Datadog, including Grok parsing pipelines for payment logs and transaction-orphan detection monitors, for single-pane dashboards and lower MTTR.',
+    body: 'Migrated 20M+ log events per week from Sumo Logic to Datadog, including Grok parsing pipelines for payment logs and transaction-orphan detection monitors, for single-pane dashboards and lower MTTR.',
   },
   {
     branch: 'ai', kind: 'commit', date: '',

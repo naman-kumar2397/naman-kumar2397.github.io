@@ -9,6 +9,7 @@
     "test": "node --test --experimental-strip-types tests/*.test.ts",
     "check:layout": "node scripts/layout-check.mjs",
     "check:seo": "node scripts/seo-check.mjs",
+    "check:ai": "node scripts/ai-check.mjs",
     "assets": "node scripts/build-assets.mjs"
   },
   "dependencies": {

@@ -21,6 +21,7 @@ const jsonLd = {
     '@type': 'Person',
     name: profile.name,
     jobTitle: profile.role,
+    description: profile.pitch,
     url: site,
     email: `mailto:${profile.email}`,
     image: new URL('/og.png', site).toString(),

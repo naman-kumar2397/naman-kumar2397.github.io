@@ -58,3 +58,14 @@ test('carousel logos exist and every carousel entry is in the inventory', () => 
     assert.ok(inventory.includes(key), `${t.name} not in resume inventory`);
   }
 });
+
+test('AI-readable Markdown covers every page and carries no phone number or private repo', async () => {
+  const { mdPath, llmsTxt, llmsFullTxt } = await import('../src/lib/markdown.ts');
+  assert.equal(mdPath('/'), '/index.md');
+  assert.equal(mdPath('/projects/alfred/'), '/projects/alfred.md');
+  const full = llmsFullTxt();
+  for (const c of caseStudies) assert.ok(full.includes(`# ${c.title}`), c.id);
+  for (const c of caseStudies.filter((x) => x.feature)) assert.ok(llmsTxt().includes(`/projects/${c.id}.md`), c.id);
+  assert.doesNotMatch(full, /\+?\d[\d\s-]{8,}\d/);
+  assert.doesNotMatch(full, /github\.com\/[^\s)]*alfred/i);
+});

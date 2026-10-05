@@ -23,3 +23,4 @@ jobs:
       # Uses the Google Chrome preinstalled on GitHub's Ubuntu runners.
       - run: npm run check:layout
       - run: npm run check:seo
+      - run: npm run check:ai

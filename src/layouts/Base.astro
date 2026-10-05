@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import { mdPath } from '../lib/markdown';
+import { sitemapPaths } from '../lib/sitemap';
 
 interface Props {
   title: string;
@@ -25,6 +27,8 @@ const {
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(ogImagePath, Astro.site);
+// Indexable pages also have a Markdown version for AI assistants (src/lib/markdown.ts).
+const markdown = sitemapPaths().includes(Astro.url.pathname) ? new URL(mdPath(Astro.url.pathname), Astro.site) : null;
 ---
 <!doctype html>
 <html lang="en-AU">
@@ -34,6 +38,7 @@ const ogImage = new URL(ogImagePath, Astro.site);
     <title>{title}</title>
     <meta name="description" content={description} />
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    {markdown && <link rel="alternate" type="text/markdown" href={markdown} title="Markdown version" />}
     <meta name="author" content="Naman Kumar" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="color-scheme" content="light dark" />

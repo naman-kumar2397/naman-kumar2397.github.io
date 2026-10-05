@@ -75,7 +75,7 @@ for (const { path, html } of indexable) {
   }
 }
 for (const [t, ps] of titles) check(ps.length === 1, ps.join(', '), `duplicate title "${t}"`);
-for (const [d, ps] of descs) check(ps.length === 1, ps.join(', '), `duplicate meta description`);
+for (const [, ps] of descs) check(ps.length === 1, ps.join(', '), `duplicate meta description`);
 
 // Sitemap and robots.
 const sitemap = existsSync(join(DIST, 'sitemap.xml')) ? readFileSync(join(DIST, 'sitemap.xml'), 'utf8') : '';

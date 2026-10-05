@@ -19,6 +19,7 @@ const orgLine = (r: (typeof experience)[number]) => {
     <meta name="description" content={resumeDescription} />
     <meta property="og:description" content={resumeDescription} />
     <link rel="canonical" href={new URL('/resume/', Astro.site)} />
+    <link rel="alternate" type="text/markdown" href={new URL('/resume.md', Astro.site)} title="Markdown version" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta property="og:type" content="profile" />
     <meta property="og:title" content="Naman Kumar | Resume" />

@@ -34,5 +34,11 @@ npm run check:layout  # after a build: renders every page at 4 widths x 2 themes
                       # small tap targets, misaligned connectors and horizontal overflow
 npm run check:seo     # after a build: titles/descriptions, canonicals, share images, one h1,
                       # alt text, JSON-LD, internal links, sitemap coverage (no browser)
-# Both run in CI on pull requests and gate every deploy to main.
+npm run check:ai      # after a build: AI crawlers allowed in robots.txt, llms.txt structure and
+                      # links, a Markdown alternate for every page, Person JSON-LD, no-JS facts
+# All three run in CI on pull requests and gate every deploy to main.
 ```
+
+## AI and agentic search
+
+Every indexable page has a Markdown version (`/index.md`, `/resume.md`, `/projects/<id>.md`), linked from the page with `<link rel="alternate" type="text/markdown">`. `/llms.txt` maps the site ([llmstxt.org](https://llmstxt.org)) and `/llms-full.txt` holds everything in one file. All of it is generated from `src/data/` by `src/lib/markdown.ts`, so it never drifts from the HTML. `robots.txt` explicitly allows search, assistant and training crawlers.

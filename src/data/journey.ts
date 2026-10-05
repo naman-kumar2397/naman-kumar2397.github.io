@@ -140,12 +140,12 @@ export const branches = {
     label: 'Netflix launch',
     parent: 'akqa',
     colour: 'coral',
-    title: 'Netflix Game Launch',
+    title: "It's What's Inside: The Game (Netflix)",
     org: 'AKQA',
     // TODO: project dates not on the resume (falls within Sep 2024 – Apr 2025).
     period: '',
     highlights: [
-      'SRE lead for an AI-driven face-transforming game',
+      'SRE lead for a Netflix game where up to six players impersonate each other with AI face and voice swapping',
       'Kubernetes clusters that scaled to 50k+ concurrent users in the first 10 minutes of launch',
       'Grafana monitoring of NVIDIA DCGM GPU metrics',
     ],

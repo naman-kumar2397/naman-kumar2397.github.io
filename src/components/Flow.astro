@@ -34,7 +34,7 @@ const { steps, caption, label } = Astro.props;
     background: linear-gradient(var(--border), var(--accent));
   }
   .step:not(:last-child)::before {
-    content: ''; position: absolute; left: 18px; bottom: -6px; z-index: 1;
+    content: ''; position: absolute; left: 18px; bottom: -22px; z-index: 1;
     border: 5px solid transparent; border-top-color: var(--accent); border-bottom: 0;
   }
   figcaption { font-size: 12px; color: var(--muted); margin-top: 8px; }
@@ -43,6 +43,6 @@ const { steps, caption, label } = Astro.props;
     .step { padding: 12px; align-content: start; }
     .n { position: static; }
     .step:not(:last-child)::after { left: auto; right: -24px; top: 50%; bottom: auto; width: 24px; height: 2px; background: linear-gradient(90deg, var(--border), var(--accent)); }
-    .step:not(:last-child)::before { left: auto; right: -8px; top: calc(50% - 4px); bottom: auto; border: 5px solid transparent; border-left-color: var(--accent); border-right: 0; }
+    .step:not(:last-child)::before { left: auto; right: -24px; top: calc(50% - 5px); bottom: auto; border: 5px solid transparent; border-left-color: var(--accent); border-right: 0; }
   }
 </style>

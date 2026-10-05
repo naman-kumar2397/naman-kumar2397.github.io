@@ -16,7 +16,7 @@ export const profile = {
   /** Hero copy: kept short; every claim is on the resume. */
   pitch:
     'I lead reliability engineering for large AWS estates: production operations, observability, infrastructure automation and the teams that run them. Lately that includes practical AI tooling for incident response on AWS Bedrock.',
-  current: { role: 'Lead SRE', where: 'Latitude Financial Services', note: 'via Viable Solutions' },
+  current: { role: 'Lead SRE', employer: 'Viable Solutions', client: 'Latitude Financial Services' },
   metrics: [
     { value: '7+', label: 'years in production engineering', context: 'Cloud automation and SRE since Jan 2019, across product, agency and consulting roles.' },
     { value: '80+', label: 'AWS accounts supported', context: 'Infrastructure support for a financial services client, delivered by the 10-engineer team I lead.' },
@@ -25,20 +25,20 @@ export const profile = {
   ],
 };
 
-/** Grouped by capability; `evidence` points at where the resume shows it. */
-export const skills: { group: string; evidence: string; items: string[] }[] = [
-  { group: 'Cloud Architecture and AWS', evidence: '80+ accounts at Latitude; Rackspace to AWS migration at Cvent', items: ['ECS and Fargate', 'EC2', 'Lambda', 'S3', 'DynamoDB', 'DMS', 'IAM and KMS', 'Transit Gateway', 'Kubernetes', 'Docker'] },
-  { group: 'Site Reliability Engineering', evidence: 'SLI/SLO standards at Cvent; HA and zero-downtime rollouts', items: ['SLIs and SLOs', 'High availability design', 'Zero-downtime rollouts', 'Capacity providers and scaling', 'Upgrade and patch automation'] },
-  { group: 'Observability and Monitoring', evidence: 'Two large log migrations to Datadog; GPU monitoring at AKQA', items: ['Datadog', 'Dynatrace', 'Grafana', 'Splunk', 'Sumo Logic', 'New Relic', 'CloudWatch'] },
-  { group: 'Infrastructure as Code', evidence: 'ClickOps to IaC at Latitude; CloudFormation to Terraform at CI&T', items: ['Terraform', 'AWS CDK', 'CloudFormation', 'Chef', 'Ansible'] },
-  { group: 'Platform Engineering and CI/CD', evidence: 'Octopus Deploy HA and one pipeline for 134 .NET projects at Cvent', items: ['Buildkite', 'GitLab', 'Jenkins', 'Harness', 'Octopus Deploy', 'GitHub', 'Bitbucket'] },
-  { group: 'Incident Management and Automation', evidence: 'Sev1 automation at Cvent; incident workflow at AKQA', items: ['PagerDuty', 'OpsGenie', 'ServiceNow', 'Jira', 'Python', 'Shell', 'PowerShell', 'Groovy', 'TypeScript'] },
-  { group: 'AI-assisted Engineering and Operations', evidence: 'AI incident assistant and Claude proxy at Latitude', items: ['AWS Bedrock', 'Claude', 'MCP servers', 'Guardrails'] },
-  { group: 'Security and Compliance', evidence: 'CrowdStrike on Fargate, CIS-hardened AMIs, non-root containers', items: ['CrowdStrike Falcon', 'Ivanti Security Controls', 'CIS-hardened AMIs', 'Least-privilege IAM'] },
-  { group: 'Technical Leadership', evidence: 'Leads 10 engineers at Latitude; mentored 4 at Cvent', items: ['Team leadership', 'Follow-the-sun support model', 'Client and offshore delivery', 'Change management', 'Mentoring'] },
+/**
+ * Core capabilities, in priority order. Each must be backed by the experience above.
+ * The complete tool list is `resumeSkills` (shown compactly, and used by the PDF).
+ */
+export const capabilities: { group: string; evidence: string; key: string[] }[] = [
+  { group: 'Site Reliability Engineering', evidence: 'SLI/SLO standards, zero-downtime rollouts, Sev1 automation that cut response time by 20+ minutes', key: ['SLIs/SLOs', 'Incident response', 'High availability', 'PagerDuty'] },
+  { group: 'Observability', evidence: 'Two large log migrations to Datadog (~880M and 20M+ events per week); GPU monitoring for a launch', key: ['Datadog', 'Dynatrace', 'Grafana', 'Splunk'] },
+  { group: 'Cloud Architecture on AWS', evidence: '80+ AWS accounts supported; 70+ ECS clusters; Rackspace to AWS migration', key: ['ECS / Fargate', 'Lambda', 'IAM', 'Kubernetes'] },
+  { group: 'Infrastructure as Code and Platform', evidence: 'ClickOps to IaC, CloudFormation to Terraform, Octopus Deploy HA at 99.9%', key: ['Terraform', 'AWS CDK', 'CloudFormation', 'CI/CD'] },
+  { group: 'Technical Leadership', evidence: 'Leads 10 engineers with a follow-the-sun 24x7 model; mentored 4 engineers', key: ['Team leadership', 'Support models', 'Change management', 'Mentoring'] },
+  { group: 'AI-assisted Operations', evidence: 'AI incident assistant and a governed Claude proxy on AWS Bedrock', key: ['AWS Bedrock', 'Claude', 'MCP', 'Guardrails'] },
 ];
 
-/** The flat resume list, used by the PDF. */
+/** Full technology inventory, as on the resume. Used by the Skills inventory and the PDF. */
 export const resumeSkills: { group: string; items: string[] }[] = [
   { group: 'Cloud and Containers', items: ['AWS (ECS, Fargate, EC2, Lambda, S3, DMS, DynamoDB, IAM, KMS, Transit Gateway, Bedrock)', 'Kubernetes', 'Docker'] },
   { group: 'Infrastructure as Code', items: ['Terraform', 'AWS CDK', 'CloudFormation'] },
@@ -71,6 +71,8 @@ export interface Role {
   client?: string;
   terms?: string;
   period: string;
+  /** One-line summary for the career overview. */
+  headline: string;
   /** Short scope facts, taken from the bullets below. */
   scope: string[];
   stack: string[];
@@ -86,6 +88,7 @@ export const experience: Role[] = [
     client: 'Latitude Financial Services',
     terms: 'Permanent',
     period: 'Aug 2025 – Present',
+    headline: 'Leads a 10-engineer team supporting 80+ AWS accounts, 24x7',
     scope: ['Leads a team of 10 engineers', '80+ AWS accounts', '24x7 follow-the-sun support'],
     stack: ['AWS', 'ECS Fargate', 'Datadog', 'Dynatrace', 'ServiceNow', 'CrowdStrike', 'Terraform', 'Bedrock'],
     points: [
@@ -107,6 +110,7 @@ export const experience: Role[] = [
     employer: 'CI&T',
     client: 'iSelect / CompareTheMarket',
     terms: 'Contract',
+    headline: 'CloudFormation to Terraform through the iSelect / CompareTheMarket merger',
     scope: ['Multiple AWS accounts', 'Merger consolidation'],
     stack: ['Terraform', 'Databricks', 'AWS DMS', 'AWS Transfer Family', 'Python'],
     period: 'May 2025 – Jun 2025',
@@ -121,6 +125,7 @@ export const experience: Role[] = [
     branch: 'akqa',
     employer: 'AKQA',
     period: 'Sep 2024 – Apr 2025',
+    headline: 'SRE lead for a Netflix game launch: 50k+ concurrent users in 10 minutes',
     scope: ['SRE lead for a Netflix game launch', 'All client infrastructures'],
     stack: ['Kubernetes', 'Grafana', 'NVIDIA DCGM', 'Python', 'AWS Lambda', 'OpsGenie'],
     points: [
@@ -135,6 +140,7 @@ export const experience: Role[] = [
     branch: 'cvent',
     employer: 'Cvent',
     period: 'Oct 2019 – Sep 2024',
+    headline: 'Co-developed Sev1 automation (20+ min faster response); ~880M logs/week to Datadog',
     scope: ['70+ ECS clusters', '500+ Chef-managed servers', 'Mentored 4 engineers'],
     stack: ['Datadog', 'Splunk', 'AWS ECS', 'AWS CDK', 'Octopus Deploy', 'PagerDuty', 'Chef'],
     points: [
@@ -156,6 +162,7 @@ export const experience: Role[] = [
     branch: 'infraguard',
     employer: 'Infraguard',
     period: 'Jan 2019 – Oct 2019',
+    headline: 'Lambda automation and private-subnet patching across multi-cloud VMs',
     scope: ['AWS, GCP, Azure and Alibaba Cloud'],
     stack: ['AWS Lambda', 'VPC', 'Multi-cloud'],
     points: [

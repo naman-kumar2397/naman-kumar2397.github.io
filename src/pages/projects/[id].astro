@@ -1,0 +1,142 @@
+---
+import Base from '../../layouts/Base.astro';
+import RepoHeader from '../../components/RepoHeader.astro';
+import Diagram from '../../components/Diagram.astro';
+import { caseStudies, type CaseStudy, type Feature } from '../../data/caseStudies';
+import { commits } from '../../data/journey';
+import { profile } from '../../data/profile';
+
+export function getStaticPaths() {
+  const featured = caseStudies.filter((c) => c.feature);
+  return featured.map((c, i) => ({
+    params: { id: c.id },
+    props: { c, prev: featured[i - 1] ?? null, next: featured[i + 1] ?? null },
+  }));
+}
+
+interface Props { c: CaseStudy & { feature: Feature }; prev: CaseStudy | null; next: CaseStudy | null }
+const { c, prev, next } = Astro.props;
+const f = c.feature;
+const has = (v?: string | string[]) => !!v && (typeof v === 'string' || v.length > 0);
+const description = `${c.title}: ${c.headline}. Engineering case study by ${profile.name}, ${profile.role}.`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: c.title,
+  description,
+  author: { '@type': 'Person', name: profile.name, url: Astro.site!.toString() },
+  about: c.stack,
+};
+---
+<Base title={`${c.title} | Case study | ${profile.name}`} description={description} jsonLd={jsonLd}>
+  <a class="skip" href="#main">Skip to content</a>
+  <RepoHeader commitCount={commits.length} projectCount={caseStudies.length} path={['projects', c.id]} current="Projects" />
+  <main id="main" class="container cs">
+    <p class="back"><a href="/#projects">Back to all projects</a></p>
+
+    <header class="cs-head">
+      <div class="meta">
+        <span class={`state ${c.status === 'Shipped' ? 'merged' : 'open'}`}>{c.status}</span>
+        <span class="muted">{c.context}</span>
+      </div>
+      <h1>{c.title}</h1>
+      <p class="headline">{c.headline}</p>
+      <p class="overview">{c.overview}</p>
+    </header>
+
+    <dl class="facts">
+      <div><dt>My role</dt><dd>{f.role}</dd></div>
+      {f.facts.map((x) => <div><dt>{x.label}</dt><dd>{x.value}</dd></div>)}
+    </dl>
+
+    <section class="block" aria-labelledby="arch">
+      <h2 id="arch">Architecture</h2>
+      <Diagram columns={f.diagram.columns} caption={f.diagram.caption} label={`${c.title} architecture, by stage`} />
+    </section>
+
+    <div class="grid">
+      {has(c.problem) && (
+        <section class="block" aria-labelledby="problem"><h2 id="problem">Problem</h2><p>{c.problem}</p></section>
+      )}
+      <section class="block" aria-labelledby="contrib">
+        <h2 id="contrib">My contribution</h2>
+        <ul>{f.contributions.map((x) => <li>{x}</li>)}</ul>
+      </section>
+      {has(c.decisions) && (
+        <section class="block" aria-labelledby="decisions"><h2 id="decisions">Engineering decisions</h2><ul>{c.decisions!.map((x) => <li>{x}</li>)}</ul></section>
+      )}
+      {has(f.tradeoffs) && (
+        <section class="block" aria-labelledby="tradeoffs"><h2 id="tradeoffs">Trade-offs</h2><ul>{f.tradeoffs!.map((x) => <li>{x}</li>)}</ul></section>
+      )}
+      {has(c.reliability) && (
+        <section class="block" aria-labelledby="rel"><h2 id="rel">Reliability and security</h2><ul>{c.reliability!.map((x) => <li>{x}</li>)}</ul></section>
+      )}
+      {has(c.outcomes) && (
+        <section class="block outcomes" aria-labelledby="out"><h2 id="out">Verified outcomes</h2><ul>{c.outcomes!.map((x) => <li>{x}</li>)}</ul></section>
+      )}
+    </div>
+
+    <section class="block" aria-labelledby="stack-h">
+      <h2 id="stack-h">Stack</h2>
+      <ul class="stack">{c.stack.map((t) => <li class="topic">{t}</li>)}</ul>
+    </section>
+
+    <p class="note muted">{f.confidentiality}</p>
+
+    {c.branch && <p><a class="mono log-link" href={`/?branch=${c.branch}#journey`}>git log {c.branch}: see this in the career journey</a></p>}
+
+    <aside class="cta" aria-labelledby="cta-h">
+      <h2 id="cta-h">Want the details behind this?</h2>
+      <p class="muted">Happy to walk through the architecture and decisions in a conversation.</p>
+      <div class="ctas">
+        <a class="btn btn-lg btn-primary" href={`mailto:${profile.email}`}>Email me</a>
+        <a class="btn btn-lg" href="/resume.pdf" download="Naman_Kumar_Resume.pdf">Download resume (PDF)</a>
+      </div>
+    </aside>
+
+    <nav class="pager" aria-label="More case studies">
+      {prev ? <a href={`/projects/${prev.id}/`} rel="prev"><span class="muted">Previous</span>{prev.title}</a> : <span></span>}
+      {next ? <a href={`/projects/${next.id}/`} rel="next" class="nx"><span class="muted">Next</span>{next.title}</a> : <span></span>}
+    </nav>
+  </main>
+  <footer class="container foot"><a href="/">naman-kumar2397.github.io</a></footer>
+</Base>
+
+<style>
+  .skip { position: absolute; left: 8px; top: -48px; z-index: 30; background: var(--bg); padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; }
+  .skip:focus { top: 8px; }
+  .cs { max-width: 960px; padding-bottom: 24px; }
+  .back { margin: 20px 0 0; font-size: 14px; }
+  .back a { display: inline-flex; min-height: 32px; align-items: center; }
+  .cs-head { margin-top: 12px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 13px; }
+  h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.15; letter-spacing: -0.02em; margin: 12px 0 0; font-weight: 650; }
+  .headline { font-size: clamp(17px, 4vw, 20px); font-weight: 600; color: var(--accent); margin: 8px 0 0; }
+  .overview { font-size: 16px; margin: 12px 0 0; max-width: 70ch; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 1px; margin: 24px 0 0; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .facts div { background: var(--panel); padding: 12px 14px; }
+  dt { font: 12px/1.5 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  dd { margin: 2px 0 0; font-weight: 500; }
+  .block { margin-top: 32px; }
+  .block h2 { font-size: 20px; margin: 0 0 10px; font-weight: 600; }
+  .block p { margin: 0; max-width: 70ch; }
+  .block ul:not(.stack) { margin: 0; padding-left: 20px; }
+  .block li { margin: 6px 0; }
+  .grid { display: grid; gap: 0 40px; }
+  .outcomes ul { list-style: none; padding: 0 !important; }
+  .outcomes li { border-left: 3px solid var(--open-bg); padding: 4px 0 4px 12px; font-weight: 500; }
+  .note { font-size: 13px; margin: 28px 0 0; padding: 10px 12px; border: 1px solid var(--border-muted); border-radius: 6px; background: var(--panel); }
+  .log-link { font-size: 13px; display: inline-flex; min-height: 44px; align-items: center; }
+  .cta { margin-top: 24px; border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-shadow: var(--shadow); }
+  .cta h2 { font-size: 20px; margin: 0; }
+  .cta p { margin: 4px 0 0; }
+  .ctas { display: grid; gap: 8px; margin-top: 14px; }
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+  .pager a { display: grid; gap: 2px; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; min-height: 44px; font-weight: 600; }
+  .pager a:hover { text-decoration: none; border-color: var(--accent); }
+  .pager span.muted { font-size: 12px; font-weight: 400; }
+  .nx { text-align: right; }
+  .foot { padding-top: 24px; padding-bottom: 40px; font-size: 13px; }
+  @media (min-width: 560px) { .ctas { display: flex; flex-wrap: wrap; } }
+  @media (min-width: 860px) { .grid { grid-template-columns: 1fr 1fr; } }
+</style>

@@ -23,11 +23,13 @@ test('no phone number in site content', () => {
   assert.doesNotMatch(all, /\+61|439\s?077/);
 });
 
-import { readFileSync } from 'node:fs';
 
-test('sitemap lists every flagship case study page', () => {
-  const xml = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
-  for (const c of caseStudies.filter((x) => x.feature)) assert.match(xml, new RegExp(`/projects/${c.id}/`));
+import { sitemapPaths } from '../src/lib/sitemap.ts';
+
+test('sitemap lists every flagship case study page and the resume', () => {
+  const paths = sitemapPaths();
+  for (const c of caseStudies.filter((x) => x.feature)) assert.ok(paths.includes(`/projects/${c.id}/`), c.id);
+  assert.ok(paths.includes('/resume/'));
 });
 
 test('flagship pages have a diagram, contributions and verified outcomes', () => {

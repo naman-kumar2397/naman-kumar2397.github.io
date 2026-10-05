@@ -22,3 +22,4 @@ jobs:
       # Renders every page at 360/768/1024/1366px in light and dark and fails on layout defects.
       # Uses the Google Chrome preinstalled on GitHub's Ubuntu runners.
       - run: npm run check:layout
+      - run: npm run check:seo

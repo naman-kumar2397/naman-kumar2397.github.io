@@ -28,6 +28,7 @@ jobs:
       - run: npm run build
       # Changes are pushed straight to main, so the layout check gates the deploy.
       - run: npm run check:layout
+      - run: npm run check:seo
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

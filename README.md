@@ -31,5 +31,8 @@ npm test          # layout engine and content checks
 npm run build     # astro check + static build to dist/
 npm run check:layout  # after a build: renders every page at 4 widths x 2 themes and flags
                       # elements touching dividers, overlapping controls, clipped text,
-                      # small tap targets and horizontal overflow (also runs on every PR)
+                      # small tap targets, misaligned connectors and horizontal overflow
+npm run check:seo     # after a build: titles/descriptions, canonicals, share images, one h1,
+                      # alt text, JSON-LD, internal links, sitemap coverage (no browser)
+# Both run in CI on pull requests and gate every deploy to main.
 ```

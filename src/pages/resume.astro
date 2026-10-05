@@ -2,6 +2,8 @@
 /* Print-first resume. `npm run resume:pdf` renders this page to public/resume.pdf. */
 import { accolades, certification, education, experience, profile, projects, resumeSkills as skills } from '../data/profile';
 
+const resumeDescription = `Resume of ${profile.name}, Lead SRE in Melbourne: 7+ years of SRE on AWS, observability, infrastructure as code and incident automation.`;
+
 // Same wording as the resume: "Viable Solutions (via Synechron, for Latitude Financial Services)".
 const orgLine = (r: (typeof experience)[number]) => {
   const extra = [r.via && `via ${r.via}`, r.client && `for ${r.client}`].filter(Boolean).join(', ');
@@ -13,8 +15,16 @@ const orgLine = (r: (typeof experience)[number]) => {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
-    <title>Naman Kumar | Resume</title>
+    <title>Naman Kumar | Resume: Lead Site Reliability Engineer, Melbourne</title>
+    <meta name="description" content={resumeDescription} />
+    <meta property="og:description" content={resumeDescription} />
+    <link rel="canonical" href={new URL('/resume/', Astro.site)} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content="Naman Kumar | Resume" />
+    <meta property="og:url" content={new URL('/resume/', Astro.site)} />
+    <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <main>

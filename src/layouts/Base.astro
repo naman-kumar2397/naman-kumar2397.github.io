@@ -6,16 +6,25 @@ interface Props {
   description?: string;
   noindex?: boolean;
   /** JSON-LD object(s) for structured data. */
-  jsonLd?: object;
+  /** JSON-LD object, or several (each rendered as its own script block). */
+  jsonLd?: object | object[];
+  /** Open Graph type: 'profile' for the home page, 'article' for case studies. */
+  ogType?: 'profile' | 'article' | 'website';
+  /** Social share image path (1200x630), defaults to the site card. */
+  ogImage?: string;
+  ogImageAlt?: string;
 }
 const {
   title,
-  description = 'Naman Kumar is a Lead Site Reliability Engineer in Melbourne with 7+ years engineering reliable, observable systems on AWS: observability, infrastructure as code, incident automation and AI-assisted operations.',
+  description = 'Naman Kumar, Lead SRE in Melbourne: 7+ years running AWS at scale. Observability, infrastructure as code, incident automation and AI-assisted operations.',
   noindex = false,
   jsonLd,
+  ogType = 'profile',
+  ogImage: ogImagePath = '/og.png',
+  ogImageAlt = 'Naman Kumar, Lead Site Reliability Engineer',
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const ogImage = new URL('/og.png', Astro.site);
+const ogImage = new URL(ogImagePath, Astro.site);
 ---
 <!doctype html>
 <html lang="en-AU">
@@ -30,7 +39,7 @@ const ogImage = new URL('/og.png', Astro.site);
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f6f8fa" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#151b23" media="(prefers-color-scheme: dark)" />
-    <meta property="og:type" content="profile" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content="Naman Kumar" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -38,11 +47,12 @@ const ogImage = new URL('/og.png', Astro.site);
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Naman Kumar, Lead Site Reliability Engineer" />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta name="twitter:image" content={ogImage} />
     <meta property="profile:first_name" content="Naman" />
     <meta property="profile:last_name" content="Kumar" />
     <meta name="twitter:card" content="summary_large_image" />
-    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {(Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).map((j) => <script type="application/ld+json" set:html={JSON.stringify(j)} />)}
     <script is:inline>
       // Enable entrance/reveal motion before first paint, unless reduced motion is requested.
       // Safety net: if the motion module never starts, drop the class so nothing stays hidden.

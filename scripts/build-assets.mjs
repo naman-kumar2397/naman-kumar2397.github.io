@@ -4,7 +4,7 @@
 // Usage: npm run assets   (set CHROMIUM_PATH if Chromium is not auto-detected)
 import { build, preview } from 'astro';
 import { chromium } from 'playwright-core';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync } from 'node:fs';
 
 const candidates = [process.env.CHROMIUM_PATH, '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'].filter(Boolean);
 const executablePath = candidates.find((p) => existsSync(p));
@@ -22,6 +22,14 @@ try {
   await og.goto('http://localhost:4399/og/', { waitUntil: 'networkidle' });
   await og.screenshot({ path: 'public/og.png' });
   console.log('wrote public/og.png');
+
+  // Per-case-study share cards (one per built /og/<id>/ page).
+  mkdirSync('public/social', { recursive: true });
+  for (const id of readdirSync('dist/og', { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)) {
+    await og.goto(`http://localhost:4399/og/${id}/`, { waitUntil: 'networkidle' });
+    await og.screenshot({ path: `public/social/${id}.png` });
+    console.log(`wrote public/social/${id}.png`);
+  }
 } finally {
   await browser.close();
   await server.stop();

@@ -24,21 +24,40 @@ const f = c.feature;
 const mediaImg = f.media ? assets[`../../assets/${f.media.file}`]?.default : undefined;
 if (f.media && !mediaImg) throw new Error(`case study media not found: ${f.media.file}`);
 const has = (v?: string | string[]) => !!v && (typeof v === 'string' || v.length > 0);
-const description = `${c.title}: ${c.headline}. Engineering case study by ${profile.name}, ${profile.role}.`;
+// Keep within ~160 characters so search results don't truncate it.
+const base = `${c.title}: ${c.headline}.`;
+const description = `${base} Case study by ${profile.name}, Lead SRE.`.length <= 160 ? `${base} Case study by ${profile.name}, Lead SRE.` : base.slice(0, 160);
 const vtCss = caseStudies
   .filter((x) => x.feature)
   .map((x) => `::view-transition-group(cs-title-${x.id}){animation-duration:var(--dur-slow);animation-timing-function:var(--ease-out);}`)
   .join('');
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: c.title,
-  description,
-  author: { '@type': 'Person', name: profile.name, url: Astro.site!.toString() },
-  about: c.stack,
-};
+const site = Astro.site!.toString();
+const pageUrl = new URL(`/projects/${c.id}/`, site).toString();
+const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      '@id': `${pageUrl}#article`,
+      headline: c.title,
+      description,
+      image: new URL(`/social/${c.id}.png`, site).toString(),
+      url: pageUrl,
+      mainEntityOfPage: pageUrl,
+      author: { '@type': 'Person', name: profile.name, url: site, jobTitle: profile.role },
+      about: c.stack,
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: profile.name, item: site },
+        { '@type': 'ListItem', position: 2, name: 'Case studies', item: new URL('/#projects', site).toString() },
+        { '@type': 'ListItem', position: 3, name: c.title, item: pageUrl },
+      ],
+    },
+];
 ---
-<Base title={`${c.title} | Case study | ${profile.name}`} description={description} jsonLd={jsonLd}>
+<Base title={`${c.title} | Case study | ${profile.name}`} description={description} jsonLd={jsonLd} ogType="article" ogImage={`/social/${c.id}.png`} ogImageAlt={`${c.title}: ${c.headline}`}>
   <a class="skip" href="#main">Skip to content</a>
   <RepoHeader commitCount={commits.length} projectCount={caseStudies.length} path={['projects', c.id]} current="Projects" />
   <main id="main" class="container cs">
@@ -157,6 +176,7 @@ const jsonLd = {
   :global(.media-img) { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); }
   .media figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
   .credit { white-space: nowrap; }
+  .credit a, .media figcaption a { text-decoration: underline; text-underline-offset: 2px; }
   dt { font: 12px/1.5 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
   dd { margin: 2px 0 0; font-weight: 500; }
   .block { margin-top: 32px; }

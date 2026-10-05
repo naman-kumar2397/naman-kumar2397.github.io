@@ -2,7 +2,7 @@
 import { profile } from '../data/profile';
 ---
 <section id="contact" class="container section" aria-labelledby="contact-title">
-  <div class="card">
+  <div class="card" data-reveal="card">
     <div class="intro">
       <p class="kicker">cat CONTACT.md</p>
       <h2 id="contact-title">Get in touch</h2>
@@ -14,7 +14,7 @@ import { profile } from '../data/profile';
       <li><span class="k">Resume</span><a href="/resume.pdf" download="Naman_Kumar_Resume.pdf">Naman_Kumar_Resume.pdf</a> <a class="muted small" href="/resume/">(web version)</a></li>
     </ul>
     <div class="ctas">
-      <a class="btn btn-lg btn-primary" href={`mailto:${profile.email}`}>Email me</a>
+      <a class="btn btn-lg btn-primary" href={`mailto:${profile.email}`} data-pointer>Email me</a>
       <a class="btn btn-lg" href={profile.linkedin} rel="noopener">Connect on LinkedIn</a>
     </div>
   </div>
@@ -26,9 +26,23 @@ import { profile } from '../data/profile';
   .intro p:last-child { margin: 6px 0 0; }
   .list { list-style: none; margin: 0; padding: 0; }
   .list li { display: flex; flex-wrap: wrap; gap: 2px 12px; padding: 8px 0; border-top: 1px solid var(--border-muted); overflow-wrap: anywhere; }
+  .list a {
+    text-decoration: none;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0% 1px no-repeat;
+    transition: background-size var(--dur-normal) var(--ease-standard);
+  }
+  .list a:hover,
+  .list a:focus-visible {
+    background-size: 100% 1px;
+  }
   .k { width: 80px; flex: none; color: var(--muted); }
   .small { font-size: 13px; }
   .ctas { display: grid; gap: 8px; }
+  @media (hover: hover) and (pointer: fine) {
+    [data-pointer].btn-primary:hover {
+      background-image: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.18), transparent 60%);
+    }
+  }
   @media (min-width: 560px) { .ctas { display: flex; flex-wrap: wrap; } }
   @media (min-width: 900px) {
     .card { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); padding: 28px 32px; align-items: start; column-gap: 40px; }

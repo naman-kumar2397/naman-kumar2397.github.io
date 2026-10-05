@@ -12,26 +12,31 @@ const sections = [
 ] as const;
 // Flagships (with their own page) first.
 const ordered = [...caseStudies].sort((a, b) => Number(!!b.feature) - Number(!!a.feature));
+// Same-named view-transition groups on the home page and project page, tuned for the title morph.
+const vtCss = caseStudies
+  .filter((c) => c.feature)
+  .map((c) => `::view-transition-group(cs-title-${c.id}){animation-duration:var(--dur-slow);animation-timing-function:var(--ease-out);}`)
+  .join('');
 ---
 <section id="projects" class="container section" aria-labelledby="projects-title">
-  <div class="section-head">
+  <div class="section-head" data-reveal="heading">
     <p class="kicker">ls projects/</p>
     <h2 id="projects-title">Engineering case studies</h2>
     <p>Three flagship projects with full write-ups, plus current work in progress. Client-specific details are intentionally left out.</p>
   </div>
-  <ul class="cases">
+  <ul class="cases" data-reveal-group>
     {ordered.map((c) => (
       <li class={c.feature ? 'case featured' : 'case'}>
-        <article aria-labelledby={`cs-${c.id}`}>
+        <article aria-labelledby={`cs-${c.id}`} data-reveal={c.feature ? 'cinematic' : 'card'} data-pointer data-tilt={c.feature ? '2' : undefined}>
           <div class="c-top">
             <span class={`state ${c.status === 'Shipped' ? 'merged' : 'open'}`}>{c.status}</span>
             <span class="ctx">{c.context}</span>
           </div>
-          <h3 id={`cs-${c.id}`}>{c.title}</h3>
+          <h3 id={`cs-${c.id}`} style={c.feature ? `view-transition-name:cs-title-${c.id}` : undefined}>{c.title}</h3>
           <p class="headline">{c.headline}</p>
           <p class="overview">{c.overview}</p>
           {c.feature ? (
-            <p class="read"><a class="btn btn-lg" href={`/projects/${c.id}/`}>Read the case study<span class="sr-only">: {c.title}</span></a></p>
+            <p class="read"><a class="btn btn-lg" href={`/projects/${c.id}/`}>Read the case study<span class="arrow" aria-hidden="true">→</span><span class="sr-only">: {c.title}</span></a></p>
           ) : (
             <>
               {c.architecture && (
@@ -59,13 +64,14 @@ const ordered = [...caseStudies].sort((a, b) => Number(!!b.feature) - Number(!!a
           )}
           <div class="c-foot">
             <ul class="stack" aria-label="Technologies">{c.stack.map((t) => <li class="topic">{t}</li>)}</ul>
-            {c.branch && <a class="to-log mono" href={`?branch=${c.branch}#journey`} data-branch={c.branch}>git log {c.branch}</a>}
+            {c.branch && <a class="to-log mono" href={`?branch=${c.branch}#journey`} data-branch={c.branch}><span class="u">git log {c.branch}</span></a>}
           </div>
         </article>
       </li>
     ))}
   </ul>
 </section>
+<style is:inline set:html={vtCss}></style>
 
 <style>
   .cases { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
@@ -77,7 +83,55 @@ const ordered = [...caseStudies].sort((a, b) => Number(!!b.feature) - Number(!!a
   }
   .read { margin: 14px 0 0; }
   .read .btn { color: var(--accent); }
-  article { container: case / inline-size; border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--bg); box-shadow: var(--shadow); }
+  .read .arrow { display: inline-block; transition: transform var(--dur-fast) var(--ease-out); }
+  .read .btn:hover .arrow, .read .btn:focus-visible .arrow { transform: translateX(3px); }
+  article {
+    container: case / inline-size; position: relative; isolation: isolate;
+    border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--bg); box-shadow: var(--shadow);
+    transition:
+      transform var(--dur-slow) var(--ease-out),
+      box-shadow var(--dur-normal) var(--ease-standard),
+      border-color var(--dur-normal) var(--ease-standard);
+  }
+  /* Keep the reveal transitions (global) alongside the hover ones. */
+  :global(html.motion) article[data-reveal] {
+    transition:
+      opacity var(--dur-reveal) var(--ease-out),
+      translate var(--dur-reveal) var(--ease-out),
+      scale var(--dur-reveal) var(--ease-out),
+      filter var(--dur-reveal) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out),
+      box-shadow var(--dur-normal) var(--ease-standard),
+      border-color var(--dur-normal) var(--ease-standard);
+  }
+  article::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%);
+    transition: opacity var(--dur-normal) var(--ease-standard);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    article:hover {
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      box-shadow: var(--shadow), 0 14px 32px -14px rgba(1, 4, 9, .28);
+    }
+    article:hover::before { opacity: 1; }
+    @media (prefers-reduced-motion: no-preference) {
+      .featured article:hover {
+        transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+        transition-duration: var(--dur-normal), var(--dur-normal), var(--dur-normal);
+      }
+      :global(html.motion) .featured article[data-reveal]:hover {
+        transition:
+          opacity var(--dur-reveal) var(--ease-out),
+          translate var(--dur-reveal) var(--ease-out),
+          scale var(--dur-reveal) var(--ease-out),
+          filter var(--dur-reveal) var(--ease-out),
+          transform var(--dur-fast) var(--ease-out),
+          box-shadow var(--dur-normal) var(--ease-standard),
+          border-color var(--dur-normal) var(--ease-standard);
+      }
+    }
+  }
   .c-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
   .ctx { font-size: 13px; color: var(--muted); }
   h3 { font-size: 20px; line-height: 1.3; margin: 10px 0 0; font-weight: 600; letter-spacing: -0.01em; }
@@ -93,6 +147,13 @@ const ordered = [...caseStudies].sort((a, b) => Number(!!b.feature) - Number(!!a
   .deep-in li { margin: 4px 0; }
   .c-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-muted); }
   .to-log { font-size: 12px; display: inline-flex; align-items: center; min-height: 32px; }
+  .to-log:hover { text-decoration: none; }
+  .to-log .u {
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 40%, transparent)) no-repeat 0 100% / 0 1px;
+    padding-bottom: 1px;
+    transition: background-size var(--dur-normal) var(--ease-out);
+  }
+  .to-log:hover .u, .to-log:focus-visible .u { background-size: 100% 1px; }
   @media (min-width: 768px) {
     article { padding: 20px 24px; }
     @container case (min-width: 760px) { .deep-in { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; } }

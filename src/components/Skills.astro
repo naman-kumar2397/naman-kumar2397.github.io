@@ -3,14 +3,14 @@ import { capabilities, resumeSkills } from '../data/profile';
 const toolCount = resumeSkills.reduce((n, g) => n + g.items.length, 0);
 ---
 <section id="skills" class="container section" aria-labelledby="skills-title">
-  <div class="section-head">
+  <div class="section-head" data-reveal="heading">
     <p class="kicker">cat skills.yml</p>
     <h2 id="skills-title">Core capabilities</h2>
     <p>In priority order, each backed by work described above.</p>
   </div>
-  <ol class="grid">
+  <ol class="grid" data-reveal-group>
     {capabilities.map((g, i) => (
-      <li class="card">
+      <li class="card" data-reveal="card">
         <h3><span class="rank mono" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>{g.group}</h3>
         <p class="ev">{g.evidence}</p>
         <ul class="stack" aria-label="Key tools">{g.key.map((k) => <li class="chip">{k}</li>)}</ul>
@@ -18,7 +18,7 @@ const toolCount = resumeSkills.reduce((n, g) => n + g.items.length, 0);
     ))}
   </ol>
   <details class="inventory">
-    <summary>Full technology inventory <span class="muted">({toolCount} entries)</span></summary>
+    <summary><span class="chev" aria-hidden="true">›</span>Full technology inventory <span class="muted">({toolCount} entries)</span></summary>
     <dl>
       {resumeSkills.map((g) => (
         <div><dt>{g.group}</dt><dd>{g.items.join(', ')}</dd></div>
@@ -29,9 +29,30 @@ const toolCount = resumeSkills.reduce((n, g) => n + g.items.length, 0);
 
 <style>
   .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
-  .card { border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; background: var(--bg); box-shadow: var(--shadow); display: grid; align-content: start; gap: 8px; }
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: var(--bg);
+    box-shadow: var(--shadow);
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    transition: border-color var(--dur-normal) var(--ease-standard), box-shadow var(--dur-normal) var(--ease-standard);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover {
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      box-shadow: 0 4px 14px -6px var(--glow), var(--shadow);
+    }
+  }
   h3 { font-size: 16px; margin: 0; font-weight: 600; display: flex; gap: 8px; align-items: baseline; }
   .rank { font-size: 12px; color: var(--accent); font-weight: 400; }
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover .rank {
+      color: color-mix(in srgb, var(--accent) 80%, var(--text));
+    }
+  }
   .ev { font-size: 14px; color: var(--muted); margin: 0; }
   .inventory { margin-top: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
   .inventory summary { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; font-weight: 500; color: var(--accent); }

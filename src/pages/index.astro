@@ -56,4 +56,13 @@ const jsonLd = {
   .skip:focus { top: 8px; }
   .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding-top: 32px; padding-bottom: 40px; font-size: 13px; color: var(--muted); }
   .foot p { margin: 0; }
+  .foot a {
+    text-decoration: none;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0% 1px no-repeat;
+    transition: background-size var(--dur-normal) var(--ease-standard);
+  }
+  .foot a:hover,
+  .foot a:focus-visible {
+    background-size: 100% 1px;
+  }
 </style>

@@ -26,6 +26,8 @@ export interface Feature {
   /** Trade-offs need first-hand detail; leave empty (not rendered) until supplied. */
   tradeoffs?: string[];
   confidentiality: string;
+  /** Optional phased history, oldest first. */
+  evolution?: { phase: string; when?: string; points: string[] }[];
 }
 
 export interface CaseStudy {
@@ -53,59 +55,115 @@ export interface CaseStudy {
 
 export const caseStudies: CaseStudy[] = [
   {
-    id: 'ai-incident-assistant',
+    id: 'alfred',
     feature: {
-      role: 'Built the assistant',
+      role: 'Designed and built it, from prototype to production',
       facts: [
         { label: 'Where', value: 'Latitude Financial Services, as Lead SRE at Viable Solutions' },
-        { label: 'Platform', value: 'AWS Bedrock with Claude' },
-        { label: 'Integrations', value: 'ServiceNow, Dynatrace and Datadog via MCP servers' },
+        { label: 'Status', value: 'Live in production since September 2026' },
+        { label: 'Platform', value: 'Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent' },
       ],
       diagram: {
-        caption: 'Logical flow. Environments, data and access controls are deliberately not shown.',
+        caption: 'Production architecture, simplified. Client systems, data and access controls are deliberately not shown.',
         columns: [
-          { title: 'Ask', nodes: [{ label: 'Engineer', detail: 'Natural-language question about an incident' }] },
-          { title: 'Reason', nodes: [{ label: 'Conversational assistant', detail: 'Claude on AWS Bedrock' }] },
-          { title: 'Tools (MCP)', nodes: [{ label: 'ServiceNow', detail: 'Incident records' }, { label: 'Dynatrace', detail: 'Traces' }, { label: 'Datadog', detail: 'Logs and metrics' }] },
-          { title: 'Answer', nodes: [{ label: 'Business-impact traces' }, { label: 'Mitigation hints' }] },
+          {
+            title: 'Entry points',
+            nodes: [
+              { label: 'Slack / Teams', detail: 'Ask during an incident' },
+              { label: 'Alerts', detail: 'Investigations start automatically' },
+              { label: 'IDE', detail: 'Deep investigation' },
+              { label: 'Pull requests', detail: 'Blast-radius comments' },
+            ],
+          },
+          { title: 'Orchestrate', nodes: [{ label: 'Alfred orchestrator', detail: 'AgentCore Runtime; Bedrock inference in-account' }] },
+          {
+            title: 'Investigate in parallel',
+            nodes: [
+              { label: 'AWS DevOps Agent', detail: 'AWS-side investigation' },
+              { label: 'Specialist agents', detail: 'Datadog, Dynatrace, Buildkite, GitHub via AgentCore Gateway' },
+              { label: 'Dependency graph', detail: 'Deterministic blast radius' },
+            ],
+          },
+          {
+            title: 'Answer and learn',
+            nodes: [
+              { label: 'Timeline and root cause', detail: 'Findings correlated, blind spots declared' },
+              { label: 'Knowledge base', detail: 'Updated after every investigation' },
+            ],
+          },
         ],
       },
-      contributions: [
-        'Built the conversational assistant on AWS Bedrock with Claude.',
-        'Connected it to ServiceNow, Dynatrace and Datadog through MCP servers.',
+      evolution: [
+        {
+          phase: 'Prototype: a local multi-agent helper',
+          points: [
+            'An orchestrator in the IDE dispatching specialist agents for AWS, Datadog, Buildkite and GitHub over MCP.',
+            'A structured investigation loop: recall similar past incidents, triage, form 3 to 5 hypotheses, fan out one hypothesis per agent, correlate, confirm, diagnose, then record what was learned.',
+            'Used on real production investigations, which proved the pattern but kept the value on one machine.',
+          ],
+        },
+        {
+          phase: 'Production: hosted on Amazon Bedrock AgentCore',
+          when: 'September 2026',
+          points: [
+            'Agents run on AgentCore Runtime, with tools exposed through AgentCore Gateway and AgentCore Memory and Identity services.',
+            'Alfred orchestrates AWS DevOps Agent as its AWS specialist, alongside agents for Datadog, Dynatrace, Buildkite and GitHub.',
+            'Reachable where engineers already work: Slack and Teams, the IDE, pull requests, and automatically from alerts.',
+            'A dependency graph adds blast-radius comments to pull requests.',
+          ],
+        },
       ],
-      // TODO: trade-offs (e.g. why MCP over direct API calls, how answers are grounded or reviewed) — needs first-hand detail.
-      confidentiality: 'Described at a logical level. Client systems, data and security controls are intentionally omitted.',
+      contributions: [
+        'Designed and built the original multi-agent prototype: orchestrator, specialist agents, MCP integrations and the knowledge-base loop.',
+        'Productionised it on Amazon Bedrock AgentCore, with Alfred orchestrating AWS DevOps Agent.',
+        'Built the dependency graph behind pull-request blast-radius comments.',
+      ],
+      tradeoffs: [
+        'MCP over CLI tools: one setup and read-only enforcement on the server side, instead of installing and authenticating four CLIs and trusting the prompt. Responses are structured, which also keeps agent context small.',
+        'Graph, not model, for blast radius: a deterministic dependency graph decides what a change reaches, so results are citable and cheap. The model only maps a diff onto the graph, ranks risk and explains it.',
+        'Declared blind spots over confident answers: every report states what it could not see. That reads as less certain, but a tool that misses something while sounding sure teaches people to stop checking.',
+      ],
+      confidentiality: 'The production code is internal to the client. This page describes public AWS services and design principles only; no client data, systems or incidents are shown.',
     },
-    title: 'AI incident management assistant',
-    context: 'Latitude Financial Services · via Viable Solutions',
+    title: 'Alfred: a multi-agent AI SRE',
+    context: 'Latitude Financial Services · as Lead SRE at Viable Solutions',
     status: 'Shipped',
-    headline: 'Business-impact traces and mitigation hints in one conversation',
+    headline: 'Live in production on Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent',
     overview:
-      'A conversational AI assistant on AWS Bedrock, powered by Claude, that helps engineers resolve incidents faster.',
+      'A multi-agent incident investigator that works across AWS, Datadog, Dynatrace, Buildkite and GitHub in parallel and correlates the findings into one timeline and root cause. It started as a local helper; I took it to production on Amazon Bedrock AgentCore.',
     problem:
-      'Incident context lives across ServiceNow, Dynatrace and Datadog. The assistant brings it together so responders can see business impact and likely mitigations sooner.',
+      'Diagnosing an incident meant stitching together several platforms by hand while it was still burning. That skill sat with a few engineers, and what they worked out was rarely written down, so the same failures were solved again later.',
     architecture: {
       caption: 'High-level flow. Client-specific details intentionally omitted.',
       steps: [
-        { label: 'Engineer', detail: 'Asks about an incident in natural language' },
-        { label: 'Assistant on AWS Bedrock', detail: 'Claude reasons over the question' },
-        { label: 'MCP servers', detail: 'ServiceNow, Dynatrace, Datadog' },
-        { label: 'Answer', detail: 'Business-impact traces and mitigation hints' },
+        { label: 'Entry points', detail: 'Slack/Teams, alerts, IDE, pull requests' },
+        { label: 'Orchestrator', detail: 'Amazon Bedrock AgentCore' },
+        { label: 'Specialists in parallel', detail: 'AWS DevOps Agent, Datadog, Dynatrace, Buildkite, GitHub' },
+        { label: 'Answer', detail: 'Timeline, root cause, blast radius' },
       ],
     },
     decisions: [
-      'Tool access through MCP servers, one per system (ServiceNow, Dynatrace, Datadog), so each integration is a separate connector.',
-      'Claude accessed through AWS Bedrock, a managed AWS service.',
+      'An orchestrator with one specialist agent per platform, run in parallel, one hypothesis per dispatch.',
+      'AWS DevOps Agent as the AWS specialist, orchestrated alongside Alfred’s own agents.',
+      'Inference through Amazon Bedrock inside the company AWS account.',
     ],
     implementation: [
-      'Built the conversational assistant on AWS Bedrock with Claude.',
-      'Connected it to ServiceNow, Dynatrace and Datadog MCP servers.',
+      'Orchestrator and specialist agents on AgentCore Runtime; tools through AgentCore Gateway.',
+      'Integrations with AWS (via AWS DevOps Agent), Datadog, Dynatrace, Buildkite and GitHub.',
+      'Dependency graph for pull-request blast radius.',
     ],
-    // TODO: reliability/security notes (auth, data handling, failure modes) not on the resume.
-    outcomes: ['Surfaces business-impact traces and mitigation hints for faster resolution.'],
-    // TODO: measured outcome (e.g. MTTR change) not on the resume.
-    stack: ['AWS Bedrock', 'Claude', 'MCP', 'ServiceNow', 'Dynatrace', 'Datadog'],
+    reliability: [
+      'Read-only, enforced in three layers: agent instructions, connector and gateway configuration, and IAM.',
+      'Inference stays inside the company AWS account.',
+      'Every investigation enriches a reviewed knowledge base, so fixes are not rediscovered.',
+    ],
+    outcomes: [
+      'Live in production since September 2026.',
+      'Used from Slack and Teams, the IDE, pull requests, and automatically from alerts.',
+      'Blast-radius comments on pull requests from the dependency graph.',
+    ],
+    // TODO: measured outcomes (e.g. time to diagnosis, investigations per month) when available.
+    stack: ['Amazon Bedrock AgentCore', 'AWS DevOps Agent', 'MCP', 'Datadog', 'Dynatrace', 'Buildkite', 'GitHub'],
     branch: 'ai',
   },
   {

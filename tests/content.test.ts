@@ -37,3 +37,10 @@ test('flagship pages have a diagram, contributions and verified outcomes', () =>
     assert.ok((c.outcomes ?? []).length > 0, c.id);
   }
 });
+
+test('no stale ServiceNow claim for the AI assistant', () => {
+  const all = JSON.stringify({ branches, caseStudies, experience, profile });
+  assert.doesNotMatch(all, /ServiceNow, Dynatrace and Datadog MCP/);
+  const alfred = caseStudies.find((c) => c.id === 'alfred');
+  assert.ok(alfred && !JSON.stringify(alfred).includes('ServiceNow'));
+});

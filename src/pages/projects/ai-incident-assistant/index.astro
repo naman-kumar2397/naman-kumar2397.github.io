@@ -1,0 +1,15 @@
+---
+/* The case study moved to /projects/alfred/. Static redirect so earlier links keep working. */
+const to = '/projects/alfred/';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content={`0; url=${to}`} />
+    <link rel="canonical" href={new URL(to, Astro.site)} />
+    <title>Moved: Alfred case study</title>
+  </head>
+  <body><p>This case study moved to <a href={to}>Alfred: a multi-agent AI SRE</a>.</p></body>
+</html>

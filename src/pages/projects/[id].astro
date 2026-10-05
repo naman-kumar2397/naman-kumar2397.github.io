@@ -54,6 +54,20 @@ const jsonLd = {
       <Diagram columns={f.diagram.columns} caption={f.diagram.caption} label={`${c.title} architecture, by stage`} />
     </section>
 
+    {f.evolution && (
+      <section class="block" aria-labelledby="evo">
+        <h2 id="evo">How it evolved</h2>
+        <ol class="evo">
+          {f.evolution.map((e) => (
+            <li>
+              <h3>{e.phase}{e.when && <span class="when mono"> · {e.when}</span>}</h3>
+              <ul>{e.points.map((x) => <li>{x}</li>)}</ul>
+            </li>
+          ))}
+        </ol>
+      </section>
+    )}
+
     <div class="grid">
       {has(c.problem) && (
         <section class="block" aria-labelledby="problem"><h2 id="problem">Problem</h2><p>{c.problem}</p></section>
@@ -123,6 +137,13 @@ const jsonLd = {
   .block ul:not(.stack) { margin: 0; padding-left: 20px; }
   .block li { margin: 6px 0; }
   .grid { display: grid; gap: 0 40px; }
+  .evo { list-style: none; margin: 0; padding: 0; }
+  .evo > li { position: relative; padding: 0 0 16px 24px; }
+  .evo > li::before { content: ''; position: absolute; left: 4px; top: 8px; bottom: -4px; width: 2px; background: var(--border); }
+  .evo > li:last-child::before { display: none; }
+  .evo > li::after { content: ''; position: absolute; left: 0; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  .evo h3 { font-size: 16px; margin: 0 0 4px; font-weight: 600; }
+  .evo .when { font-size: 13px; color: var(--muted); font-weight: 400; }
   .outcomes ul { list-style: none; padding: 0 !important; }
   .outcomes li { border-left: 3px solid var(--open-bg); padding: 4px 0 4px 12px; font-weight: 500; }
   .note { font-size: 13px; margin: 28px 0 0; padding: 10px 12px; border: 1px solid var(--border-muted); border-radius: 6px; background: var(--panel); }

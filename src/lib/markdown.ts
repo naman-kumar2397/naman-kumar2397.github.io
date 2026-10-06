@@ -36,6 +36,7 @@ ${section('Summary', profile.summary)}
 ${section('Key numbers', list(profile.metrics.map((m) => `**${m.value}** ${m.label}: ${m.context}`)))}
 ${section('Experience', experience.map((r) => `- **${r.title}**, ${orgLine(r)}, ${r.period}: ${r.headline}`).join('\n') + `\n\nFull detail: [resume](${abs('/resume.md')})`)}
 ${section('Case studies', caseStudies.map((c) => `- ${c.feature ? `[${c.title}](${abs(mdPath(`/projects/${c.id}/`))})` : `**${c.title}**`} (${c.context}): ${c.headline}`).join('\n'))}
+${section('Side projects', list(projects.filter((p) => p.home).map((p) => `**${p.name}**: ${p.text}${p.links ? ` (${p.links.map((l) => `[${l.label}](${l.href})`).join(', ')})` : ''}`)))}
 ${section('Capabilities', list(capabilities.map((c) => `**${c.group}**: ${c.evidence}`)))}
 ${section('Contact', contact)}`);
 }
@@ -51,7 +52,7 @@ ${profile.role} · ${profile.location}, Australia · ${profile.email} · ${profi
 ${section('Summary', profile.summary)}
 ${section('Experience', roles)}
 ${section('Skills', list(resumeSkills.map((s) => `**${s.group}**: ${s.items.join(', ')}`)))}
-${section('Projects', list(projects.map((p) => `**${p.name}**: ${p.text}`)))}
+${section('Projects', list(projects.map((p) => `**${p.name}**: ${p.text}${p.links ? ` (${p.links.map((l) => `[${l.label}](${l.href})`).join(', ')})` : ''}`)))}
 ${section('Awards', list(accolades))}
 ${section('Education', education)}
 ${section('Certifications', certification)}`);

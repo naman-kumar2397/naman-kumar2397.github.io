@@ -1,6 +1,8 @@
 ---
 import { caseStudies } from '../data/caseStudies';
 import Flow from './Flow.astro';
+import { projects } from '../data/profile';
+const sideProjects = projects.filter((p) => p.home);
 
 const sections = [
   ['problem', 'Problem'],
@@ -24,7 +26,7 @@ const branchName = (id: string) => (branches as Record<string, Branch>)[id]?.nam
   <div class="section-head" data-reveal="heading">
     <p class="kicker">ls projects/</p>
     <h2 id="projects-title">Engineering case studies</h2>
-    <p>Three flagship projects with full write-ups, plus current work in progress. Client-specific details are intentionally left out.</p>
+    <p>Three flagship projects with full write-ups, plus current work in progress and a side project. Client-specific details are intentionally left out.</p>
   </div>
   <ul class="cases" data-reveal-group>
     {ordered.map((c) => (
@@ -72,10 +74,36 @@ const branchName = (id: string) => (branches as Record<string, Branch>)[id]?.nam
       </li>
     ))}
   </ul>
+  {sideProjects.length > 0 && (
+    <div class="side" data-reveal="card">
+      <h3 class="side-title mono">Side projects</h3>
+      <ul class="side-list">
+        {sideProjects.map((p) => (
+          <li class="side-item">
+            <h4>{p.name}</h4>
+            <p class="overview">{p.text}</p>
+            {p.links && <p class="side-links">{p.links.map((l) => <a href={l.href}>{l.label}</a>)}</p>}
+            {p.note && <p class="note">{p.note}</p>}
+            {p.stack && <ul class="stack" aria-label="Technologies">{p.stack.map((t) => <li class="topic">{t}</li>)}</ul>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
 </section>
 <style is:inline set:html={vtCss}></style>
 
 <style>
+  .side { margin-top: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); padding: 16px; }
+  .side-title { margin: 0 0 10px; font-size: 12px; font-weight: 400; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .side-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .side-item h4 { margin: 0; font-size: 16px; }
+  .side-item .overview { margin: 4px 0 0; }
+  .side-links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 8px 0 0; font-size: 14px; }
+  .side-links a { display: inline-flex; align-items: center; min-height: 24px; }
+  .note { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+  .side-item .stack { margin-top: 10px; }
+  @media (min-width: 900px) { .side { padding: 20px 24px; } }
   .cases { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
   @media (min-width: 900px) {
     .cases { grid-template-columns: repeat(3, minmax(0, 1fr)); }

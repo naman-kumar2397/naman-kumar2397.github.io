@@ -85,7 +85,7 @@ const orgLine = (r: (typeof experience)[number]) => {
 
       <section>
         <h2>Projects</h2>
-        <ul class="plain">{projects.map((p) => <li><b>{p.name}:</b> {p.text}</li>)}</ul>
+        <ul class="plain">{projects.map((p) => <li><b>{p.name}:</b> {p.text}{p.links && <> ({p.links.map((l, i) => <>{i > 0 && ', '}<a href={l.href}>{l.href.replace(/^https:\/\//, '')}</a></>)})</>}</li>)}</ul>
       </section>
 
       <section>

@@ -391,6 +391,11 @@ export const commits: (Commit & { branch: BranchId; source?: BranchId })[] = [
     body: 'Hosted on Amazon Bedrock AgentCore, orchestrating AWS DevOps Agent alongside Datadog, Dynatrace, Buildkite and GitHub specialists. Available from Slack and Teams, the IDE, pull requests and alerts.',
   },
   { branch: 'latitude', kind: 'merge', source: 'ai', message: "Merge branch 'project/alfred': live in production", date: 'Sep 2026' },
+  {
+    branch: 'main', kind: 'commit', date: 'Sep 2026', milestone: true,
+    message: 'feat: Buildkite Build Watcher, an open-source Chrome extension',
+    body: 'Side project, live on the Chrome Web Store: a Manifest V3 extension that plays a distinct chime when a Buildkite build passes, fails or is blocked on input, and auto-watches builds you trigger.',
+  },
   { branch: 'bedrock', kind: 'branch', message: 'Claude for developers via a Bedrock proxy', date: 'Sep 2026' },
   {
     branch: 'bedrock', kind: 'commit', date: '',

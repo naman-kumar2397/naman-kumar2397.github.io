@@ -175,7 +175,26 @@ export const experience: Role[] = [
   },
 ];
 
-export const projects = [
+export interface Project {
+  name: string;
+  text: string;
+  /** Shown as a side-project card on the home page (needs a public link). */
+  home?: boolean;
+  links?: { label: string; href: string }[];
+  note?: string;
+  stack?: string[];
+}
+
+export const projects: Project[] = [
+  {
+    name: 'Buildkite Build Watcher',
+    text: 'Open-source Chrome extension (Manifest V3), live on the Chrome Web Store. Plays a distinct synthesised chime when a build passes, fails or is blocked on input, and auto-watches builds you trigger.',
+    home: true,
+    // TODO: add the Chrome Web Store listing URL (with its extension ID) when supplied.
+    links: [{ label: 'Source on GitHub', href: 'https://github.com/naman-kumar2397/chrome_buildkite' }],
+    note: 'Independent project; not affiliated with Buildkite.',
+    stack: ['Chrome extension', 'Manifest V3', 'JavaScript', 'Buildkite'],
+  },
   {
     name: 'neuron-graph',
     text: 'Self-hosted AWS infrastructure knowledge graph that scans multiple accounts, with a web UI, REST API, CLI and MCP server. Built with rustworkx and sigma.js, per-account subgraphs, and a scoped IAM policy in place of ReadOnlyAccess.',

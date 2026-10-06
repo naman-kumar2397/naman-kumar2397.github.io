@@ -99,6 +99,8 @@ const isCurrent = (label: string, i: number) => (onHome ? i === 0 : label === cu
 </style>
 
 <script>
+  import { onScroll } from '../scripts/motion';
+
   const bar = document.querySelector<HTMLElement>('.tabs-in');
   const ind = bar?.querySelector<HTMLElement>('.indicator');
   const home = location.pathname === '/';
@@ -124,7 +126,10 @@ const isCurrent = (label: string, i: number) => (onHome ? i === 0 : label === cu
   const sections = spyTabs
     .map((t) => document.getElementById(t.hash.slice(1)))
     .filter((s): s is HTMLElement => !!s);
+  let current = '';
   const setActive = (id: string) => {
+    if (id === current) return;
+    current = id;
     spyTabs.forEach((t) => {
       const on = t.hash === `#${id}`;
       if (on) {
@@ -137,12 +142,21 @@ const isCurrent = (label: string, i: number) => (onHome ? i === 0 : label === cu
     });
     place(true);
   };
-  // The section crossing a line ~30% down the viewport is the active one.
+  // The section crossing a line ~30% down the viewport is the active one. The last section is
+  // too short to reach that line, so at the bottom of the page the last tab wins instead.
+  let onLine = '';
+  const atBottom = () => window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4;
+  const update = () => {
+    const id = sections.length && atBottom() ? sections[sections.length - 1].id : onLine;
+    if (id) setActive(id);
+  };
   const io = new IntersectionObserver(
     (entries) => {
-      for (const e of entries) if (e.isIntersecting) setActive(e.target.id);
+      for (const e of entries) if (e.isIntersecting) onLine = e.target.id;
+      update();
     },
     { rootMargin: '-30% 0px -69% 0px' },
   );
   sections.forEach((s) => io.observe(s));
+  if (sections.length) onScroll(update);
 </script>

@@ -44,7 +44,7 @@ const config = JSON.stringify({ sources: sources.map((s) => ({ rate: s.rate, y: 
         </g>
       ))}
     </svg>
-    <canvas aria-hidden="true"></canvas>
+    <canvas class="gl" aria-hidden="true"></canvas>
     {sources.map((s, i) => (
       <div class={`node src s${i}`} style={`left:${pctX(s.x)}%;top:${pctY(s.y)}%`}>
         <span class="dot" aria-hidden="true"></span>
@@ -52,7 +52,7 @@ const config = JSON.stringify({ sources: sources.map((s) => ({ rate: s.rate, y: 
       </div>
     ))}
     <div class="node sink" style={`left:${pctX(SINK_X)}%;top:${pctY(0)}%`}>
-      <span class="dot" aria-hidden="true"></span>
+      <canvas class="sink-orb" data-orb="weaving" data-orb-size="64"></canvas>
       <span class="lbl"><b>{visual.sink}</b><span>logs, metrics, traces</span></span>
     </div>
   </div>
@@ -74,12 +74,12 @@ const config = JSON.stringify({ sources: sources.map((s) => ({ rate: s.rate, y: 
       radial-gradient(60% 80% at 92% 50%, color-mix(in srgb, var(--merged-bg) 14%, transparent), transparent 70%),
       var(--panel);
   }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity var(--dur-slow) var(--ease-standard); }
+  .gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity var(--dur-slow) var(--ease-standard); }
   .fallback { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity var(--dur-slow) var(--ease-standard); }
   .fallback path { fill: none; stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .45; }
   .strand.s0 path { stroke: var(--accent); }
   .strand.s1 path { stroke: var(--c-green); }
-  .ls.live canvas { opacity: 1; }
+  .ls.live .gl { opacity: 1; }
   .ls.live .fallback { opacity: 0; }
 
   .node { position: absolute; transform: translate(-50%, -50%); }
@@ -91,9 +91,8 @@ const config = JSON.stringify({ sources: sources.map((s) => ({ rate: s.rate, y: 
   .s0 { --c: var(--accent); }
   .s1 { --c: var(--c-green); }
   .sink { --c: var(--merged-bg); }
-  .sink .dot { width: 22px; height: 22px; }
-  .ls.live .sink .dot { animation: ls-pulse 1.6s var(--ease-in-out) infinite; }
-  @keyframes ls-pulse { 50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--c) 12%, transparent); } }
+  /* The stream pours into a slowly weaving dotted sphere (a thinking orb in Datadog purple). */
+  .sink-orb { display: block; width: clamp(40px, 9vw, 72px); height: clamp(40px, 9vw, 72px); color: var(--c); }
 
   .lbl { position: absolute; display: grid; white-space: nowrap; font-size: 13px; line-height: 1.3; }
   .lbl b { font-weight: 600; }
@@ -101,7 +100,7 @@ const config = JSON.stringify({ sources: sources.map((s) => ({ rate: s.rate, y: 
   /* Labels sit outside the streams: the first source's above its node, the rest below. */
   .src .lbl { left: -2px; top: calc(100% + 6px); }
   .src.s0 .lbl { top: auto; bottom: calc(100% + 6px); }
-  .sink .lbl { right: -4px; top: calc(100% + 8px); text-align: right; }
+  .sink .lbl { right: 50%; top: calc(100% + 4px); text-align: right; transform: translateX(50%); }
   @media (max-width: 520px) {
     .lbl { font-size: 12px; }
     .lbl span { font-size: 11px; }
@@ -112,7 +111,10 @@ const config = JSON.stringify({ sources: sources.map((s) => ({ rate: s.rate, y: 
 </style>
 
 <script>
+  import { mountOrbs } from '../scripts/orbs';
+
   const fig = document.querySelector<HTMLElement>('[data-log-stream]');
+  if (fig) mountOrbs(fig);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
   const hasWebGL = () => {

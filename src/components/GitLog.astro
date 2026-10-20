@@ -255,14 +255,18 @@ const graphData: GraphData = {
   /* graph elements are created at runtime */
   .graph :global(.lane) { fill: none; stroke-width: 2.5; stroke-linecap: round; transition: opacity var(--dur-fast) var(--ease-standard); }
   .graph :global(.node) { transition: opacity var(--dur-fast) var(--ease-standard); transform-box: fill-box; transform-origin: center; }
-  .graph :global(.pulse) { fill: none; stroke-width: 2; transform-box: fill-box; transform-origin: center; }
+  .log-wrap :global(.orb) {
+    position: absolute; left: 0; top: 0; z-index: 2; width: 34px; height: 34px; pointer-events: none;
+    opacity: 0; transition: opacity var(--dur-slow) var(--ease-standard);
+  }
+  .log-wrap :global(.orb.on) { opacity: 1; }
+  .log-wrap :global(.orb.on.dimmed) { opacity: .2; }
   /* short cross-fade when the filter or view changes; only the log container is named */
   .log-clip.vt { view-transition-name: git-log; }
   :global(::view-transition-group(git-log)) { animation-duration: var(--dur-normal); animation-timing-function: var(--ease-standard); }
   :global(::view-transition-old(git-log)), :global(::view-transition-new(git-log)) { height: 100%; width: 100%; object-fit: none; object-position: left top; animation-duration: var(--dur-normal); animation-timing-function: var(--ease-standard); }
   .graph:global(.dim) :global(.lane:not(.hl)),
-  .graph:global(.dim) :global(.node:not(.hl)),
-  .graph:global(.dim) :global(.pulse:not(.hl)) { opacity: .2; }
+  .graph:global(.dim) :global(.node:not(.hl)) { opacity: .2; }
 </style>
 
 <script>

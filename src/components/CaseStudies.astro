@@ -33,6 +33,7 @@ const branchName = (id: string) => (branches as Record<string, Branch>)[id]?.nam
       <li class={c.feature ? 'case featured' : 'case'}>
         <article aria-labelledby={`cs-${c.id}`} data-reveal={c.feature ? 'cinematic' : 'card'} data-pointer data-tilt={c.feature ? '2' : undefined}>
           <div class="c-top">
+            {c.orb && <canvas class="orb" data-orb={c.orb.state} style={`color:var(--c-${c.orb.colour})`}></canvas>}
             <span class={`state ${c.status === 'Shipped' ? 'merged' : 'open'}`}>{c.status}</span>
             <span class="ctx">{c.context}</span>
           </div>
@@ -93,7 +94,14 @@ const branchName = (id: string) => (branches as Record<string, Branch>)[id]?.nam
 </section>
 <style is:inline set:html={vtCss}></style>
 
+<script>
+  import { mountOrbs } from '../scripts/orbs';
+  const projects = document.getElementById('projects');
+  if (projects) mountOrbs(projects);
+</script>
+
 <style>
+  .c-top .orb { width: 28px; height: 28px; margin: -5px -2px; }
   .side { margin-top: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); padding: 16px; }
   .side-title { margin: 0 0 10px; font-size: 12px; font-weight: 400; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
   .side-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }

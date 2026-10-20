@@ -4,6 +4,7 @@
  * draws the SVG, animates it and keeps it aligned as rows expand.
  */
 import type { CommitKind } from '../data/journey';
+import { mountOrb } from '../scripts/orbs';
 
 export interface GraphData {
   /** Oldest first, same indices as the layout. */
@@ -55,7 +56,6 @@ export function initGraph(root: HTMLElement, data: GraphData): GraphApi {
   // Trunk and outer branches underneath, so forks read cleanly.
   paths.forEach((p) => svg.appendChild(p));
 
-  let pulse: SVGCircleElement | null = null;
   const nodes: SVGElement[] = data.rows.map((r) => {
     const c: SVGElement = r.marker === 'diamond' && !r.head ? el('polygon', { class: 'node' }) : el('circle', { class: 'node', r: r.head ? '6' : '4.5' });
     c.dataset.owner = r.owner;
@@ -63,10 +63,6 @@ export function initGraph(root: HTMLElement, data: GraphData): GraphApi {
       c.style.fill = 'var(--bg)';
       c.style.stroke = colour(r.colour);
       c.style.strokeWidth = '3';
-      pulse = el('circle', { class: 'pulse', r: '6' });
-      pulse.style.stroke = colour(r.colour);
-      pulse.dataset.owner = r.owner;
-      svg.appendChild(pulse);
     } else if (r.kind === 'merge') {
       c.style.fill = 'var(--bg)';
       c.style.stroke = colour(r.mergeColour ?? r.colour);
@@ -78,6 +74,26 @@ export function initGraph(root: HTMLElement, data: GraphData): GraphApi {
     }
     svg.appendChild(c);
     return c;
+  });
+
+  // Thinking orbs mark what is still live: HEAD is "working"; each other open branch gets a
+  // "composing" orb on its newest visible commit (so it shows in Highlights and Full history).
+  type OrbSpot = { canvas: HTMLCanvasElement; row?: number; branch?: string; end: number };
+  const orbs: OrbSpot[] = [];
+  const addOrb = (state: string, rowIdx: number, spot: Omit<OrbSpot, 'canvas'>) => {
+    const c = document.createElement('canvas');
+    c.className = 'orb';
+    c.dataset.orb = state;
+    c.dataset.owner = data.rows[rowIdx].owner;
+    c.style.color = colour(data.rows[rowIdx].colour);
+    root.appendChild(c);
+    orbs.push({ canvas: c, ...spot });
+  };
+  const headRow = data.rows.findIndex((r) => r.head);
+  if (headRow >= 0) addOrb('working', headRow, { row: headRow, end: headRow });
+  data.spans.forEach((sp) => {
+    if (sp.merged || sp.parentLane === null || sp.end === headRow) return;
+    addOrb('composing', sp.end, { branch: sp.branch, end: sp.end });
   });
 
   // --- geometry ------------------------------------------------------------
@@ -142,12 +158,15 @@ export function initGraph(root: HTMLElement, data: GraphData): GraphApi {
         n.setAttribute('cx', String(cx));
         n.setAttribute('cy', String(cy));
       }
-      if (r.head && pulse) {
-        pulse.style.display = n.style.display;
-        pulse.setAttribute('cx', String(x(r.lane)));
-        pulse.setAttribute('cy', String(y(i)));
-      }
     });
+
+    for (const o of orbs) {
+      let i = o.row ?? -1;
+      if (o.branch) for (let k = o.end; k >= 0; k--) if (data.rows[k].owner === o.branch && !items.get(k)!.hidden) { i = k; break; }
+      const shown = i >= 0 && !items.get(i)!.hidden;
+      o.canvas.style.display = shown ? '' : 'none';
+      if (shown) o.canvas.style.transform = `translate(${x(data.rows[i].lane)}px, ${y(i)}px) translate(-50%, -50%)`;
+    }
   }
 
   let queued = 0;
@@ -155,6 +174,7 @@ export function initGraph(root: HTMLElement, data: GraphData): GraphApi {
     if (!queued) queued = requestAnimationFrame(() => { queued = 0; draw(); });
   };
   draw();
+  orbs.forEach((o) => mountOrb(o.canvas));
   new ResizeObserver(schedule).observe(root);
   window.addEventListener('resize', schedule);
 
@@ -189,45 +209,26 @@ export function initGraph(root: HTMLElement, data: GraphData): GraphApi {
     });
   }
 
-  // HEAD pulse: runs only while the log is on screen.
-  let pulseAnim: Animation | null = null;
-  let onScreen = false;
   let started = reduce.matches;
-  if (pulse) (pulse as SVGCircleElement).style.opacity = '0';
-  const syncPulse = () => {
-    if (!pulseAnim) return;
-    if (onScreen && started) pulseAnim.play();
-    else pulseAnim.pause();
-  };
-  const startPulse = () => {
-    if (!pulse || reduce.matches || pulseAnim) return;
-    pulseAnim = (pulse as SVGCircleElement).animate(
-      [{ transform: 'scale(1)', opacity: 0.55 }, { transform: 'scale(2.2)', opacity: 0 }],
-      { duration: 2400, iterations: Infinity, easing: 'ease-out', delay: DRAW_MS + 200 },
-    );
-    pulseAnim.pause();
-    syncPulse();
-  };
-  startPulse();
 
+  // Orbs appear once the graph has drawn itself (at once with reduced motion).
+  const showOrbs = () => orbs.forEach((o) => o.canvas.classList.add('on'));
+  if (started) showOrbs();
   const begin = () => {
     if (started) return;
     started = true;
+    setTimeout(showOrbs, DRAW_MS);
     intro.forEach((a) => a.play());
-    syncPulse();
   };
   if ('IntersectionObserver' in window && !reduce.matches) {
     const io = new IntersectionObserver(
       (entries) => {
-        onScreen = entries[entries.length - 1].isIntersecting;
-        if (onScreen) begin();
-        syncPulse();
+        if (entries[entries.length - 1].isIntersecting) begin();
       },
       { rootMargin: '0px 0px -12% 0px' },
     );
     io.observe(root);
   } else {
-    onScreen = true;
     begin();
   }
 
@@ -235,10 +236,7 @@ export function initGraph(root: HTMLElement, data: GraphData): GraphApi {
     if (reduce.matches) {
       intro.forEach((a) => { try { a.finish(); } catch { /* already done */ } });
       paths.forEach((p) => (p.style.strokeDasharray = ''));
-      pulseAnim?.cancel();
-      pulseAnim = null;
-    } else {
-      startPulse();
+      showOrbs();
     }
   });
 
@@ -248,6 +246,7 @@ export function initGraph(root: HTMLElement, data: GraphData): GraphApi {
     const on = owner ? new Set([owner]) : focus;
     svg.classList.toggle('dim', !!on);
     svg.querySelectorAll<SVGElement>('[data-owner]').forEach((e) => e.classList.toggle('hl', !!on && on.has(e.dataset.owner!)));
+    orbs.forEach((o) => o.canvas.classList.toggle('dimmed', !!on && !on.has(o.canvas.dataset.owner!)));
   };
   const ownerOf = (t: EventTarget | null) => (t instanceof Element ? t.closest<HTMLElement>('li.row')?.dataset.owner ?? null : null);
   root.addEventListener('pointerover', (e) => highlight(ownerOf(e.target)));

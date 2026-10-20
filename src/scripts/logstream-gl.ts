@@ -12,7 +12,7 @@ type Config = { sources: { rate: number; y: number }[]; srcX: number; sinkX: num
 export function start(fig: HTMLElement, reduce: MediaQueryList) {
   const cfg: Config = JSON.parse(fig.dataset.logStream!);
   const stage = fig.querySelector<HTMLElement>('.stage')!;
-  const canvas = fig.querySelector<HTMLCanvasElement>('canvas')!;
+  const canvas = fig.querySelector<HTMLCanvasElement>('canvas.gl')!;
   const countEl = fig.querySelector<HTMLElement>('.count')!;
 
   const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: 'low-power' });

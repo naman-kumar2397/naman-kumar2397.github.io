@@ -69,6 +69,7 @@ const jsonLd = [
 
     <header class="cs-head">
       <div class="meta" style="--d:1">
+        {c.orb && <canvas class="orb" data-orb={c.orb.state} style={`color:var(--c-${c.orb.colour})`}></canvas>}
         <span class={`state ${c.status === 'Shipped' ? 'merged' : 'open'}`}>{c.status}</span>
         <span class="muted">{c.context}</span>
       </div>
@@ -168,6 +169,7 @@ const jsonLd = [
   .cs-head { margin-top: 12px; }
   .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 13px; }
   h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.15; letter-spacing: -0.02em; margin: 12px 0 0; font-weight: 650; }
+  .orb { width: 28px; height: 28px; margin: -5px -2px; vertical-align: middle; }
   .headline { font-size: clamp(17px, 4vw, 20px); font-weight: 600; color: var(--accent); margin: 8px 0 0; }
   .overview { font-size: 16px; margin: 12px 0 0; max-width: 70ch; }
   .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); margin: 24px 0 0; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
@@ -252,3 +254,8 @@ const jsonLd = [
   @media (min-width: 560px) { .ctas { display: flex; flex-wrap: wrap; } }
   @media (min-width: 860px) { .grid { grid-template-columns: 1fr 1fr; } }
 </style>
+
+<script>
+  import { mountOrbs } from '../../scripts/orbs';
+  mountOrbs();
+</script>

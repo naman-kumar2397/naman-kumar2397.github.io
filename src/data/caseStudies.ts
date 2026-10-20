@@ -65,6 +65,8 @@ export interface CaseStudy {
   stack: string[];
   /** Branch in src/data/journey.ts, to link to the git log. */
   branch?: string;
+  /** Thinking orb beside the status, for live or in-progress work only. Colour = branch colour. */
+  orb?: { state: 'connecting' | 'composing'; colour: string };
 }
 
 export const caseStudies: CaseStudy[] = [
@@ -180,6 +182,7 @@ export const caseStudies: CaseStudy[] = [
     // TODO: measured outcomes (e.g. time to diagnosis, investigations per month) when available.
     stack: ['Amazon Bedrock AgentCore', 'AWS DevOps Agent', 'MCP', 'Datadog', 'Dynatrace', 'Buildkite', 'GitHub'],
     branch: 'ai',
+    orb: { state: 'connecting', colour: 'teal' },
   },
   {
     id: 'netflix-game-launch',
@@ -347,5 +350,6 @@ export const caseStudies: CaseStudy[] = [
     // TODO: outcomes once rolled out.
     stack: ['AWS Bedrock', 'AWS Lambda', 'Claude', 'GitHub Copilot', 'Guardrails'],
     branch: 'bedrock',
+    orb: { state: 'composing', colour: 'orange' },
   },
 ];

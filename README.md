@@ -46,3 +46,9 @@ npm run check:ai      # after a build: AI crawlers allowed in robots.txt, llms.t
 ## AI and agentic search
 
 Every indexable page has a Markdown version (`/index.md`, `/resume.md`, `/projects/<id>.md`), linked from the page with `<link rel="alternate" type="text/markdown">`. `/llms.txt` maps the site ([llmstxt.org](https://llmstxt.org)) and `/llms-full.txt` holds everything in one file. All of it is generated from `src/data/` by `src/lib/markdown.ts`, so it never drifts from the HTML. `robots.txt` explicitly allows search, assistant and training crawlers.
+
+## Credits
+
+- [thinking-orbs](https://github.com/Jakubantalik/thinking-orbs) by Jakub Antalik (MIT): the dotted orb animations.
+- [three.js](https://threejs.org) (MIT): the log-stream particles.
+- [Simple Icons](https://simpleicons.org) (CC0): technology logos.

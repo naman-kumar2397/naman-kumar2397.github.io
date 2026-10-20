@@ -46,12 +46,20 @@ ring, accent edge and lift
 arrow nudges; title morphs from card to project page; diagrams reveal stage by stage with data pulses
 travelling along connectors (only while on screen); node hover highlight
 
-**Git log**: graph draws in when it first scrolls into view; HEAD pulse only while visible; sliding segmented
+**Git log**: graph draws in when it first scrolls into view; thinking orbs (below) on HEAD and open branches; sliding segmented
 control; filter changes via View Transitions with fade fallback; animated expand of the full log
 
 **Skills / Contact / Footer**: staggered reveals, hover states, underline sweeps; technology logo carousel
 while the inventory is collapsed (80s loop, pauses on hover/focus, pause button for WCAG 2.2.2, stops off-screen,
 static wrapped grid without JS or with reduced motion). Logos: Simple Icons (CC0), vendored in `src/data/logos.ts`.
+
+**Thinking orbs** (`src/scripts/orbs.ts`, engine from [thinking-orbs](https://github.com/Jakubantalik/thinking-orbs), MIT):
+small dotted canvas animations tinted with the branch colour, used only for live or in-progress work: "working" on HEAD,
+"composing" on open branches and the in-progress Bedrock proxy, "connecting" beside Alfred's status, "weaving" as the
+Datadog node the log stream pours into. Decorative (aria-hidden), paused off screen, one static frame with reduced motion.
+
+**Log stream** (`src/components/LogStream.astro`, three.js, observability case study only): one dot per log event at the
+real migrated rates. Loads near the viewport when the browser is idle; never with reduced motion or Save-Data.
 
 ## Guarantees
 - Hidden start states only apply under `html.motion` (set before paint when JS runs and reduced motion is off;

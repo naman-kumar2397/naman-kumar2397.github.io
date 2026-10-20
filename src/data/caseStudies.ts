@@ -16,6 +16,14 @@ export interface DiagramColumn {
   nodes: FlowStep[];
 }
 
+/** Animated figure: one dot per log event at the real rate, from old platforms into one sink. */
+export interface LogStreamVisual {
+  kind: 'log-stream';
+  sink: string;
+  /** perWeek must match the figures stated elsewhere in the study. */
+  sources: { label: string; org: string; perWeek: number; display: string }[];
+}
+
 /** Extra content for a dedicated /projects/<id>/ page. */
 export interface Feature {
   /** My role, as the resume states it. */
@@ -30,6 +38,8 @@ export interface Feature {
   media?: { file: string; alt: string; credit: string; href: string; caption?: string };
   /** Public write-up of the project, linked from the page header. */
   publicLink?: { label: string; href: string };
+  /** Optional interactive figure, shown after the key facts. */
+  visual?: LogStreamVisual;
   /** Optional phased history, oldest first. */
   evolution?: { phase: string; when?: string; points: string[] }[];
 }
@@ -240,6 +250,14 @@ export const caseStudies: CaseStudy[] = [
     id: 'observability-migrations',
     feature: {
       role: 'Migrated at Cvent and at Latitude',
+      visual: {
+        kind: 'log-stream',
+        sink: 'Datadog',
+        sources: [
+          { label: 'Splunk', org: 'Cvent', perWeek: 880_000_000, display: '~880M a week' },
+          { label: 'Sumo Logic', org: 'Latitude', perWeek: 20_000_000, display: '20M+ a week' },
+        ],
+      },
       facts: [
         { label: 'Cvent', value: '~880M log events per week, Splunk to Datadog (completed)' },
         { label: 'Latitude', value: '20M+ log events per week, Sumo Logic to Datadog (completed)' },

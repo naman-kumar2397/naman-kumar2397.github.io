@@ -1,0 +1,137 @@
+---
+/*
+ * Log stream: one dot per log event, at the real migrated rate, flowing from the old log
+ * platforms into Datadog. The labels, nodes, caption and a static drawing are plain HTML/SVG
+ * (readable without JS, by crawlers and screen readers); the moving dots are a WebGL layer that
+ * three.js draws only when the figure nears the viewport, never with reduced motion or Save-Data,
+ * and paused while off screen.
+ *
+ * Geometry: a fixed 2:1 stage. World x in [-5, 5], y in [-2.5, 2.5] maps exactly onto the stage
+ * (the camera is fitted to that width), so the HTML labels and the SVG fallback use the same
+ * coordinates as the particles: no layout shift when the animation starts.
+ */
+import type { LogStreamVisual } from '../data/caseStudies';
+interface Props { visual: LogStreamVisual }
+const { visual } = Astro.props;
+
+const WEEK = 7 * 24 * 3600;
+const W = 5;
+const H = W / 2;
+const SRC_X = -4.2;
+const SINK_X = 4.2;
+const srcY = (i: number, n: number) => (n === 1 ? 0 : 1.1 - (2.2 * i) / (n - 1));
+const sources = visual.sources.map((s, i) => ({
+  ...s,
+  rate: Math.round(s.perWeek / WEEK),
+  x: SRC_X,
+  y: srcY(i, visual.sources.length),
+}));
+// World -> stage percentages and SVG (1000 x 500) coordinates.
+const pctX = (x: number) => ((x / W + 1) / 2) * 100;
+const pctY = (y: number) => ((1 - y / H) / 2) * 100;
+const svgX = (x: number) => pctX(x) * 10;
+const svgY = (y: number) => pctY(y) * 5;
+const path = (y: number) => `M${svgX(SRC_X)} ${svgY(y)} C${svgX(SRC_X + 3)} ${svgY(y)} ${svgX(SINK_X - 3)} ${svgY(0)} ${svgX(SINK_X)} ${svgY(0)}`;
+const fmt = (n: number) => n.toLocaleString('en-AU');
+const config = JSON.stringify({ sources: sources.map((s) => ({ rate: s.rate, y: s.y })), srcX: SRC_X, sinkX: SINK_X, w: W });
+---
+<figure class="ls" data-log-stream={config}>
+  <div class="stage">
+    <svg class="fallback" viewBox="0 0 1000 500" preserveAspectRatio="none" aria-hidden="true">
+      {sources.map((s, i) => (
+        <g class={`strand s${i}`}>
+          {[-14, -7, 0, 7, 14].map((o) => <path d={path(s.y)} transform={`translate(0 ${o * (1 - i * 0.6)})`} />)}
+        </g>
+      ))}
+    </svg>
+    <canvas aria-hidden="true"></canvas>
+    {sources.map((s, i) => (
+      <div class={`node src s${i}`} style={`left:${pctX(s.x)}%;top:${pctY(s.y)}%`}>
+        <span class="dot" aria-hidden="true"></span>
+        <span class="lbl"><b>{s.label}</b><span>{s.org} · {s.display}</span></span>
+      </div>
+    ))}
+    <div class="node sink" style={`left:${pctX(SINK_X)}%;top:${pctY(0)}%`}>
+      <span class="dot" aria-hidden="true"></span>
+      <span class="lbl"><b>{visual.sink}</b><span>logs, metrics, traces</span></span>
+    </div>
+  </div>
+  <figcaption>
+    One dot is one log event, at the real rate:{' '}
+    {sources.map((s, i) => (
+      <>{i > 0 && ' and '}about {fmt(s.rate)} a second from {s.label} ({s.org}, {s.display})</>
+    ))}, both into {visual.sink}.
+    <span class="count" aria-hidden="true" hidden></span>
+  </figcaption>
+</figure>
+
+<style>
+  .ls { margin: 24px 0 0; }
+  .stage {
+    position: relative; aspect-ratio: 2 / 1; overflow: hidden;
+    border: 1px solid var(--border); border-radius: 8px;
+    background:
+      radial-gradient(60% 80% at 92% 50%, color-mix(in srgb, var(--merged-bg) 14%, transparent), transparent 70%),
+      var(--panel);
+  }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity var(--dur-slow) var(--ease-standard); }
+  .fallback { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity var(--dur-slow) var(--ease-standard); }
+  .fallback path { fill: none; stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .45; }
+  .strand.s0 path { stroke: var(--accent); }
+  .strand.s1 path { stroke: var(--c-green); }
+  .ls.live canvas { opacity: 1; }
+  .ls.live .fallback { opacity: 0; }
+
+  .node { position: absolute; transform: translate(-50%, -50%); }
+  .dot {
+    display: block; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--bg); border: 2px solid var(--c, var(--accent));
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--c, var(--accent)) 18%, transparent);
+  }
+  .s0 { --c: var(--accent); }
+  .s1 { --c: var(--c-green); }
+  .sink { --c: var(--merged-bg); }
+  .sink .dot { width: 22px; height: 22px; }
+  .ls.live .sink .dot { animation: ls-pulse 1.6s var(--ease-in-out) infinite; }
+  @keyframes ls-pulse { 50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--c) 12%, transparent); } }
+
+  .lbl { position: absolute; display: grid; white-space: nowrap; font-size: 13px; line-height: 1.3; }
+  .lbl b { font-weight: 600; }
+  .lbl span { font-size: 12px; color: var(--muted); }
+  /* Labels sit outside the streams: the first source's above its node, the rest below. */
+  .src .lbl { left: -2px; top: calc(100% + 6px); }
+  .src.s0 .lbl { top: auto; bottom: calc(100% + 6px); }
+  .sink .lbl { right: -4px; top: calc(100% + 8px); text-align: right; }
+  @media (max-width: 520px) {
+    .lbl { font-size: 12px; }
+    .lbl span { font-size: 11px; }
+  }
+
+  figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .count { display: block; margin-top: 2px; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--text); }
+</style>
+
+<script>
+  const fig = document.querySelector<HTMLElement>('[data-log-stream]');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+  const hasWebGL = () => {
+    try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; }
+  };
+
+  if (fig && !reduce.matches && !saveData && hasWebGL() && 'IntersectionObserver' in window) {
+    const near = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
+      near.disconnect();
+      // Never compete with the page's own loading: start once the browser is idle.
+      const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: object) => void }).requestIdleCallback;
+      if (idle) idle(() => start(fig), { timeout: 2000 }); else setTimeout(() => start(fig), 300);
+    }, { rootMargin: '300px 0px' });
+    near.observe(fig);
+  }
+
+  async function start(fig: HTMLElement) {
+    const gl = await import('../scripts/logstream-gl');
+    gl.start(fig, reduce);
+  }
+</script>

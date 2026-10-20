@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import RepoHeader from '../../components/RepoHeader.astro';
 import Diagram from '../../components/Diagram.astro';
+import LogStream from '../../components/LogStream.astro';
 import { caseStudies, type CaseStudy, type Feature } from '../../data/caseStudies';
 import { branches, commits, type Branch } from '../../data/journey';
 import { profile } from '../../data/profile';
@@ -83,6 +84,7 @@ const jsonLd = [
       {f.facts.map((x) => <div><dt>{x.label}</dt><dd>{x.value}</dd></div>)}
     </dl>
 
+    {f.visual?.kind === 'log-stream' && <LogStream visual={f.visual} />}
     {f.media && mediaImg && (
       <figure class="media">
         <Picture src={mediaImg} formats={['avif', 'webp']} widths={[480, 768, 1024]} sizes="(min-width: 1000px) 896px, 100vw" alt={f.media.alt} class="media-img" loading="lazy" />

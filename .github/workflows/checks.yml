@@ -24,3 +24,4 @@ jobs:
       - run: npm run check:layout
       - run: npm run check:seo
       - run: npm run check:ai
+      - run: npm run check:bundle

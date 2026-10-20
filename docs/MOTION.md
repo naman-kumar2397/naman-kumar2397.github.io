@@ -61,6 +61,23 @@ Datadog node the log stream pours into. Decorative (aria-hidden), paused off scr
 **Log stream** (`src/components/LogStream.astro`, three.js, observability case study only): one dot per log event at the
 real migrated rates. Loads near the viewport when the browser is idle; never with reduced motion or Save-Data.
 
+**3D architecture diagrams** (`src/components/Diagram.astro` + `src/scripts/arch3d.ts`, three.js, project pages only; the
+home page stays 2D and three-free, enforced by `npm run check:bundle`): one board tilted 30° away from a fixed camera, a
+lane per stage, a low tile per component with an HTML label card over it, and flat glowing grooves for the flow. Edges only
+join neighbouring stages: node to node when either side has one component (so fan-out and fan-in are literal), otherwise
+through a hub between the lanes.
+- Gate: WebGL2, no reduced motion, no Save-Data, IntersectionObserver, figure at least 720px wide (re-checked on resize;
+  narrower shows the list). Loads near the viewport when idle. "Show as list" / "Show 3D view" toggle, remembered.
+- No layout shift: the board's height is reserved in CSS (under `html.motion`, from the diagram's own text) before the
+  engine loads; the list sits inside that box until the board is ready, then stays in the accessibility tree (sr-only).
+  If the board would not fit the box, the list stays.
+- Motion: build-in under 1.6s (board rises, lanes left to right, tiles drop by stage, grooves draw), exactly three packet
+  cycles (a single component fans out to all targets at once), then rendering stops. Hover (fine pointer) lifts a tile,
+  brightens its grooves, dims the rest and plays one packet run; it renders only while that transition runs.
+- Off screen or in a hidden tab nothing renders; the WebGL context is released on a real unload and rebuilt on a
+  bfcache restore. Unlit materials only, pixel ratio capped at 1.5, colours read from the theme tokens.
+- `?settle` (or `window.__arch3dSettle()`) skips straight to the settled board; `npm run check:layout` uses it.
+
 ## Guarantees
 - Hidden start states only apply under `html.motion` (set before paint when JS runs and reduced motion is off;
   removed after 2.5s if the controller never starts). No-JS and reduced-motion visitors see everything.

@@ -3,27 +3,54 @@
  * Architecture diagram as semantic HTML: stages left to right (top to bottom on
  * narrow screens), each with one or more components. Screen readers get an
  * ordered list of stages; sighted users get boxes and connectors.
+ *
+ * On wide screens with motion allowed, a three.js view (src/scripts/arch3d.ts) replaces the
+ * boxes once it is ready: the same stages as lanes on a tilted board. The list stays in the
+ * accessibility tree, and a button switches back to it. The box the board needs is reserved
+ * in CSS before any script runs, so the swap does not move the page.
  */
 import type { DiagramColumn } from '../data/caseStudies';
 interface Props { columns: DiagramColumn[]; caption: string; label: string }
 const { columns, caption, label } = Astro.props;
+
+const data = JSON.stringify({ stages: columns.map((c) => ({ title: c.title, nodes: c.nodes.map((n) => ({ label: n.label, detail: n.detail })) })) });
+// Height the board needs at a given figure width, estimated from the text it carries (mirrors
+// the layout constants in arch3d.ts; the engine falls back to the list if it would not fit).
+const boardHeight = (width: number) => {
+  const n = columns.length;
+  const px = ((width - 4) / (n * 2.6 + (n - 1) * 0.8 + 0.44)) * 0.97; // px per world unit
+  const inner = 2.6 * px - 24 - 22; // card text width
+  const lines = (s: string, perChar: number) => Math.max(1, Math.ceil((s.length * perChar) / inner));
+  const stacks = columns.map((c) => c.nodes.reduce((h, nd) => h + 18 + 19 * lines(nd.label, 8.2) + (nd.detail ? 18.2 * lines(nd.detail, 6.9) : 0) + 10, 0) + (c.nodes.length - 1) * 12);
+  const chip = Math.max(...columns.map((c) => 8 + 17 * Math.ceil(((c.title.length + 3) * 7.3) / (2.6 * px - 30))));
+  return Math.ceil(14 + Math.max(...stacks) + 12 + chip + 12 + 0.75 * px);
+};
+// Labels keep their size, so the board gets taller as the figure narrows: reserve a height
+// interpolated between the two ends of the 3D range (720px to 896px, the widest figure).
+const h720 = boardHeight(720);
+const h896 = Math.min(h720, boardHeight(896));
+const slope = ((h720 - h896) / 176).toFixed(4);
 ---
-<figure class="dg" style={`--cols:${columns.length}`} data-inview>
-  <ol class="stages" aria-label={label} data-reveal-group>
-    {columns.map((c, i) => (
-      <li class="stage" data-reveal="scale" style={`--i:${i}`}>
-        <p class="st-title mono"><span aria-hidden="true">{String(i + 1).padStart(2, '0')} </span>{c.title}</p>
-        <ul class="nodes">
-          {c.nodes.map((n) => (
-            <li class="node">
-              <span class="lbl">{n.label}</span>
-              {n.detail && <span class="dt">{n.detail}</span>}
-            </li>
-          ))}
-        </ul>
-      </li>
-    ))}
-  </ol>
+<figure class="dg arch3d" style={`--cols:${columns.length};--h3d:${h720}px;--h3d-min:${h896}px;--h3d-slope:${slope}`} data-diagram={data} data-inview>
+  <div class="dg-head"><button class="btn dg-toggle" type="button" aria-pressed="false" hidden>Show as list</button></div>
+  <div class="dg-box">
+    <ol class="stages" aria-label={label} data-reveal-group>
+      {columns.map((c, i) => (
+        <li class="stage" data-reveal="scale" style={`--i:${i}`}>
+          <p class="st-title mono"><span aria-hidden="true">{String(i + 1).padStart(2, '0')} </span>{c.title}</p>
+          <ul class="nodes">
+            {c.nodes.map((n) => (
+              <li class="node">
+                <span class="lbl">{n.label}</span>
+                {n.detail && <span class="dt">{n.detail}</span>}
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ol>
+    <div class="scene" aria-hidden="true"><canvas></canvas><div class="labels"></div></div>
+  </div>
   <figcaption>{caption}</figcaption>
 </figure>
 
@@ -70,10 +97,115 @@ const { columns, caption, label } = Astro.props;
     border: 5px solid transparent; border-top-color: var(--accent); border-bottom: 0;
   }
   figcaption { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+  /* 3D view. Hidden (but laid out, so the engine can measure) until it is ready. */
+  .dg-head { display: none; }
+  .dg-box { position: relative; }
+  .scene { position: absolute; inset: 0; visibility: hidden; opacity: 0; transition: opacity var(--dur-slow) var(--ease-standard), visibility 0s linear var(--dur-slow); }
+  .scene canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .labels :global(.a3-card), .labels :global(.a3-chip) { position: absolute; left: 0; top: 0; will-change: transform; }
+  .labels :global(.a3-card) {
+    display: grid; gap: 1px; box-sizing: border-box; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+    background: var(--panel); pointer-events: auto;
+    transition: opacity var(--dur-normal) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-normal) var(--ease-standard);
+  }
+  .labels :global(.a3-card .lbl) { font-weight: 600; font-size: 14px; line-height: 1.35; }
+  .labels :global(.a3-card .dt) { font-size: 13px; color: var(--muted); line-height: 1.4; }
+  .labels :global(.a3-card.on) { border-color: var(--accent); box-shadow: var(--shadow), 0 8px 18px -10px rgba(1, 4, 9, .35); }
+  .labels :global(.a3-card.dim) { opacity: .4; }
+  .labels :global(.a3-chip) {
+    box-sizing: border-box; padding: 2px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg);
+    font: 12px/1.4 var(--mono); color: var(--accent); text-transform: uppercase; letter-spacing: .04em; text-wrap: balance;
+    transition: opacity var(--dur-normal) var(--ease-standard);
+  }
+  .labels :global(.a3-chip.dim) { opacity: .55; }
   @container dg (min-width: 720px) {
     .stages { grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 32px; align-items: center; }
     .stage:not(:last-child)::after { left: auto; right: -32px; top: 50%; bottom: auto; width: 32px; height: 2px; transform: translateY(-50%); animation-name: flow-h;
       background: linear-gradient(90deg, transparent, var(--flow-hi), transparent) no-repeat -100% 0 / 50% 100%, linear-gradient(90deg, var(--border), var(--accent)); }
     .stage:not(:last-child)::before { left: auto; right: -32px; top: 50%; bottom: auto; transform: translateY(-50%); border: 5px solid transparent; border-left-color: var(--accent); border-right: 0; }
+
+    /* Reserve the board's box (and the header row for the toggle) before the engine loads.
+       Dropped when the view can't run (.no-3d) or the reader chose the list (.is-list). */
+    :global(html.motion) .dg:not(.no-3d) .dg-head { display: flex; justify-content: flex-end; min-height: 28px; margin-bottom: 8px; }
+    :global(html.motion) .dg:not(.no-3d, .is-list) .dg-box {
+      display: grid; align-items: center;
+      height: max(var(--h3d-min), calc(var(--h3d) - (100cqi - 720px) * var(--h3d-slope)));
+    }
+    .dg.is-3d .scene { visibility: visible; opacity: 1; transition: opacity var(--dur-slow) var(--ease-standard); }
+    /* The list stays in the accessibility tree (sr-only pattern) while the board is shown. */
+    .dg.is-3d .stages {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
   }
 </style>
+
+<script>
+  /* Gate for the 3D view: WebGL2, motion allowed, no Save-Data, IntersectionObserver, and a
+     figure at least 720px wide. The engine (and three.js) loads near the viewport, when idle. */
+  import type { Controller } from '../scripts/arch3d';
+
+  const KEY = 'arch3d-view';
+  const MIN_W = 720;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+  const hasWebGL = () => {
+    try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; }
+  };
+  const load = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const save = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* storage blocked */ } };
+
+  const figs = [...document.querySelectorAll<HTMLElement>('.arch3d')];
+  const can = !reduce.matches && !saveData && 'IntersectionObserver' in window && figs.length > 0 && hasWebGL();
+  for (const fig of figs) if (can) gate(fig); else fig.classList.add('no-3d');
+
+  function gate(fig: HTMLElement) {
+    const btn = fig.querySelector<HTMLButtonElement>('.dg-toggle')!;
+    let list = load(KEY) === 'list';
+    let near = false, wide = false, ctl: Controller | null = null, loading = false;
+    const label = () => {
+      btn.textContent = list ? 'Show 3D view' : 'Show as list';
+      btn.setAttribute('aria-pressed', String(list));
+      fig.classList.toggle('is-list', list);
+    };
+    // The reader's choice of the list needs no engine, so the button can show straight away.
+    if (list) { label(); btn.hidden = false; }
+    const apply = () => {
+      if (ctl && !ctl.disposed) ctl.setActive(wide && !list);
+      else if (near && wide && !list && !loading) mountNow();
+    };
+    async function mountNow() {
+      loading = true;
+      const { mount } = await import('../scripts/arch3d');
+      ctl = await mount(fig);
+      loading = false;
+      label();
+      btn.hidden = false;
+      apply();
+    }
+    btn.addEventListener('click', () => {
+      list = !list;
+      save(KEY, list ? 'list' : '3d');
+      label();
+      apply();
+    });
+    new ResizeObserver(() => {
+      wide = fig.clientWidth >= MIN_W;
+      apply();
+    }).observe(fig);
+    const io = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
+      io.disconnect();
+      // Never compete with the page's own loading: start once the browser is idle.
+      const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: object) => void }).requestIdleCallback;
+      const go = () => { near = true; apply(); };
+      if (idle) idle(go, { timeout: 2000 }); else setTimeout(go, 300);
+    }, { rootMargin: '300px 0px' });
+    io.observe(fig);
+    // Free the GPU context when the page is really unloaded; rebuild it if restored from bfcache.
+    addEventListener('pagehide', (e) => { if (!e.persisted) ctl?.dispose(); });
+    addEventListener('pageshow', (e) => { if (e.persisted && ctl?.disposed) { ctl = null; apply(); } });
+  }
+</script>

@@ -6,6 +6,10 @@
 //   target     an interactive element is smaller than 24x24px (WCAG 2.5.8)
 //   align      a connector line (::after) and its arrowhead (::before) are off-centre (> 0.5px)
 //   overflow   the page scrolls horizontally
+// Then a second pass with motion on (WebGL through SwiftShader) for pages with a 3D architecture
+// diagram (.arch3d), once its view is ready:
+//   arch3d     labels overlap each other or leave the stage, the toggle is under 24px, the
+//              reserved box changes height when the view swaps in, or the view never gets ready
 // Usage: npm run build && npm run check:layout [-- --url http://localhost:4321]
 // Exits non-zero if anything is found. Chromium: CHROMIUM_PATH or the Playwright cache.
 import { chromium } from 'playwright-core';
@@ -168,10 +172,63 @@ for (const path of pages) for (const w of widths) for (const scheme of schemes) 
   await page.close();
 }
 await browser.close();
+
+// Motion-on pass for the 3D diagrams. `?settle` skips the build-in and packet cycles.
+function audit3d() {
+  const out = [];
+  const fig = document.querySelector('.arch3d');
+  const stage = fig.querySelector('.scene').getBoundingClientRect();
+  const labels = [...fig.querySelectorAll('.a3-card, .a3-chip')].map((el) => [el, el.getBoundingClientRect()]);
+  const name = (el) => `${el.className.split(' ')[0]} "${el.textContent.trim().slice(0, 30)}"`;
+  for (const [el, r] of labels) {
+    if (r.left < stage.left - 0.5 || r.top < stage.top - 0.5 || r.right > stage.right + 0.5 || r.bottom > stage.bottom + 0.5) out.push(`${name(el)} is outside the stage`);
+  }
+  for (let i = 0; i < labels.length; i++) for (let j = i + 1; j < labels.length; j++) {
+    const [a, ra] = labels[i]; const [b, rb] = labels[j];
+    const ix = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
+    const iy = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+    if (ix > 0.5 && iy > 0.5) out.push(`${name(a)} overlaps ${name(b)}`);
+  }
+  const t = fig.querySelector('.dg-toggle').getBoundingClientRect();
+  if (t.width < 24 || t.height < 24) out.push(`toggle is ${t.width.toFixed(0)}x${t.height.toFixed(0)}px`);
+  return out;
+}
+const pages3d = pages.filter((p) => /class="[^"]*\barch3d\b/.test(readFileSync(join('dist', p, 'index.html'), 'utf8')));
+const gl = await chromium.launch({
+  ...(executablePath ? { executablePath } : { channel: 'chrome' }),
+  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+});
+for (const path of pages3d) for (const w of [768, 1024, 1366]) for (const scheme of schemes) {
+  const page = await gl.newPage({ viewport: { width: w, height: 900 }, colorScheme: scheme });
+  await page.goto(`${base}${path}?settle`, { waitUntil: 'networkidle' });
+  const report = (msg) => {
+    const key = `${path} arch3d: ${msg}`;
+    findings.set(key, [...(findings.get(key) || []), `${w}${scheme === 'dark' ? 'd' : ''}`]);
+  };
+  const before = await page.evaluate(() => {
+    const fig = document.querySelector('.arch3d');
+    fig.scrollIntoView({ block: 'center' });
+    return { wide: fig.clientWidth >= 720, h: fig.querySelector('.dg-box').getBoundingClientRect().height };
+  });
+  if (before.wide) {
+    try {
+      await page.waitForSelector('.arch3d[data-arch3d="ready"]', { timeout: 30000 });
+      const h = await page.evaluate(() => document.querySelector('.arch3d .dg-box').getBoundingClientRect().height);
+      if (Math.abs(h - before.h) > 1) report(`reserved box changed height (${before.h.toFixed(0)} -> ${h.toFixed(0)}px)`);
+      for (const f of await page.evaluate(audit3d)) report(f);
+    } catch {
+      report('3D view never became ready');
+    }
+  } else if (await page.evaluate(() => document.querySelector('.arch3d').classList.contains('is-3d'))) {
+    report('3D view shown in a figure narrower than 720px');
+  }
+  await page.close();
+}
+await gl.close();
 if (server) await server.stop();
 
 if (!findings.size) {
-  console.log(`layout-check: clean (${pages.length} pages x ${widths.length} widths x ${schemes.length} schemes)`);
+  console.log(`layout-check: clean (${pages.length} pages x ${widths.length} widths x ${schemes.length} schemes; 3D: ${pages3d.length} pages x 3 widths x ${schemes.length} schemes)`);
 } else {
   for (const [k, where] of findings) console.log(`${k}  [${[...new Set(where)].join(', ')}]`);
   console.log(`\nlayout-check: ${findings.size} finding(s)`);

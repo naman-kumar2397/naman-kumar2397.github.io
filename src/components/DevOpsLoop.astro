@@ -1,0 +1,129 @@
+---
+/*
+ * Skills: the DevOps loop. Server-rendered as a plain list of the eight stages (no JS, reduced
+ * motion, crawlers and AI readers get all of it). With motion on, src/scripts/devops-loop.ts
+ * turns it into a pinned particle infinity loop: scrolling lights one stage at a time and its
+ * card rises out of that stage's orb. Decided in CSS by html.motion, so there is no swap shift.
+ */
+import { loopStages } from '../data/devopsLoop';
+---
+<div class="dl" id="devops-loop">
+  <h3 class="dl-title">Across the DevOps loop</h3>
+  <p class="dl-sub">Scroll through the loop; each stage lists the tools I have used there. Select a card to see what I did.</p>
+
+  <ol class="dl-list">
+    {loopStages.map((s, i) => (
+      <li style={`--c: var(${s.half === 'dev' ? '--c-orange' : '--accent'})`}>
+        <p class="step mono">{String(i + 1).padStart(2, '0')} · {s.half === 'dev' ? 'Dev' : 'Ops'}</p>
+        <h4>{s.name}</h4>
+        <p class="what">{s.what}</p>
+        <ul class="chips" aria-label={`${s.name} tools`}>{s.tools.map((t) => <li>{t}</li>)}</ul>
+        <ul class="did">{s.work.map(([k, v]) => <li><b>{k}:</b> {v}</li>)}</ul>
+      </li>
+    ))}
+  </ol>
+
+  <div class="dl-track" id="dl-track">
+    <div class="dl-pin">
+      <div class="dl-loop" id="dl-loop" aria-hidden="true">
+        <canvas id="dl-canvas"></canvas>
+        <span class="half dev" id="dl-half-dev">DEV</span>
+        <span class="half ops" id="dl-half-ops">OPS</span>
+      </div>
+      <div class="dl-slot" id="dl-slot"></div>
+      <p class="sr-only" id="dl-status" aria-live="polite"></p>
+      <div class="dl-controls">
+        <ul class="dl-stages" id="dl-stages" aria-label="DevOps stages">
+          {loopStages.map((s, i) => (
+            <li><button type="button" data-i={i} style={`--c: var(${s.half === 'dev' ? '--c-orange' : '--accent'})`}>{s.name}</button></li>
+          ))}
+        </ul>
+        <button type="button" class="dl-pause" id="dl-pause" aria-pressed="false">Pause animation</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .dl { margin-top: 28px; --dev: var(--c-orange); --ops: var(--accent); }
+  .dl-title { font-size: 18px; margin: 0; font-weight: 600; }
+  .dl-sub { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+
+  /* ---- static list (no JS / reduced motion / crawlers) ---- */
+  .dl-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+  .dl-list > li { border: 1px solid var(--border); border-left: 3px solid var(--c); border-radius: 8px; padding: 12px 14px; background: var(--bg); display: grid; gap: 6px; align-content: start; }
+  .step { margin: 0; font-size: 11px; color: var(--muted); }
+  .dl-list h4 { margin: 0; font-size: 16px; }
+  .what { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 0; padding: 0; list-style: none; }
+  .chips li { font-size: 12px; line-height: 20px; padding: 0 9px; border-radius: 999px; color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); border: 1px solid color-mix(in srgb, var(--c) 28%, transparent); }
+  .did { margin: 0; padding-left: 16px; display: grid; gap: 4px; font-size: 13px; line-height: 1.45; }
+  .did b { font-weight: 600; }
+
+  /* ---- animated loop (html.motion only) ---- */
+  .dl-track { display: none; }
+  :global(html.motion) .dl-list { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  :global(html.motion) .dl-track { display: block; position: relative; height: calc(100vh + 8 * 55vh); }
+  .dl-pin {
+    position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h)); min-height: 520px;
+    display: grid; align-content: center; gap: 12px;
+  }
+  .dl-loop { position: relative; width: 100%; aspect-ratio: 2.1 / 1; perspective: 900px; }
+  .dl-loop canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .dl-loop :global(.tag) {
+    position: absolute; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: none;
+    font: 600 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+    transition: color var(--dur-normal) var(--ease-standard);
+  }
+  .dl-loop :global(.tag.dev.on) { color: var(--dev); }
+  .dl-loop :global(.tag.ops.on) { color: var(--ops); }
+  .half { position: absolute; transform: translate(-50%, -50%); font: 600 14px/1 var(--mono); letter-spacing: .1em; opacity: .6; pointer-events: none; }
+  .half.dev { color: var(--dev); }
+  .half.ops { color: var(--ops); }
+
+  /* The card floats over the loop on wide screens (moved there by the script). */
+  .dl-slot { position: relative; perspective: 900px; }
+  .dl :global(.dl-card) {
+    position: absolute; left: 0; top: 0; width: var(--cw, 300px); box-sizing: border-box; z-index: 2;
+    transform-origin: 50% 50%; will-change: transform, opacity;
+    background: color-mix(in srgb, var(--panel) 80%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid color-mix(in srgb, var(--c) 45%, var(--border)); border-radius: 10px;
+    box-shadow: 0 18px 40px -18px rgba(1, 4, 9, .45), 0 0 0 1px color-mix(in srgb, var(--c) 10%, transparent);
+    padding: 14px 16px; cursor: pointer; text-align: left; color: var(--text); font: inherit;
+    display: grid; gap: 8px;
+  }
+  .dl :global(.dl-card:focus-visible) { outline: 2px solid var(--c); outline-offset: 2px; }
+  .dl :global(.dl-card .name) { margin: 0; font-size: 19px; font-weight: 650; display: flex; align-items: center; gap: 8px; }
+  .dl :global(.dl-card .swatch) { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 22%, transparent); flex: none; }
+  .dl :global(.dl-card .more) { display: flex; align-items: center; gap: 6px; font: 500 12px/1 var(--mono); color: var(--c); margin: 2px 0 0; }
+  .dl :global(.dl-card .chev) { display: inline-block; transition: transform var(--dur-fast) var(--ease-standard); }
+  .dl :global(.dl-card[aria-expanded='true'] .chev) { transform: rotate(90deg); }
+  .dl :global(.dl-card .step) { font: 11px/1.4 var(--mono); color: var(--muted); }
+  .dl :global(.dl-card .what) { font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .dl :global(.dl-card .chips) { display: flex; flex-wrap: wrap; gap: 5px; }
+  .dl :global(.dl-card .chip-i) { font-size: 12px; line-height: 20px; padding: 0 9px; border-radius: 999px; color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); border: 1px solid color-mix(in srgb, var(--c) 28%, transparent); }
+  .dl :global(.dl-card .did) { display: none; gap: 6px; font-size: 13px; line-height: 1.45; padding: 0; }
+  .dl :global(.dl-card .did span) { display: block; padding-left: 14px; position: relative; }
+  .dl :global(.dl-card .did span)::before { content: ''; position: absolute; left: 3px; top: .62em; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+  .dl :global(.dl-card[aria-expanded='true'] .did) { display: grid; }
+
+  .dl-controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+  .dl-stages { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0; padding: 0; list-style: none; }
+  .dl-stages button, .dl-pause {
+    font: 500 12px/1 var(--mono); color: var(--muted); background: transparent; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 999px; padding: 7px 11px; min-height: 28px;
+  }
+  .dl-stages button[aria-current='step'] { color: var(--c); border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, transparent); }
+  .dl-pause[aria-pressed='true'] { color: var(--text); border-color: var(--muted); }
+
+  @media (max-width: 759px) {
+    .dl-loop { aspect-ratio: 1.75 / 1; }
+    .dl-slot { min-height: 230px; }
+  }
+</style>
+
+<script>
+  import { initDevOpsLoop } from '../scripts/devops-loop';
+  const root = document.getElementById('devops-loop');
+  if (root && document.documentElement.classList.contains('motion')) initDevOpsLoop(root);
+</script>

@@ -55,4 +55,3 @@ Every indexable page has a Markdown version (`/index.md`, `/resume.md`, `/projec
 
 - [thinking-orbs](https://github.com/Jakubantalik/thinking-orbs) by Jakub Antalik (MIT): the dotted orb animations.
 - [three.js](https://threejs.org) (MIT): the log-stream particles.
-- [Simple Icons](https://simpleicons.org) (CC0): technology logos.

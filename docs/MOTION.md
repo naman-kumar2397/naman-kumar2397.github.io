@@ -52,9 +52,13 @@ travelling along connectors (only while on screen); node hover highlight
 **Git log**: graph draws in when it first scrolls into view; thinking orbs (below) on HEAD and open branches; sliding segmented
 control; filter changes via View Transitions with fade fallback; animated expand of the full log
 
-**Skills / Contact / Footer**: staggered reveals, hover states, underline sweeps; technology logo carousel
-while the inventory is collapsed (80s loop, pauses on hover/focus, pause button for WCAG 2.2.2, stops off-screen,
-static wrapped grid without JS or with reduced motion). Logos: Simple Icons (CC0), vendored in `src/data/logos.ts`.
+**Skills**: the DevOps loop (`src/components/DevOpsLoop.astro`, `src/scripts/devops-loop.ts`): a pinned particle
+infinity loop that always flows; scrolling the track lights one stage (brighter orbs on its arc) and its card rises out
+of that stage's orb in 3D, settling inside its half (below the loop on narrow screens); clicking the card shows what I
+did. Pause button (WCAG 2.2.2); pauses off screen; colours from tokens each frame (live light/dark). Without motion it
+is a static list of the eight stages.
+
+**Contact / Footer**: staggered reveals, hover states, underline sweeps.
 
 **Thinking orbs** (`src/scripts/orbs.ts`, engine from [thinking-orbs](https://github.com/Jakubantalik/thinking-orbs), MIT):
 small dotted canvas animations tinted with the branch colour, used only for live or in-progress work: "working" on HEAD,

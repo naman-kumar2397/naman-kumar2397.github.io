@@ -136,7 +136,8 @@ a:hover { text-decoration: underline; }
 .btn-primary:hover { background: var(--primary-hover); }
 
 .container { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
-.section { padding: 40px 0 0; scroll-margin-top: var(--header-h); }
+/* padding-top only: a shorthand here would zero .container's side padding on phones. */
+.section { padding-top: 40px; scroll-margin-top: var(--header-h); }
 .section-head { margin: 0 0 16px; }
 .kicker { font: 12px/1.5 var(--mono); color: var(--muted); margin: 0 0 4px; }
 .section-head h2 { font-size: 24px; line-height: 1.25; font-weight: 600; margin: 0; letter-spacing: -0.01em; }

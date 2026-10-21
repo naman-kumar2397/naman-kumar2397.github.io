@@ -47,15 +47,25 @@ test('no stale ServiceNow claim for the AI assistant', () => {
   assert.ok(alfred && !JSON.stringify(alfred).includes('ServiceNow'));
 });
 
-import { logos } from '../src/data/logos.ts';
-import { techCarousel, resumeSkills } from '../src/data/profile.ts';
+import { resumeSkills } from '../src/data/profile.ts';
+import { loopStages } from '../src/data/devopsLoop.ts';
 
-test('carousel logos exist and every carousel entry is in the inventory', () => {
-  const inventory = JSON.stringify(resumeSkills).toLowerCase();
-  for (const t of techCarousel) {
-    if (t.logo) assert.ok(logos[t.logo], `missing logo ${t.logo}`);
-    const key = t.name.toLowerCase().replace(/^bash$/, 'shell').replace(/^groovy$/, 'groovy').replace(/^mcp$/, 'mcp');
-    assert.ok(inventory.includes(key), `${t.name} not in resume inventory`);
+test('DevOps loop: 4 Dev + 4 Ops stages, every tool and number traceable to the resume data', () => {
+  assert.equal(loopStages.length, 8);
+  assert.deepEqual(loopStages.map((s) => s.half), ['dev', 'dev', 'dev', 'dev', 'ops', 'ops', 'ops', 'ops']);
+  const source = JSON.stringify({ experience, profile, resumeSkills, caseStudies, branches }).toLowerCase();
+  for (const s of loopStages) {
+    assert.ok(s.tools.length && s.work.length, s.name);
+    for (const tool of s.tools) {
+      for (const word of tool.toLowerCase().split(/[\s/]+/).filter(Boolean)) {
+        assert.ok(source.includes(word.replace(/s$/, '')), `${s.name}: "${tool}" not found in resume data`);
+      }
+    }
+    for (const [, text] of s.work) {
+      for (const num of text.match(/~?\d[\d.,]*\s?[%+MkK]*/g) ?? []) {
+        assert.ok(source.includes(num.trim().toLowerCase()), `${s.name}: figure "${num.trim()}" not found in resume data`);
+      }
+    }
   }
 });
 

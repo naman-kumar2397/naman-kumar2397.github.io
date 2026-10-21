@@ -16,6 +16,9 @@ interface Props {
   /** Social share image path (1200x630), defaults to the site card. */
   ogImage?: string;
   ogImageAlt?: string;
+  /** Absolute canonical URL for a page that is not its own canonical (e.g. a noindex
+      alternate of the home page). Rendered even with noindex. Defaults to the page's own URL. */
+  canonical?: string;
 }
 const {
   title,
@@ -25,8 +28,9 @@ const {
   ogType = 'profile',
   ogImage: ogImagePath = '/og.png',
   ogImageAlt = 'Naman Kumar, Lead Site Reliability Engineer',
+  canonical: canonicalProp,
 } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site);
+const canonical = new URL(canonicalProp ?? Astro.url.pathname, Astro.site);
 const ogImage = new URL(ogImagePath, Astro.site);
 // Indexable pages also have a Markdown version for AI assistants (src/lib/markdown.ts).
 const markdown = sitemapPaths().includes(Astro.url.pathname) ? new URL(mdPath(Astro.url.pathname), Astro.site) : null;
@@ -38,7 +42,8 @@ const markdown = sitemapPaths().includes(Astro.url.pathname) ? new URL(mdPath(As
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    {noindex && <meta name="robots" content="noindex" />}
+    {(!noindex || canonicalProp) && <link rel="canonical" href={canonical} />}
     {markdown && <link rel="alternate" type="text/markdown" href={markdown} title="Markdown version" />}
     <meta name="author" content="Naman Kumar" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

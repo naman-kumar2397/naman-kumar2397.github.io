@@ -8,11 +8,13 @@ interface Props {
   path?: string[];
   /** Tab to mark current on sub-pages. */
   current?: string;
+  /** Replaces the home-page section tabs (in-page anchors of another single-page layout). */
+  tabs?: { href: string; label: string; count?: number }[];
 }
-const { commitCount, projectCount, path = [], current } = Astro.props;
+const { commitCount, projectCount, path = [], current, tabs: customTabs } = Astro.props;
 const onHome = path.length === 0;
 const base = onHome ? '' : '/';
-const tabs = [
+const tabs: { href: string; label: string; count?: number }[] = customTabs ?? [
   { href: `${base}#top`, label: 'Overview' },
   { href: `${base}#experience`, label: 'Experience' },
   { href: `${base}#projects`, label: 'Projects', count: projectCount },
@@ -103,7 +105,6 @@ const isCurrent = (label: string, i: number) => (onHome ? i === 0 : label === cu
 
   const bar = document.querySelector<HTMLElement>('.tabs-in');
   const ind = bar?.querySelector<HTMLElement>('.indicator');
-  const home = location.pathname === '/';
   const tabs = [...document.querySelectorAll<HTMLAnchorElement>('.tabs .tab')];
 
   const place = (animate: boolean) => {
@@ -121,8 +122,8 @@ const isCurrent = (label: string, i: number) => (onHome ? i === 0 : label === cu
   if (bar && 'ResizeObserver' in window) new ResizeObserver(() => place(false)).observe(bar);
   if (document.fonts?.ready) document.fonts.ready.then(() => place(false));
 
-  // Scroll-spy only on the home page (tab links there are in-page hashes).
-  const spyTabs = home ? tabs : [];
+  // Scroll-spy only where the tab links are in-page hashes (the home page and its alternate).
+  const spyTabs = tabs.every((t) => t.getAttribute('href')!.startsWith('#')) ? tabs : [];
   const sections = spyTabs
     .map((t) => document.getElementById(t.hash.slice(1)))
     .filter((s): s is HTMLElement => !!s);

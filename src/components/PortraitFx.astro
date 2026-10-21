@@ -1,0 +1,11 @@
+---
+/*
+ * Starts the hero portrait entrance (src/scripts/portrait.ts) on the wrapper the hero's inline
+ * gate marked with `.fx`. Shared by both homepage heroes so the module stays one inlined script.
+ */
+---
+<script>
+  import { initPortrait } from '../scripts/portrait';
+  const wrap = document.querySelector<HTMLElement>('.photo-wrap.fx');
+  if (wrap) initPortrait(wrap);
+</script>

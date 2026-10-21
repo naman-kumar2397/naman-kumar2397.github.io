@@ -1,0 +1,73 @@
+---
+/*
+ * Toolbox on /home-alternate/: the DevOps loop as a compact strip (no pinning). Each stage is
+ * a disclosure that opens to the tools used there (src/data/devopsLoop.ts); the complete list
+ * is the resume's inventory below it.
+ */
+import { loopStages } from '../../data/devopsLoop';
+import { resumeSkills } from '../../data/profile';
+const toolCount = resumeSkills.reduce((n, g) => n + g.items.length, 0);
+const halves = [
+  { id: 'dev', label: 'Dev', colour: '--c-orange' },
+  { id: 'ops', label: 'Ops', colour: '--accent' },
+] as const;
+---
+<section id="toolbox" class="container toolbox" aria-labelledby="toolbox-title">
+  <p class="kicker">cat toolbox.yml</p>
+  <h2 id="toolbox-title">The toolbox, across the DevOps loop</h2>
+  <p class="sub">Open a stage to see the tools I have used there.</p>
+  <div class="loop">
+    {halves.map((h) => (
+      <div class="half" style={`--c: var(${h.colour})`}>
+        <p class="hl">{h.label}</p>
+        <ul>
+          {loopStages.map((s, i) => ({ s, i })).filter(({ s }) => s.half === h.id).map(({ s, i }) => (
+            <li>
+              <details>
+                <summary><span class="n">{String(i + 1).padStart(2, '0')}</span>{s.name}</summary>
+                <ul class="tools" aria-label={`${s.name} tools`}>{s.tools.map((t) => <li>{t}</li>)}</ul>
+              </details>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+  <details class="inventory">
+    <summary><span class="chev" aria-hidden="true">›</span>Full technology inventory <span class="muted">({toolCount} entries)</span></summary>
+    <dl>
+      {resumeSkills.map((g) => (
+        <div><dt>{g.group}</dt><dd>{g.items.join(', ')}</dd></div>
+      ))}
+    </dl>
+  </details>
+</section>
+
+<style>
+  .toolbox { padding-top: 72px; scroll-margin-top: var(--header-h); }
+  h2 { font-size: clamp(24px, 5vw, 32px); line-height: 1.15; letter-spacing: -0.02em; font-weight: 650; margin: 0; }
+  .sub { margin: 6px 0 0; color: var(--muted); }
+  .loop { display: grid; gap: 10px; margin-top: 18px; }
+  .half { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: start; }
+  .hl { margin: 0; padding-top: 10px; font: 600 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--c); }
+  .half > ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  details { border: 1px solid color-mix(in srgb, var(--c) 30%, var(--border)); border-radius: 10px; background: var(--bg); }
+  details[open] { background: color-mix(in srgb, var(--c) 6%, var(--bg)); }
+  summary { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; font-weight: 600; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary:hover { color: var(--c); }
+  .n { font: 11px/1 var(--mono); color: var(--muted); font-weight: 400; }
+  .tools { display: flex; flex-wrap: wrap; gap: 5px; margin: 0; padding: 0 12px 12px; list-style: none; }
+  .tools li { font-size: 12px; line-height: 20px; padding: 0 9px; border-radius: 999px; color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); }
+  .inventory { --c: var(--accent); margin-top: 14px; background: var(--panel); border-color: var(--border); border-radius: 8px; overflow: hidden; }
+  .inventory summary { gap: 6px; min-height: 44px; padding: 0 16px; font-weight: 500; color: var(--accent); }
+  .inventory dl { margin: 0; padding: 4px 16px 12px; display: grid; gap: 6px; }
+  .inventory dl > div { display: grid; gap: 0 16px; font-size: 13px; }
+  .inventory dt { font-weight: 600; }
+  .inventory dd { margin: 0; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  @media (min-width: 768px) {
+    .toolbox { padding-top: 80px; }
+    .half > ul { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .inventory dl > div { grid-template-columns: 240px minmax(0, 1fr); }
+  }
+</style>

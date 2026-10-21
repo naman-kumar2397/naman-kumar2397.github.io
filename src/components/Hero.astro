@@ -1,5 +1,6 @@
 ---
 import { Picture } from 'astro:assets';
+import PortraitFx from './PortraitFx.astro';
 import photo from '../assets/profile.jpg';
 import { profile } from '../data/profile';
 import { branches } from '../data/journey';
@@ -158,8 +159,4 @@ import { branches } from '../data/journey';
   @keyframes drift-b { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(70px, -30px, 0); } }
 </style>
 
-<script>
-  import { initPortrait } from '../scripts/portrait';
-  const wrap = document.querySelector<HTMLElement>('.photo-wrap.fx');
-  if (wrap) initPortrait(wrap);
-</script>
+<PortraitFx />

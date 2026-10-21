@@ -60,6 +60,28 @@ is a static list of the eight stages.
 
 **Contact / Footer**: staggered reveals, hover states, underline sweeps.
 
+**Journey homepage** (`/home-alternate/`, noindex alternate of the home page; `src/pages/home-alternate.astro`,
+`src/components/ride/*`, content picked from `src/data` by `src/lib/ride.ts`):
+- Hero: the home hero's entrance (word-masked name, staggered status, role, statement, fact chips, CTAs), the same portrait
+  entrance and gate (`src/components/PortraitFx.astro` starts it on both pages), slow ambient gradients and a scroll cue line.
+- Journey (`src/scripts/ride.ts`, `src/scripts/ride-field.ts`): `.live` is decided before first paint (html.motion, no
+  Save-Data). Desktop: a sticky chapter rail (branch-coloured nodes, HEAD ring on the current chapter, a line that fills
+  with progress) and a sticky stage beside six chapters, each a one-screen scene whose text is pinned (never hidden) while
+  native scroll scrubs one shared canvas 2D particle field (1400 points, projected 3D, DPR capped at 1.5). Each chapter has
+  a shape (accounts orbiting a team ring; agents converging with pulses and a timeline; two clouds merging; a sparse disc
+  filling up; a log stream into a sink settling into 70 dots; a collapse into `main`), and the last 28% of a chapter morphs
+  every particle, staggered on a small arc, into the next shape. Scenes trail the text by 0.14 of a chapter so a morph is
+  half done as the next chapter becomes current. Phones: each chapter card gets its own small field (360 points, its scene
+  only). Count-up figures count once, the first time their chapter is current (final value server-rendered, width reserved).
+- Polite live region "Chapter n of 6: title" once the reader settles; J/K and up/down arrows move between chapters only
+  while focus is inside the journey; rail links land on the same settled point. Pause button (WCAG 2.2.2) freezes the
+  field; scrolling still scrubs it. Fields start when the journey nears the viewport and stop off screen and in hidden
+  tabs. Colours come from the tokens (`--muted`, `--c-<branch>`) and are re-read on a colour scheme change.
+- No JS, reduced motion or Save-Data: the same HTML as stacked chapter cards with a chapter index; no pinning, no canvas.
+- Toolbox: the DevOps loop as a compact strip of disclosures (no pinning). `npm run check:layout` runs a motion-on pass
+  for this page (1366 and 390, both schemes): overflow, 6 chapter headings, hero facts and resume above the fold at
+  390x844, CLS < 0.05, no text overlap at any scroll position, rail matches the chapter in view, field animating.
+
 **Thinking orbs** (`src/scripts/orbs.ts`, engine from [thinking-orbs](https://github.com/Jakubantalik/thinking-orbs), MIT):
 small dotted canvas animations tinted with the branch colour, used only for live or in-progress work: "working" on HEAD,
 "composing" on open branches and the in-progress Bedrock proxy, "connecting" beside Alfred's status, "weaving" as the

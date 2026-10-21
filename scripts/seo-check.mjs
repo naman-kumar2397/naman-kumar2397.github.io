@@ -1,6 +1,6 @@
 // SEO lint over the built site (dist/). No browser needed. For every page:
 //   title 30-65 chars and unique · meta description 70-160 chars and unique · canonical is the
-//   absolute page URL · og:title/og:description/og:image/twitter:card present · share image exists
+//   absolute page URL (a noindex page that declares a canonical: an absolute URL on the site) · og:title/og:description/og:image/twitter:card present · share image exists
 //   and is 1200x630 · exactly one <h1> · <html lang> · every <img> has alt · JSON-LD parses and
 //   has @context · internal links and assets resolve.
 // Site-wide: robots.txt points at the sitemap; sitemap URLs exist and are indexable; every
@@ -73,6 +73,12 @@ for (const { path, html } of indexable) {
     if (ref.startsWith('//')) continue;
     check(!!fileFor(ref), path, `broken internal link/asset ${ref}`);
   }
+}
+// A noindex page may point its canonical elsewhere (an alternate of the home page), but then
+// it must be an absolute URL on this site.
+for (const { path, html } of pages.filter((p) => isNoindex(p.html) && !isRedirect(p.html))) {
+  const canonical = attr((html.match(/<link[^>]+rel="canonical"[^>]*>/i) || [''])[0], 'href');
+  if (canonical !== undefined) check(canonical.startsWith(`${SITE}/`), path, `noindex page canonical "${canonical}" is not an absolute URL on ${SITE}`);
 }
 for (const [t, ps] of titles) check(ps.length === 1, ps.join(', '), `duplicate title "${t}"`);
 for (const [, ps] of descs) check(ps.length === 1, ps.join(', '), `duplicate meta description`);

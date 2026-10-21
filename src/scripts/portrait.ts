@@ -35,6 +35,9 @@ export function initPortrait(wrap: HTMLElement) {
   const dark = matchMedia('(prefers-color-scheme: dark)');
   let W = 0, PR = 0, dpr = 1, dots: Dot[] = [];
   let raf = 0, last = 0, clock = 0, visible = true, resolved = false;
+  // Sample from a plain copy of the chosen file: an <img> with srcset reports a
+  // density-corrected natural size that does not match its bitmap, which skewed the crop.
+  let src: HTMLImageElement = img;
   // Ring angle advances with its own clock so it can slow to a stop and start again on hover.
   let ringClock = 0, ringSpeed = 1, ringUntil = SETTLED + RING_RUN;
 
@@ -55,8 +58,8 @@ export function initPortrait(wrap: HTMLElement) {
     off.width = off.height = size;
     const o = off.getContext('2d', { willReadFrequently: true });
     if (!o) return false;
-    const nw = img!.naturalWidth, nh = img!.naturalHeight, s = Math.min(nw, nh);
-    o.drawImage(img!, (nw - s) / 2, (nh - s) / 2, s, s, 0, 0, size, size);
+    const nw = src.naturalWidth, nh = src.naturalHeight, s = Math.min(nw, nh);
+    o.drawImage(src, (nw - s) / 2, (nh - s) / 2, s, s, 0, 0, size, size);
     let data: Uint8ClampedArray;
     try { data = o.getImageData(0, 0, size, size).data; } catch { return false; }
     const pts: Pick<Dot, 'tx' | 'ty' | 'r' | 'g' | 'b'>[] = [];
@@ -171,9 +174,16 @@ export function initPortrait(wrap: HTMLElement) {
     run();
   }
 
-  if (img.complete && img.naturalWidth) start();
+  const begin = () => {
+    const copy = new Image();
+    copy.decoding = 'async';
+    copy.onload = () => { src = copy; start(); };
+    copy.onerror = giveUp;
+    copy.src = img.currentSrc || img.src;
+  };
+  if (img.complete && img.naturalWidth) begin();
   else {
-    img.addEventListener('load', start, { once: true });
+    img.addEventListener('load', begin, { once: true });
     img.addEventListener('error', giveUp, { once: true });
   }
 }

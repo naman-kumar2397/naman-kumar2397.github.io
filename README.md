@@ -33,6 +33,7 @@ npm run check:layout  # after a build: renders every page at 4 widths x 2 themes
                       # elements touching dividers, overlapping controls, clipped text,
                       # small tap targets, misaligned connectors and horizontal overflow;
                       # then, with motion on, checks the 3D architecture diagrams' labels
+                      # and that they cause no layout shift
 npm run check:seo     # after a build: titles/descriptions, canonicals, share images, one h1,
                       # alt text, JSON-LD, internal links, sitemap coverage (no browser)
 npm run check:ai      # after a build: AI crawlers allowed in robots.txt, llms.txt structure and

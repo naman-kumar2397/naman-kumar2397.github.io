@@ -18,21 +18,37 @@ const data = JSON.stringify({ stages: columns.map((c) => ({ title: c.title, node
 // the layout constants in arch3d.ts; the engine falls back to the list if it would not fit).
 const boardHeight = (width: number) => {
   const n = columns.length;
-  const px = ((width - 4) / (n * 2.6 + (n - 1) * 0.8 + 0.44)) * 0.97; // px per world unit
-  const inner = 2.6 * px - 24 - 22; // card text width
-  const lines = (s: string, perChar: number) => Math.max(1, Math.ceil((s.length * perChar) / inner));
-  const stacks = columns.map((c) => c.nodes.reduce((h, nd) => h + 18 + 19 * lines(nd.label, 8.2) + (nd.detail ? 18.2 * lines(nd.detail, 6.9) : 0) + 10, 0) + (c.nodes.length - 1) * 12);
-  const chip = Math.max(...columns.map((c) => 8 + 17 * Math.ceil(((c.title.length + 3) * 7.3) / (2.6 * px - 30))));
-  return Math.ceil(14 + Math.max(...stacks) + 12 + chip + 12 + 0.75 * px);
+  const px = ((width - 4) / (n * 2.6 + (n - 1) * 0.8 + 0.44)) * 0.97; // px per world unit, board centre
+  const lane = 2.6 * px * 0.92; // a lane's width on screen, allowing for perspective
+  // Greedy word wrap at an average glyph width (breaks only at spaces, so it errs high).
+  const lines = (s: string, perChar: number, room: number) => {
+    let count = 1, used = 0;
+    for (const w of s.split(' ')) {
+      const len = w.length * perChar;
+      if (used && used + perChar + len > room) { count++; used = len; } else used += (used ? perChar : 0) + len;
+    }
+    return count;
+  };
+  const text = lane - 20 - 22; // card width minus padding and border
+  const stacks = columns.map((c) => c.nodes.reduce((h, nd) => h + 18 + 18.9 * lines(nd.label, 7.2, text) + (nd.detail ? 18.2 * lines(nd.detail, 6.1, text) : 0), 0) + (c.nodes.length - 1) * 12);
+  const chip = Math.max(...columns.map((c, i) => 6 + 17 * lines(`${String(i + 1).padStart(2, '0')} ${c.title}`.toUpperCase(), 7.7, lane - 20 - 18)));
+  return Math.ceil(14 + Math.max(...stacks) + 12 + chip + 12 + 0.5 * px);
 };
-// Labels keep their size, so the board gets taller as the figure narrows: reserve a height
-// interpolated between the two ends of the 3D range (720px to 896px, the widest figure).
-const h720 = boardHeight(720);
-const h896 = Math.min(h720, boardHeight(896));
-const slope = ((h720 - h896) / 176).toFixed(4);
+// Labels keep their size, so the board gets taller as the figure narrows (in steps, as lines
+// wrap). Reserve top - (width - 720px) * slope: of the lines that stay above the estimate (plus
+// slack) at every width from 720px to 896px (the widest figure), the one with the least excess.
+const SLACK = 14;
+const need = [720, 736, 752, 768, 784, 800, 816, 832, 848, 864, 880, 896].map((w) => [w, boardHeight(w) + SLACK]);
+let best = { top: 0, slope: 0, cost: Infinity };
+for (let top = need[0][1]; top <= need[0][1] + 120; top += 2) {
+  const slope = Math.max(0, Math.min(...need.slice(1).map(([w, h]) => (top - h) / (w - 720))));
+  const cost = need.reduce((c, [w]) => c + top - (w - 720) * slope, 0);
+  if (cost < best.cost) best = { top, slope, cost };
+}
+const floor = Math.ceil(best.top - 176 * best.slope); // the line's value at 896px
 ---
-<figure class="dg arch3d" style={`--cols:${columns.length};--h3d:${h720}px;--h3d-min:${h896}px;--h3d-slope:${slope}`} data-diagram={data} data-inview>
-  <div class="dg-head"><button class="btn dg-toggle" type="button" aria-pressed="false" hidden>Show as list</button></div>
+<figure class="dg arch3d" style={`--cols:${columns.length};--h3d:${best.top}px;--h3d-min:${floor}px;--h3d-slope:${best.slope.toFixed(4)}`} data-diagram={data} data-inview>
+  <div class="dg-head"><button class="btn dg-toggle" type="button" aria-pressed="false" hidden>List view</button></div>
   <div class="dg-box">
     <ol class="stages" aria-label={label} data-reveal-group>
       {columns.map((c, i) => (
@@ -53,6 +69,32 @@ const slope = ((h720 - h896) / 176).toFixed(4);
   </div>
   <figcaption>{caption}</figcaption>
 </figure>
+<script is:inline>
+  // Before first paint: drop the reserved box where the 3D view can't run (Save-Data, no WebGL2,
+  // no IntersectionObserver; reduced motion never sets html.motion), and honour a stored choice
+  // of the list. Doing this in the deferred module would shift the page. Narrow figures need
+  // nothing: the reservation is behind a 720px container query.
+  (function (fig) {
+    var ok = document.documentElement.classList.contains('motion') && 'IntersectionObserver' in window && !(navigator.connection && navigator.connection.saveData);
+    if (ok) {
+      try {
+        var gl = document.createElement('canvas').getContext('webgl2');
+        ok = !!gl;
+        var lose = gl && gl.getExtension('WEBGL_lose_context');
+        if (lose) lose.loseContext();
+      } catch (e) { ok = false; }
+    }
+    if (!ok) { fig.classList.add('no-3d'); return; }
+    var list = false;
+    try { list = localStorage.getItem('arch3d-view') === 'list'; } catch (e) { /* storage blocked */ }
+    if (list) {
+      var btn = fig.querySelector('.dg-toggle');
+      fig.classList.add('is-list');
+      btn.setAttribute('aria-pressed', 'true');
+      btn.hidden = false;
+    }
+  })(document.currentScript.previousElementSibling);
+</script>
 
 <style>
   .dg { margin: 0; container: dg / inline-size; --flow-hi: color-mix(in srgb, var(--accent) 70%, #fff); }
@@ -143,52 +185,64 @@ const slope = ((h720 - h896) / 176).toFixed(4);
 </style>
 
 <script>
-  /* Gate for the 3D view: WebGL2, motion allowed, no Save-Data, IntersectionObserver, and a
-     figure at least 720px wide. The engine (and three.js) loads near the viewport, when idle. */
+  /* Loader for the 3D view. The inline script above has already ruled out Save-Data, missing
+     WebGL2 or IntersectionObserver (.no-3d) and applied a stored list choice (.is-list). This
+     adds the width rule (figure at least 720px, re-checked on resize), loads the engine (and
+     three.js) near the viewport when idle, and runs the "List view" toggle. */
   import type { Controller } from '../scripts/arch3d';
 
   const KEY = 'arch3d-view';
   const MIN_W = 720;
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-  const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
-  const hasWebGL = () => {
-    try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; }
-  };
-  const load = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
-  const save = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* storage blocked */ } };
+  const save = (v: string) => { try { localStorage.setItem(KEY, v); } catch { /* storage blocked */ } };
 
-  const figs = [...document.querySelectorAll<HTMLElement>('.arch3d')];
-  const can = !reduce.matches && !saveData && 'IntersectionObserver' in window && figs.length > 0 && hasWebGL();
-  for (const fig of figs) if (can) gate(fig); else fig.classList.add('no-3d');
+  for (const fig of document.querySelectorAll<HTMLElement>('.arch3d')) if (!fig.classList.contains('no-3d')) gate(fig);
 
   function gate(fig: HTMLElement) {
     const btn = fig.querySelector<HTMLButtonElement>('.dg-toggle')!;
-    let list = load(KEY) === 'list';
-    let near = false, wide = false, ctl: Controller | null = null, loading = false;
-    const label = () => {
-      btn.textContent = list ? 'Show 3D view' : 'Show as list';
+    let list = fig.classList.contains('is-list');
+    let near = false, wide = false, fits = false, failed = false, loading = false;
+    let ctl: Controller | null = null;
+    // The toggle is offered only where both views can actually be shown.
+    const sync = () => {
       btn.setAttribute('aria-pressed', String(list));
       fig.classList.toggle('is-list', list);
+      btn.hidden = failed || !(list || fits);
     };
-    // The reader's choice of the list needs no engine, so the button can show straight away.
-    if (list) { label(); btn.hidden = false; }
+    // When the board can't be shown, release its reserved box, but only while the figure is
+    // below the viewport (a shift there is never seen); otherwise the list stays in the box.
+    const giveUp = () => {
+      failed = true;
+      fig.dataset.arch3d = 'fallback';
+      ctl?.setActive(false);
+      if (fig.getBoundingClientRect().top > innerHeight) fig.classList.add('no-3d');
+      sync();
+    };
+    const onFit = (ok: boolean) => {
+      fits = ok;
+      if (!ok && !list) giveUp(); else sync();
+    };
     const apply = () => {
-      if (ctl && !ctl.disposed) ctl.setActive(wide && !list);
-      else if (near && wide && !list && !loading) mountNow();
+      if (failed) return;
+      if (ctl) ctl.setActive(wide && !list);
+      else if (near && wide && !list && !loading) void mountNow();
     };
     async function mountNow() {
       loading = true;
-      const { mount } = await import('../scripts/arch3d');
-      ctl = await mount(fig);
+      try {
+        const { mount } = await import('../scripts/arch3d');
+        ctl = await mount(fig, onFit);
+      } catch {
+        loading = false;
+        giveUp(); // e.g. a stale chunk after a deploy, or no WebGL context available
+        return;
+      }
       loading = false;
-      label();
-      btn.hidden = false;
       apply();
     }
     btn.addEventListener('click', () => {
       list = !list;
-      save(KEY, list ? 'list' : '3d');
-      label();
+      save(list ? 'list' : '3d');
+      sync();
       apply();
     });
     new ResizeObserver(() => {
@@ -198,14 +252,15 @@ const slope = ((h720 - h896) / 176).toFixed(4);
     const io = new IntersectionObserver((entries) => {
       if (!entries.some((e) => e.isIntersecting)) return;
       io.disconnect();
-      // Never compete with the page's own loading: start once the browser is idle.
+      // Never compete with the page's own loading: start 3s after load, once idle (shader
+      // compiles and the first frames are costly on machines without a GPU).
       const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: object) => void }).requestIdleCallback;
       const go = () => { near = true; apply(); };
-      if (idle) idle(go, { timeout: 2000 }); else setTimeout(go, 300);
+      const later = () => setTimeout(() => (idle ? idle(go, { timeout: 2000 }) : go()), 3000);
+      if (document.readyState === 'complete') later(); else addEventListener('load', later, { once: true });
     }, { rootMargin: '300px 0px' });
     io.observe(fig);
-    // Free the GPU context when the page is really unloaded; rebuild it if restored from bfcache.
+    // Free the GPU context when the page is really unloaded (not kept in the bfcache).
     addEventListener('pagehide', (e) => { if (!e.persisted) ctl?.dispose(); });
-    addEventListener('pageshow', (e) => { if (e.persisted && ctl?.disposed) { ctl = null; apply(); } });
   }
 </script>

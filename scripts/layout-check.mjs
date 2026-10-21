@@ -9,7 +9,9 @@
 // Then a second pass with motion on (WebGL through SwiftShader) for pages with a 3D architecture
 // diagram (.arch3d), once its view is ready:
 //   arch3d     labels overlap each other or leave the stage, the toggle is under 24px, the
-//              reserved box changes height when the view swaps in, or the view never gets ready
+//              page shifts (CLS >= 0.001), or the view never gets ready without a proper
+//              fallback (list shown, toggle hidden); also with a stored list choice and
+//              with WebGL disabled
 // Usage: npm run build && npm run check:layout [-- --url http://localhost:4321]
 // Exits non-zero if anything is found. Chromium: CHROMIUM_PATH or the Playwright cache.
 import { chromium } from 'playwright-core';
@@ -173,7 +175,8 @@ for (const path of pages) for (const w of widths) for (const scheme of schemes) 
 }
 await browser.close();
 
-// Motion-on pass for the 3D diagrams. `?settle` skips the build-in and packet cycles.
+// Motion-on pass for the 3D diagrams. `?settle` (a test hook in arch3d.ts) skips the build-in
+// and packet cycles.
 function audit3d() {
   const out = [];
   const fig = document.querySelector('.arch3d');
@@ -194,41 +197,86 @@ function audit3d() {
   return out;
 }
 const pages3d = pages.filter((p) => /class="[^"]*\barch3d\b/.test(readFileSync(join('dist', p, 'index.html'), 'utf8')));
-const gl = await chromium.launch({
+// Figure widths across the 3D range (720-896px) and the narrow side of it.
+const widths3d = [784, 832, 900, 940, 1366];
+const launch3d = (extra = []) => chromium.launch({
   ...(executablePath ? { executablePath } : { channel: 'chrome' }),
-  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', ...extra],
 });
-for (const path of pages3d) for (const w of [768, 1024, 1366]) for (const scheme of schemes) {
-  const page = await gl.newPage({ viewport: { width: w, height: 900 }, colorScheme: scheme });
+// Sums layout shifts (CLS) from the first paint, before any page script runs.
+const watchShifts = () => {
+  window.__cls = 0;
+  new PerformanceObserver((list) => {
+    for (const e of list.getEntries()) if (!e.hadRecentInput) window.__cls += e.value;
+  }).observe({ type: 'layout-shift', buffered: true });
+};
+const run3d = async (browser, { path, w, scheme, tag = '', init = [] }, check) => {
+  const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, colorScheme: scheme });
+  await ctx.addInitScript(watchShifts);
+  for (const fn of init) await ctx.addInitScript(fn);
+  const page = await ctx.newPage();
   await page.goto(`${base}${path}?settle`, { waitUntil: 'networkidle' });
   const report = (msg) => {
-    const key = `${path} arch3d: ${msg}`;
+    const key = `${path} arch3d${tag}: ${msg}`;
     findings.set(key, [...(findings.get(key) || []), `${w}${scheme === 'dark' ? 'd' : ''}`]);
   };
-  const before = await page.evaluate(() => {
+  const wide = await page.evaluate(() => {
     const fig = document.querySelector('.arch3d');
     fig.scrollIntoView({ block: 'center' });
-    return { wide: fig.clientWidth >= 720, h: fig.querySelector('.dg-box').getBoundingClientRect().height };
+    return fig.clientWidth >= 720;
   });
-  if (before.wide) {
-    try {
-      await page.waitForSelector('.arch3d[data-arch3d="ready"]', { timeout: 30000 });
-      const h = await page.evaluate(() => document.querySelector('.arch3d .dg-box').getBoundingClientRect().height);
-      if (Math.abs(h - before.h) > 1) report(`reserved box changed height (${before.h.toFixed(0)} -> ${h.toFixed(0)}px)`);
-      for (const f of await page.evaluate(audit3d)) report(f);
-    } catch {
-      report('3D view never became ready');
+  await check(page, wide, report);
+  const cls = await page.evaluate(() => window.__cls);
+  if (cls >= 0.001) report(`layout shift ${cls.toFixed(4)} (CLS must stay under 0.001)`);
+  await ctx.close();
+};
+const state3d = () => {
+  const fig = document.querySelector('.arch3d');
+  return { shown: fig.classList.contains('is-3d'), toggle: !fig.querySelector('.dg-toggle').hidden };
+};
+
+const gl = await launch3d();
+for (const path of pages3d) for (const w of widths3d) for (const scheme of schemes) {
+  await run3d(gl, { path, w, scheme }, async (page, wide, report) => {
+    if (!wide) {
+      if ((await page.evaluate(state3d)).shown) report('3D view shown in a figure narrower than 720px');
+      return;
     }
-  } else if (await page.evaluate(() => document.querySelector('.arch3d').classList.contains('is-3d'))) {
-    report('3D view shown in a figure narrower than 720px');
-  }
-  await page.close();
+    // Ready, or a legitimate fallback: the board didn't fit, so the list shows and no toggle is offered.
+    const settled = await page.waitForFunction(() => {
+      const fig = document.querySelector('.arch3d');
+      return fig.dataset.arch3d === 'ready' || (fig.dataset.arch3d === 'fallback' && !fig.classList.contains('is-3d') && fig.querySelector('.dg-toggle').hidden);
+    }, null, { timeout: 30000 }).then(() => true, () => false);
+    const st = await page.evaluate(state3d);
+    if (!settled) report(st.toggle ? '3D view never became ready, but the toggle is offered' : '3D view never became ready');
+    else if (st.shown) for (const f of await page.evaluate(audit3d)) report(f);
+    await page.waitForTimeout(300);
+  });
+}
+// A stored choice of the list: no shift, list shown, toggle offered to switch back.
+for (const path of pages3d) for (const w of [900, 1366]) {
+  await run3d(gl, { path, w, scheme: 'light', tag: ' (list preferred)', init: [() => localStorage.setItem('arch3d-view', 'list')] }, async (page, wide, report) => {
+    await page.waitForTimeout(2500);
+    const st = await page.evaluate(state3d);
+    if (st.shown) report('3D view shown although the list was chosen');
+    if (wide && !st.toggle) report('toggle missing in list mode');
+  });
 }
 await gl.close();
+// No WebGL at all: no shift, list shown, no toggle.
+const noGl = await launch3d(['--disable-3d-apis']);
+for (const path of pages3d) for (const w of [900, 1366]) {
+  await run3d(noGl, { path, w, scheme: 'light', tag: ' (no WebGL)' }, async (page, _wide, report) => {
+    await page.waitForTimeout(2500);
+    const st = await page.evaluate(state3d);
+    if (st.shown || st.toggle) report('3D view or its toggle shown without WebGL');
+  });
+}
+await noGl.close();
 if (server) await server.stop();
 
 if (!findings.size) {
-  console.log(`layout-check: clean (${pages.length} pages x ${widths.length} widths x ${schemes.length} schemes; 3D: ${pages3d.length} pages x 3 widths x ${schemes.length} schemes)`);
+  console.log(`layout-check: clean (${pages.length} pages x ${widths.length} widths x ${schemes.length} schemes; 3D: ${pages3d.length} pages x ${widths3d.length} widths x ${schemes.length} schemes, plus list-preferred and no-WebGL runs, CLS < 0.001)`);
 } else {
   for (const [k, where] of findings) console.log(`${k}  [${[...new Set(where)].join(', ')}]`);
   console.log(`\nlayout-check: ${findings.size} finding(s)`);

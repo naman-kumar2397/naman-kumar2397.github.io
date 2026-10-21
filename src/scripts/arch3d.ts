@@ -1,9 +1,10 @@
 /**
  * 3D view for src/components/Diagram.astro, loaded on demand: one board tilted away from the
- * viewer, a lane per stage (left to right), a low tile per component and flat glowing grooves
- * for the flow, with small packets travelling along them.
+ * viewer, a lane per stage (left to right), a card per component resting on the board (a soft
+ * contact shadow under it) and flat glowing grooves for the flow, with small packets travelling
+ * along them.
  *
- * The labels are HTML cards (crisp text, theme colours) positioned over the tiles; the canvas
+ * The cards are HTML (crisp text, theme colours) anchored to points on the board; the canvas
  * and the label layer are decorative (aria-hidden). The list in the figure stays the accessible
  * version and is shown whenever this view is not.
  *
@@ -15,19 +16,17 @@
  * hover, resize and theme changes. Unlit materials only; nothing renders while off screen.
  */
 import {
-  AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, EdgesGeometry, Float32BufferAttribute,
-  Group, InstancedMesh, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, NormalBlending, PerspectiveCamera,
-  Points, Scene, ShaderMaterial, Sphere, Vector3, WebGLRenderer,
+  AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, Float32BufferAttribute, Group,
+  InstancedBufferAttribute, InstancedMesh, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, NormalBlending,
+  PerspectiveCamera, PlaneGeometry, Points, Scene, ShaderMaterial, Sphere, Vector3, WebGLRenderer,
 } from 'three';
 
 type Data = { stages: { title: string; nodes: { label: string; detail?: string }[] }[] };
-type Node = { stage: number; index: number; x: number; z: number; w: number; d: number; lift: number; dim: number; el: HTMLElement; cw: number; ch: number };
+type Node = { stage: number; index: number; x: number; z: number; w: number; d: number; y: number; lift: number; dim: number; el: HTMLElement; cw: number; ch: number };
 type Groove = { from: number; to: number; t: number; pts: Vector3[]; len: number; core: Mesh; glow: Mesh; level: number };
 type Trip = { path: Groove[]; t0: number; dur: number };
 
 export type Controller = { settle(): void; dispose(): void; setActive(on: boolean): boolean; disposed: boolean };
-
-declare global { interface Window { __arch3dSettle?: () => void } }
 
 // World units. The board lies in the x/z plane (y up); stages run along +x, the near edge is +z.
 const TILT = 30; // degrees the board leans back from facing the viewer
@@ -37,12 +36,11 @@ const GAP = 0.8; // between lanes: where grooves bend and hubs sit
 const MARGIN = 0.22; // board border around the lanes
 const BOARD_T = 0.22;
 const LANE_T = 0.012;
-const TILE_H = 0.09;
+const CARD_Y = 0.02; // cards rest just above the lane surface
 const LIFT = 0.16;
 // Pixels (cards are HTML, so spacing is measured on screen).
 const FIT_PX = 2;
-const LANE_PAD_PX = 7;
-const RIM_PX = 5;
+const LANE_PAD_PX = 10;
 const TILE_GAP_PX = 12;
 const TOP_PX = 14;
 const CHIP_GAP_PX = 12;
@@ -58,11 +56,13 @@ const inOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2,
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 const WHITE = new Color(1, 1, 1);
 
-export async function mount(fig: HTMLElement): Promise<Controller> {
+/** `onFit` hears whether the board fits its reserved box, after every layout while shown. */
+export async function mount(fig: HTMLElement, onFit: (fits: boolean) => void): Promise<Controller> {
   const data: Data = JSON.parse(fig.dataset.diagram!);
   const scene3d = fig.querySelector<HTMLElement>('.scene')!;
   const canvas = scene3d.querySelector<HTMLCanvasElement>('canvas')!;
   const layer = scene3d.querySelector<HTMLElement>('.labels')!;
+  // Test hook: `?settle` skips the build-in and packet cycles (used by npm run check:layout).
   const settleParam = new URLSearchParams(location.search).has('settle');
   const dark = matchMedia('(prefers-color-scheme: dark)');
   const fine = matchMedia('(hover: hover) and (pointer: fine)');
@@ -76,7 +76,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
 
   // ---- Colours, from the page's tokens (the site follows prefers-color-scheme only).
   const css = (v: string) => new Color(getComputedStyle(fig).getPropertyValue(v).trim() || '#888');
-  const col = {} as Record<'bg' | 'panel' | 'border' | 'accent' | 'text' | 'boardFar' | 'boardNear' | 'boardSide' | 'lane' | 'laneEdge' | 'tile' | 'tileEdge', Color>;
+  const col = {} as Record<'bg' | 'panel' | 'border' | 'accent' | 'text' | 'boardFar' | 'boardNear' | 'boardSide' | 'lane' | 'laneEdge', Color>;
   const readColours = () => {
     const bg = css('--bg'), panel = css('--panel'), border = css('--border'), accent = css('--accent'), text = css('--text');
     const d = dark.matches;
@@ -87,8 +87,6 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
       boardSide: panel.clone().lerp(border, d ? 0.45 : 0.75),
       lane: d ? panel.clone().lerp(border, 0.1) : panel.clone().lerp(border, 0.2),
       laneEdge: d ? panel.clone().lerp(border, 0.7) : panel.clone().lerp(border, 0.85),
-      tile: d ? panel.clone().lerp(border, 0.45) : panel.clone().lerp(border, 0.45),
-      tileEdge: d ? border.clone().lerp(text, 0.12) : border.clone().lerp(text, 0.08),
     });
   };
   readColours();
@@ -120,7 +118,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
   const laneEdges = new LineSegments(laneEdgeGeo, new LineBasicMaterial({ vertexColors: true }));
   rig.add(laneEdges);
 
-  // ---- Tiles: instanced boxes, shaded per face (top lighter than the sides), with merged outlines.
+  // ---- Cards (HTML) and stage chips.
   const nodes: Node[] = [];
   data.stages.forEach((s, si) => s.nodes.forEach((nd, ni) => {
     const el = document.createElement('div');
@@ -130,7 +128,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     if (nd.detail) el.lastElementChild!.textContent = nd.detail;
     el.dataset.i = String(nodes.length);
     layer.append(el);
-    nodes.push({ stage: si, index: ni, x: 0, z: 0, w: 1, d: 1, lift: 0, dim: 0, el, cw: 0, ch: 0 });
+    nodes.push({ stage: si, index: ni, x: 0, z: 0, w: 1, d: 1, y: 0, lift: 0, dim: 0, el, cw: 0, ch: 0 });
   }));
   const chips = data.stages.map((s, i) => {
     const el = document.createElement('div');
@@ -139,33 +137,45 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     layer.append(el);
     return el;
   });
-  const tileGeo = new BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
-  {
-    const nrm = tileGeo.attributes.normal;
-    const shade = new Float32Array(nrm.count * 3);
-    for (let i = 0; i < nrm.count; i++) {
-      const v = nrm.getY(i) > 0.5 ? 1 : nrm.getZ(i) > 0.5 ? 0.9 : 0.8;
-      shade.set([v, v, v], i * 3);
-    }
-    tileGeo.setAttribute('color', new Float32BufferAttribute(shade, 3));
-  }
-  const tiles = new InstancedMesh(tileGeo, new MeshBasicMaterial({ vertexColors: true }), nodes.length);
-  rig.add(tiles);
-  const unitBox = new BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
-  const unitEdgeGeo = new EdgesGeometry(unitBox);
-  const unitEdges = unitEdgeGeo.attributes.position;
-  unitBox.dispose();
-  const tileEdgeGeo = new BufferGeometry();
-  tileEdgeGeo.setAttribute('position', new Float32BufferAttribute(new Float32Array(nodes.length * unitEdges.count * 3), 3));
-  tileEdgeGeo.setAttribute('color', new Float32BufferAttribute(new Float32Array(nodes.length * unitEdges.count * 3), 3));
-  const tileEdges = new LineSegments(tileEdgeGeo, new LineBasicMaterial({ vertexColors: true }));
-  rig.add(tileEdges);
+
+  // ---- Contact shadows: one soft rounded rectangle under each card, so it reads as resting on
+  // the board (a flat card over a perspective box never lines up exactly). Spread grows on lift.
+  const shadowGeo = new PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+  shadowGeo.setAttribute('aRect', new InstancedBufferAttribute(new Float32Array(nodes.length * 4), 4));
+  const shadowMat = new ShaderMaterial({
+    uniforms: { uColor: { value: new Color(0, 0, 0) } },
+    transparent: true,
+    depthWrite: false,
+    vertexShader: /* glsl */ `
+      attribute vec4 aRect; // half width, half depth, blur (world units), opacity
+      varying vec2 vP;
+      varying vec4 vRect;
+      void main() {
+        vRect = aRect;
+        vP = (uv - 0.5) * 2.0 * (aRect.xy + aRect.z);
+        gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uColor;
+      varying vec2 vP;
+      varying vec4 vRect;
+      void main() {
+        vec2 q = abs(vP) - vRect.xy + vRect.z * 0.5;
+        float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - vRect.z * 0.5;
+        gl_FragColor = vec4(uColor, vRect.w * (1.0 - smoothstep(-vRect.z, vRect.z, d)));
+        #include <colorspace_fragment>
+      }`,
+  });
+  const shadows = new InstancedMesh(shadowGeo, shadowMat, nodes.length);
+  shadows.renderOrder = 1;
+  shadows.frustumCulled = false;
+  rig.add(shadows);
 
   // ---- Grooves (rebuilt on layout), hubs and packets.
   const grooveGroup = new Group();
   rig.add(grooveGroup);
   let grooves: Groove[] = [];
-  const hubMat = new MeshBasicMaterial({ transparent: true, depthWrite: false });
+  let hubs: { t: number; mesh: Mesh<CircleGeometry, MeshBasicMaterial> }[] = [];
   const hubGeo = new CircleGeometry(1, 24).rotateX(-Math.PI / 2);
   const viaHub = (t: number) => data.stages[t].nodes.length > 1 && data.stages[t + 1].nodes.length > 1;
 
@@ -212,7 +222,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     pMat.needsUpdate = true;
     pUniforms.uColor.value.copy(col.accent);
     pUniforms.uCore.value.copy(col.accent).lerp(WHITE, d ? 0.55 : 0); // a hot core reads as glow on dark
-    hubMat.color.copy(col.accent);
+    for (const h of hubs) h.mesh.material.color.copy(col.accent);
     for (const g of grooves) {
       (g.core.material as MeshBasicMaterial).color.copy(col.accent);
       const gm = g.glow.material as MeshBasicMaterial;
@@ -222,7 +232,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     }
   };
 
-  // ---- Layout: cards are measured, tiles sized to sit just under them, camera fitted to the box.
+  // ---- Layout: cards are measured and stacked on the board, camera fitted to the box.
   let W = 0, H = 0, D = 6, ok = false;
   const BW = n * LANE_W + (n - 1) * GAP;
   const laneX = (i: number) => -BW / 2 + i * (LANE_W + GAP) + LANE_W / 2;
@@ -264,20 +274,19 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     rig.updateMatrixWorld();
     renderer.setSize(W, H, false);
     const stacks: number[] = new Array(n).fill(0);
-    let chipZ = 0;
-    for (let iter = 0; iter < 4; iter++) {
+        for (let iter = 0; iter < 4; iter++) {
       fit();
       // Card widths follow the lane's width on screen at the card's depth (board centre at first).
       stacks.fill(0);
       let maxChip = 0;
       for (const nd of nodes) {
         const z = iter === 0 ? 0 : nd.z;
-        const cw = Math.floor(LANE_W * sx(z) - 2 * (LANE_PAD_PX + RIM_PX));
+        const cw = Math.floor(LANE_W * sx(z) - 2 * LANE_PAD_PX);
         if (cw !== nd.cw) { nd.el.style.width = `${cw}px`; nd.cw = cw; }
       }
       chips.forEach((c) => {
         c.style.width = '';
-        c.style.maxWidth = `${Math.floor(LANE_W * sx(D / 2) - 2 * LANE_PAD_PX)}px`;
+        c.style.maxWidth = `${Math.floor(LANE_W * sx(Number(c.dataset.z ?? 0)) - 2 * LANE_PAD_PX)}px`;
         // A wrapped title keeps its box as wide as its longest line, not the whole lane.
         const r = document.createRange();
         r.selectNodeContents(c);
@@ -287,24 +296,25 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
       });
       for (const nd of nodes) nd.ch = nd.el.offsetHeight;
       const k = sz(0);
-      // Stack each lane's tiles along z (first component farthest), then size the board to the tallest lane.
+      // Stack each lane's cards along z (first component farthest), then size the board to the tallest lane.
       for (const nd of nodes) {
-        nd.d = (nd.ch + 2 * RIM_PX) / k;
+        nd.d = nd.ch / k;
         stacks[nd.stage] += nd.d + (nd.index ? TILE_GAP_PX / k : 0);
       }
       const top = TOP_PX / k, chip = (CHIP_GAP_PX + maxChip + BOTTOM_PX) / k;
       const content = Math.max(...stacks);
       D = top + content + chip;
       const farZ = -D / 2 + top;
-      chipZ = D / 2 - chip + CHIP_GAP_PX / k;
       for (let s = 0; s < n; s++) {
         let z = farZ + (content - stacks[s]) / 2;
         for (const nd of nodes.filter((q) => q.stage === s)) {
           nd.z = z + nd.d / 2;
           nd.x = laneX(s);
-          nd.w = (nd.cw + 2 * RIM_PX) / sx(nd.z);
+          nd.w = nd.cw / sx(nd.z);
           z += nd.d + TILE_GAP_PX / k;
         }
+        // Each lane's title sits just below its own lowest card.
+        chips[s].dataset.z = String(z - TILE_GAP_PX / k + CHIP_GAP_PX / k);
       }
     }
     // Centre the board vertically in the box (shifting the view keeps the perspective).
@@ -312,7 +322,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     const bottom = project(BW / 2 + MARGIN, -BOARD_T, D / 2 + MARGIN).y;
     camera.setViewOffset(W, H, 0, Math.round((top + bottom) / 2 - H / 2), W, H);
     camera.updateProjectionMatrix();
-    chips.forEach((c, i) => { c.dataset.x = String(laneX(i) - LANE_W / 2 + LANE_PAD_PX / sx(chipZ)); c.dataset.z = String(chipZ); });
+    chips.forEach((c, i) => { c.dataset.x = String(laneX(i) - LANE_W / 2 + LANE_PAD_PX / sx(Number(c.dataset.z))); });
 
     board.scale.set(BW + 2 * MARGIN, BOARD_T, D + 2 * MARGIN);
     const m = new Matrix4();
@@ -329,7 +339,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     lp.needsUpdate = true;
     buildGrooves();
     applyTheme();
-    return (bottom - top) <= H - 8;
+    return bottom - top <= H - 2;
   };
 
   const curve = (x0: number, z0: number, x1: number, z1: number) => {
@@ -375,8 +385,10 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
       g.core.geometry.dispose(); g.glow.geometry.dispose();
       (g.core.material as MeshBasicMaterial).dispose(); (g.glow.material as MeshBasicMaterial).dispose();
     }
+    for (const h of hubs) h.mesh.material.dispose();
     grooveGroup.clear();
     grooves = [];
+    hubs = [];
     const k = sx(0);
     const add = (from: number, to: number, t: number, x0: number, z0: number, x1: number, z1: number) => {
       const pts = curve(x0, z0, x1, z1);
@@ -399,11 +411,12 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
       const hz = [...a, ...b].reduce((s, q) => s + q.z, 0) / (a.length + b.length);
       for (const u of a) add(nodes.indexOf(u), -1 - t, t, right(u), u.z, hx, hz);
       for (const w of b) add(-1 - t, nodes.indexOf(w), t, hx, hz, left(w), w.z);
-      const hub = new Mesh(hubGeo, hubMat);
+      const hub = new Mesh(hubGeo, new MeshBasicMaterial({ transparent: true, depthWrite: false }));
       hub.position.set(hx, LANE_T + 0.006, hz);
       hub.scale.setScalar(3.5 / k);
       hub.renderOrder = 2;
       grooveGroup.add(hub);
+      hubs.push({ t, mesh: hub });
     }
   };
 
@@ -415,24 +428,18 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
   let trips: Trip[] = [];
   let focus = -1;
 
-  const pathsFrom = (i: number) => {
+  // Paths leaving / reaching a component. With `own`, a path through a hub stops at the hub: the
+  // bundle says the whole stage feeds the next, not which component feeds which.
+  const pathsFrom = (i: number, own = false) => {
     const out: Groove[][] = [];
     for (const g of grooves) {
       if (g.from !== i) continue;
-      if (g.to >= 0) out.push([g]);
+      if (g.to >= 0 || own) out.push([g]);
       else for (const h of grooves) if (h.from === g.to) out.push([g, h]);
     }
     return out;
   };
-  const pathsInto = (i: number) => {
-    const out: Groove[][] = [];
-    for (const g of grooves) {
-      if (g.to !== i) continue;
-      if (g.from >= 0) out.push([g]);
-      else for (const h of grooves) if (h.to === g.from) out.push([h, g]);
-    }
-    return out;
-  };
+  const pathsInto = (i: number) => grooves.filter((g) => g.to === i).map((g) => [g]);
   // One cycle: a wave left to right. A single component fans out to all its targets at once;
   // through a hub each component sends one packet on to one of the next stage's components.
   const cycle = (t0: number) => {
@@ -447,21 +454,10 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     }
   };
 
-  const related = (i: number, j: number) => {
-    if (i === j) return true;
-    const a = nodes[i], b = nodes[j];
-    if (Math.abs(a.stage - b.stage) !== 1) return false;
-    const t = Math.min(a.stage, b.stage);
-    return viaHub(t) || data.stages[a.stage].nodes.length === 1 || data.stages[b.stage].nodes.length === 1;
-  };
-  const grooveTouches = (g: Groove, i: number) => {
-    if (g.from === i || g.to === i) return true;
-    // The other half of a hub bundle the focused component feeds or is fed by.
-    const st = nodes[i].stage;
-    if (g.from < 0 && g.t === st && viaHub(st)) return true;
-    if (g.to < 0 && g.t === st - 1 && viaHub(st - 1)) return true;
-    return false;
-  };
+  // Components joined by a direct groove (never across a hub).
+  const related = (i: number, j: number) => i === j || grooves.some((g) => (g.from === i && g.to === j) || (g.from === j && g.to === i));
+  const grooveTouches = (g: Groove, i: number) => g.from === i || g.to === i;
+  const hubTouches = (t: number, i: number) => nodes[i].stage === t || nodes[i].stage === t + 1;
 
   const setFocus = (i: number) => {
     if (i === focus) return;
@@ -470,7 +466,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     nodes.forEach((nd, j) => nd.el.classList.toggle('on', i === j));
     chips.forEach((c) => c.classList.toggle('dim', i >= 0));
     if (i >= 0) {
-      const inc = pathsInto(i), out = pathsFrom(i);
+      const inc = pathsInto(i), out = pathsFrom(i, true);
       for (const p of inc) trips.push({ path: p, t0: time, dur: TRAVEL * p.length * 0.6 });
       for (const p of out) trips.push({ path: p, t0: time + (inc.length ? 0.55 : 0), dur: TRAVEL * p.length * 0.6 });
     }
@@ -478,7 +474,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
   };
 
   // ---- Per-frame drawing.
-  const tmpC = new Color(), edgeC = new Color();
+  const tmpC = new Color();
   const m4 = new Matrix4();
   const grooveTarget = (g: Groove) => (focus < 0 ? 1 : grooveTouches(g, focus) ? 2 : 0);
   const approach = (cur: number, target: number, dt: number, rate = 12) => {
@@ -506,8 +502,9 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     lc.needsUpdate = true;
     if (lanes.instanceColor) lanes.instanceColor.needsUpdate = true;
 
-    // Tiles drop in by stage, then lift and dim with focus.
-    const tp = tileEdgeGeo.attributes.position as BufferAttribute, tc = tileEdgeGeo.attributes.color as BufferAttribute;
+    // Cards drop in by stage, then lift and dim with focus; their shadows follow.
+    const rect = shadowGeo.attributes.aRect as InstancedBufferAttribute;
+    const shadowA = d ? 0.7 : 0.2;
     nodes.forEach((nd, i) => {
       const p = buildDone ? 1 : ease((time - 0.32 - nd.stage * 0.13 - nd.index * 0.04) / 0.45);
       const liftT = focus === i ? 1 : 0;
@@ -515,24 +512,16 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
       nd.lift = approach(nd.lift, liftT, dt);
       nd.dim = approach(nd.dim, dimT, dt);
       if (nd.lift !== liftT || nd.dim !== dimT) busy = true;
-      const y = LANE_T + (1 - p) * 0.4 + nd.lift * LIFT;
-      m4.makeScale(nd.w, TILE_H, nd.d).setPosition(nd.x, y, nd.z);
-      tiles.setMatrixAt(i, m4);
-      const fade = p * (1 - nd.dim * 0.65);
-      tiles.setColorAt(i, tmpC.lerpColors(col.lane, col.tile, fade));
-      const ec = edgeC.lerpColors(col.lane, col.tileEdge, fade);
-      const base = i * unitEdges.count;
-      for (let j = 0; j < unitEdges.count; j++) {
-        v.fromBufferAttribute(unitEdges, j).applyMatrix4(m4);
-        tp.setXYZ(base + j, v.x, v.y, v.z);
-        tc.setXYZ(base + j, ec.r, ec.g, ec.b);
-      }
+      const h = (nd.y = (1 - p) * 0.4 + nd.lift * LIFT); // height above the board
+      const px = 1 / sx(nd.z); // one screen pixel in world units here
+      const blur = (7 + h * 40) * px;
+      m4.makeScale(nd.w + 2 * blur, 1, nd.d + 2 * blur).setPosition(nd.x, LANE_T + 0.003, nd.z + 4 * px);
+      shadows.setMatrixAt(i, m4);
+      rect.setXYZW(i, nd.w / 2, nd.d / 2, blur, shadowA * p * (1 - nd.dim * 0.6) * (1 - nd.lift * 0.25));
       if (!buildDone) nd.el.style.opacity = String(p);
     });
-    tiles.instanceMatrix.needsUpdate = true;
-    if (tiles.instanceColor) tiles.instanceColor.needsUpdate = true;
-    tp.needsUpdate = true;
-    tc.needsUpdate = true;
+    shadows.instanceMatrix.needsUpdate = true;
+    rect.needsUpdate = true;
 
     // Grooves draw along their curve, stage by stage; the focused component's brighten.
     for (const g of grooves) {
@@ -549,7 +538,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
       (g.core.material as MeshBasicMaterial).opacity = coreA;
       (g.glow.material as MeshBasicMaterial).opacity = glowA;
     }
-    hubMat.opacity = (buildDone ? 1 : ease((time - 0.8) / 0.4)) * (focus >= 0 ? 0.5 : 0.9);
+    for (const hb of hubs) hb.mesh.material.opacity = (buildDone ? 1 : ease((time - 0.8) / 0.4)) * (focus < 0 ? 0.9 : hubTouches(hb.t, focus) ? 1 : 0.3);
 
     // Packets.
     if (buildDone && cyclesLeft > 0 && time >= nextCycle) {
@@ -588,7 +577,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
   // Labels follow their anchors on whole pixels.
   const placeLabels = () => {
     for (const nd of nodes) {
-      const p = project(nd.x, LANE_T + TILE_H + nd.lift * LIFT, nd.z);
+      const p = project(nd.x, CARD_Y + nd.y, nd.z);
       nd.el.style.visibility = p.behind ? 'hidden' : '';
       nd.el.style.transform = `translate3d(${Math.round(p.x - nd.cw / 2)}px, ${Math.round(p.y - nd.ch / 2)}px, 0)`;
     }
@@ -630,14 +619,14 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
     fig.dataset.arch3d = 'ready';
   };
 
-  // ---- Interaction (fine pointer only): hover a card or a tile.
+  // ---- Interaction (fine pointer only): hover a card or its footprint on the board.
   const hit = (e: PointerEvent) => {
     const card = (e.target as HTMLElement).closest<HTMLElement>('.a3-card');
     if (card) return Number(card.dataset.i);
     const r = scene3d.getBoundingClientRect();
     const nx = ((e.clientX - r.left) / W) * 2 - 1, ny = 1 - ((e.clientY - r.top) / H) * 2;
     const o = camera.position, dir = new Vector3(nx, ny, 0.5).unproject(camera).sub(o).normalize();
-    const y0 = LANE_T + TILE_H;
+    const y0 = CARD_Y;
     if (Math.abs(dir.y) < 1e-6) return -1;
     const s = (y0 - o.y) / dir.y, hx = o.x + dir.x * s, hz = o.z + dir.z * s;
     return nodes.findIndex((nd) => Math.abs(hx - nd.x) <= nd.w / 2 && Math.abs(hz - nd.z) <= nd.d / 2);
@@ -658,6 +647,7 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
   const show = () => {
     ok = layout();
     fig.classList.toggle('is-3d', ok);
+    onFit(ok);
     if (ok) renderOnce();
     return ok;
   };
@@ -698,7 +688,6 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
         const mats = Array.isArray(m.material) ? m.material : m.material ? [m.material] : [];
         mats.forEach((x) => x.dispose());
       });
-      unitEdgeGeo.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
       layer.replaceChildren();
@@ -708,9 +697,14 @@ export async function mount(fig: HTMLElement): Promise<Controller> {
   };
 
   // Compile shaders before the build-in, so its first frames don't stall.
+  // One material at a time with a yield in between, so no single task blocks the page for long
+  // (without KHR_parallel_shader_compile each compile is synchronous).
+  const yieldTask = () => new Promise((r) => setTimeout(r, 0));
   layout();
-  await renderer.compileAsync(scene, camera);
-  const prev = window.__arch3dSettle;
-  window.__arch3dSettle = () => { prev?.(); if (active) settle(); };
+  for (const o of [board, lanes, laneEdges, shadows, packets, ...grooveGroup.children]) {
+    await yieldTask();
+    await renderer.compileAsync(o, camera, scene);
+  }
+  await yieldTask();
   return ctl;
 }

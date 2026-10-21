@@ -157,5 +157,4 @@ export function start(fig: HTMLElement, reduce: MediaQueryList) {
 
   renderer.render(scene, camera);
   fig.classList.add('live');
-  countEl.hidden = false;
 }

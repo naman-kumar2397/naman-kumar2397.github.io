@@ -61,7 +61,7 @@ const config = JSON.stringify({ sources: sources.map((s) => ({ rate: s.rate, y: 
     {sources.map((s, i) => (
       <>{i > 0 && ' and '}about {fmt(s.rate)} a second from {s.label} ({s.org}, {s.display})</>
     ))}, both into {visual.sink}.
-    <span class="count" aria-hidden="true" hidden></span>
+    <span class="count" aria-hidden="true"></span>
   </figcaption>
 </figure>
 
@@ -107,7 +107,11 @@ const config = JSON.stringify({ sources: sources.map((s) => ({ rate: s.rate, y: 
   }
 
   figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
-  .count { display: block; margin-top: 2px; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--text); }
+  /* The counter's line is reserved whenever the animation may start (html.motion), so revealing it
+     never shifts the page; without motion it takes no space. */
+  .count { display: none; margin-top: 2px; min-height: 1.5em; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--text); visibility: hidden; }
+  :global(html.motion) .count { display: block; }
+  .ls.live .count { visibility: visible; }
 </style>
 
 <script>

@@ -172,10 +172,12 @@ const jsonLd = [
   .orb { width: 28px; height: 28px; margin: -5px -2px; vertical-align: middle; }
   .headline { font-size: clamp(17px, 4vw, 20px); font-weight: 600; color: var(--accent); margin: 8px 0 0; }
   .overview { font-size: 16px; margin: 12px 0 0; max-width: 70ch; }
-  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); margin: 24px 0 0; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  /* Wrapping rows whose last-row cells stretch to fill the row, so an odd count never leaves an
+     empty outlined cell. */
+  .facts { display: flex; flex-wrap: wrap; margin: 24px 0 0; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
   /* Dividers drawn per cell (right and bottom edges), clipped by the rounded container, so a
      short last row never leaves empty grey filler cells. */
-  .facts div { background: var(--panel); padding: 12px 14px; box-shadow: 1px 0 0 var(--border), 0 1px 0 var(--border); }
+  .facts div { flex: 1 1 200px; min-width: 0; background: var(--panel); padding: 12px 14px; box-shadow: 1px 0 0 var(--border), 0 1px 0 var(--border); }
   .public { margin: 10px 0 0; font-size: 14px; }
   .public a { display: inline-flex; min-height: 32px; align-items: center; gap: 4px; }
   .media { margin: 24px 0 0; }

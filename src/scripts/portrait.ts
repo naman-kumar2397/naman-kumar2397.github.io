@@ -58,8 +58,11 @@ export function initPortrait(wrap: HTMLElement) {
     off.width = off.height = size;
     const o = off.getContext('2d', { willReadFrequently: true });
     if (!o) return false;
-    const nw = src.naturalWidth, nh = src.naturalHeight, s = Math.min(nw, nh);
-    o.drawImage(src, (nw - s) / 2, (nh - s) / 2, s, s, 0, 0, size, size);
+    // Cover-crop by drawing the WHOLE image into a destination rect (no source rect), so the
+    // result never depends on what the browser reports as the natural size, only on the ratio.
+    const ratio = (src.naturalWidth || 1) / (src.naturalHeight || 1);
+    const dw = ratio >= 1 ? size * ratio : size, dh = ratio >= 1 ? size : size / ratio;
+    o.drawImage(src, (size - dw) / 2, (size - dh) / 2, dw, dh);
     let data: Uint8ClampedArray;
     try { data = o.getImageData(0, 0, size, size).data; } catch { return false; }
     const pts: Pick<Dot, 'tx' | 'ty' | 'r' | 'g' | 'b'>[] = [];

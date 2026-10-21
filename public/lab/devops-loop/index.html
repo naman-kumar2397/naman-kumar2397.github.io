@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<!-- Prototype for review, not linked from the site. Source: built in the portfolio session; will move into src/ when approved. -->
+<title>DevOps Loop</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* Layout: a pinned particle infinity loop inside a tall scroll track. Dev half orange, Ops half
+     blue. The stage card lives inside the active half and emerges from that stage's orb. */
+  :root {
+    --bg: #ffffff;
+    --panel: #f6f8fa;
+    --border: #d1d9e0;
+    --text: #1f2328;
+    --muted: #59636e;
+    --dev: #bc4c00;
+    --ops: #0969da;
+    --glass: rgba(246, 248, 250, .78);
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0d1117; --panel: #151b23; --border: #3d444d; --text: #f0f6fc; --muted: #9198a1; --dev: #f0883e; --ops: #4493f8; --glass: rgba(21, 27, 35, .72); color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1117; --panel: #151b23; --border: #3d444d; --text: #f0f6fc; --muted: #9198a1; --dev: #f0883e; --ops: #4493f8; --glass: rgba(21, 27, 35, .72); color-scheme: dark; }
+
+  body {
+    background: var(--bg); color: var(--text); font-family: var(--sans);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  .intro, .outro { padding-block: 56px 24px; max-width: 64ch; }
+  .outro { padding-block: 40px 72px; }
+  .kicker { font: 12px/1.5 var(--mono); color: var(--muted); margin: 0 0 6px; }
+  h1 { margin: 0; font-size: clamp(24px, 4vw, 32px); font-weight: 650; letter-spacing: -0.015em; text-wrap: balance; }
+  .intro p, .outro p { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 10px 0 0; }
+
+  .track { position: relative; height: calc(9 * 70vh); }
+  .pin { position: sticky; top: env(safe-area-inset-top, 0px); height: 100vh; min-height: 560px; display: grid; align-content: center; gap: 14px; }
+
+  .loop { position: relative; width: 100%; aspect-ratio: 2.1 / 1; perspective: 900px; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .tag {
+    position: absolute; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: none;
+    font: 600 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+    transition: color .25s;
+  }
+  .tag.dev.on { color: var(--dev); }
+  .tag.ops.on { color: var(--ops); }
+  .half { position: absolute; transform: translate(-50%, -50%); font: 600 14px/1 var(--mono); letter-spacing: .1em; opacity: .6; pointer-events: none; }
+  .half.dev { color: var(--dev); }
+  .half.ops { color: var(--ops); }
+
+  /* The card: frosted glass floating in the active half. */
+  .card {
+    position: absolute; left: 0; top: 0; width: var(--cw, 300px); box-sizing: border-box;
+    transform-origin: 50% 50%; will-change: transform, opacity;
+    background: var(--glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid color-mix(in srgb, var(--c) 45%, var(--border)); border-radius: 10px;
+    box-shadow: 0 18px 40px -18px rgba(1, 4, 9, .45), 0 0 0 1px color-mix(in srgb, var(--c) 10%, transparent);
+    padding: 14px 16px; cursor: pointer; text-align: left; color: var(--text); font: inherit;
+    display: grid; gap: 8px;
+  }
+  .card:focus-visible { outline: 2px solid var(--c); outline-offset: 2px; }
+  .card .step { font: 11px/1.4 var(--mono); color: var(--muted); margin: 0; }
+  .card h2 { margin: 0; font-size: 19px; font-weight: 650; display: flex; align-items: center; gap: 8px; }
+  .swatch { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 22%, transparent); flex: none; }
+  .card .what { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 0; padding: 0; list-style: none; }
+  .chips li { font-size: 12px; line-height: 20px; padding: 0 9px; border-radius: 999px; color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); border: 1px solid color-mix(in srgb, var(--c) 28%, transparent); }
+  .more { display: flex; align-items: center; gap: 6px; font: 500 12px/1 var(--mono); color: var(--c); margin: 2px 0 0; }
+  .more .chev { display: inline-block; transition: transform .2s; }
+  .card[aria-expanded="true"] .more .chev { transform: rotate(90deg); }
+  .did { display: none; margin: 0; padding-left: 16px; gap: 6px; font-size: 13px; line-height: 1.45; }
+  .card[aria-expanded="true"] .did { display: grid; }
+  .did b { font-weight: 600; }
+
+  .stages { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0; padding: 0; list-style: none; }
+  .stages button {
+    font: 500 12px/1 var(--mono); color: var(--muted); background: transparent; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 999px; padding: 7px 11px; min-height: 28px;
+  }
+  .stages button[aria-current="step"] { color: var(--c); border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, transparent); }
+  .stages button:focus-visible { outline: 2px solid var(--ops); outline-offset: 2px; }
+  .hint { text-align: center; font: 12px/1.4 var(--mono); color: var(--muted); margin: 0; transition: opacity .3s; }
+
+  /* Narrow screens: the card settles in a slot under the loop (still emerging from its orb). */
+  .slot { display: none; position: relative; min-height: 220px; perspective: 900px; }
+  @media (max-width: 759px) {
+    .loop { aspect-ratio: 1.75 / 1; }
+    .slot { display: block; }
+  }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <section class="intro">
+    <p class="kicker">prototype · skills section</p>
+    <h1>Where I have worked across the DevOps loop</h1>
+    <p>Scroll to move through the loop. The stage you are on lights up and its card rises out of that stage. Click a card to see what I did there. Every item comes from the resume on the portfolio.</p>
+  </section>
+
+  <section class="track" id="track">
+    <div class="pin">
+      <div class="loop" id="loop">
+        <canvas id="c" aria-hidden="true"></canvas>
+        <span class="half dev" id="half-dev" aria-hidden="true">DEV</span>
+        <span class="half ops" id="half-ops" aria-hidden="true">OPS</span>
+      </div>
+      <div class="slot" id="slot"></div>
+      <ul class="stages" id="stages" aria-label="DevOps stages"></ul>
+      <p class="hint" id="hint">Scroll to move around the loop</p>
+    </div>
+  </section>
+
+  <section class="outro">
+    <p class="kicker">end of loop</p>
+    <p>Monitoring feeds the next round of planning, which is why the loop never closes. On the portfolio this would replace the logo carousel in Skills, with the full inventory still one click away.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  // --- content: grouped by stage; every item comes from the portfolio's resume data ---
+  const STAGES = [
+    { name: 'Plan', half: 'dev', what: 'Intake, standards and change control before work starts.',
+      tools: ['Jira', 'ServiceNow', 'SLIs / SLOs', 'Change requests'],
+      work: [['Support model', 'Streamlined intake for all additional workloads through ServiceNow at Latitude.'],
+             ['Change management', 'Defined Change Request standards and automated approvals at AKQA.'],
+             ['Reliability standards', 'Owned SLI/SLO and instrumentation standards for Java microservices at Cvent.']] },
+    { name: 'Code', half: 'dev', what: 'Automation and tooling, written and reviewed in version control.',
+      tools: ['Python', 'TypeScript', 'Groovy', 'Shell', 'PowerShell', 'GitHub', 'Bitbucket', 'MCP'],
+      work: [['Alfred', 'Multi-agent incident investigator, from local prototype to production on Bedrock AgentCore.'],
+             ['Incident automation', 'Python and AWS Lambda workflow integrating OpsGenie, Slack, Teams and Jira at AKQA.'],
+             ['neuron-graph', 'Self-hosted AWS infrastructure knowledge graph with a web UI, REST API, CLI and MCP server.']] },
+    { name: 'Build', half: 'dev', what: 'Pipelines that turn commits into deployable artefacts.',
+      tools: ['Buildkite', 'Jenkins', 'GitLab', 'Harness', 'Docker'],
+      work: [['One pipeline', 'Standardised build pipelines for 134 .NET projects across Cvent onto one pipeline.'],
+             ['Build Watcher', 'Open-source Chrome extension that chimes when a Buildkite build passes, fails or needs input.']] },
+    { name: 'Test', half: 'dev', what: 'Confidence before merge: reliable tests and a known blast radius.',
+      tools: ['JUnit', 'Jest', 'GitHub pull requests'],
+      work: [['Flaky tests', 'Fixed flaky JUnit and Jest tests that were wasting PR build hours at Cvent.'],
+             ['Blast radius', "Alfred's dependency graph posts blast-radius comments on pull requests."]] },
+    { name: 'Release', half: 'ops', what: 'Getting a tested build safely approved and promoted.',
+      tools: ['Octopus Deploy', 'Harness', 'Change approvals'],
+      work: [['Octopus Deploy HA', 'Built a high-availability model sustaining 99.9% availability and cut self-hosting costs by 30%.'],
+             ['Harness POC', 'Ran Fargate and Harness proofs of concept for deployment pipelines at Cvent.']] },
+    { name: 'Deploy', half: 'ops', what: 'Infrastructure as code and rollouts without downtime.',
+      tools: ['Terraform', 'AWS CDK', 'CloudFormation', 'ECS / Fargate', 'Kubernetes', 'Lambda'],
+      work: [['Zero downtime', 'Rolled out ECS Capacity Providers across 70+ clusters with zero downtime at Cvent.'],
+             ['IaC migration', 'Led the move from CloudFormation to Terraform across multiple AWS accounts at CI&T.'],
+             ['ECS upgrades', 'Automated ECS cluster upgrades to CIS-hardened Amazon Linux 2023 AMIs at Latitude.']] },
+    { name: 'Operate', half: 'ops', what: 'Running the estate day to day: patching, security, incidents.',
+      tools: ['AWS', 'Chef', 'Ansible', 'Ivanti', 'CrowdStrike', 'PagerDuty', 'OpsGenie'],
+      work: [['80+ AWS accounts', 'Lead a team of 10 engineers with a follow-the-sun model across Melbourne and India.'],
+             ['Sev1 automation', 'Co-developed incident response automation that cut time-to-respond by 20+ minutes at Cvent.'],
+             ['Patching', 'Removed ClickOps from monthly patching with Ivanti Security Controls at Latitude.']] },
+    { name: 'Monitor', half: 'ops', what: 'Logs, metrics and traces on one platform, and AI that reads them.',
+      tools: ['Datadog', 'Dynatrace', 'Grafana', 'Splunk', 'Sumo Logic', 'New Relic', 'CloudWatch'],
+      work: [['~880M events/week', 'Migrated Splunk to Datadog at Cvent, unifying logs, metrics and traces.'],
+             ['20M+ events/week', 'Migrated Sumo Logic to Datadog at Latitude, with Grok parsing for payment logs.'],
+             ['GPU monitoring', 'Grafana monitoring of NVIDIA DCGM metrics for a Netflix game launch at AKQA.']] },
+  ];
+
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const loopEl = document.getElementById('loop');
+  const slot = document.getElementById('slot');
+  const track = document.getElementById('track');
+  const list = document.getElementById('stages');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const narrow = matchMedia('(max-width: 759px)');
+  const cssVar = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const rgb = (hex) => { const n = parseInt(hex.replace('#', ''), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+
+  // --- geometry: Bernoulli lemniscate; t in [pi/2, 3pi/2] is the Dev half, [3pi/2, 5pi/2] Ops ---
+  let W = 0, H = 0, dpr = 1, A = 0;
+  const T0 = Math.PI / 2, TAU = Math.PI * 2, GAP = 0.5;
+  const curve = (t) => { const s = Math.sin(t), c = Math.cos(t), d = 1 + s * s; return [W / 2 + (A * c) / d, H / 2 - (A * s * c) / d]; };
+  const normal = (t) => { const [x1, y1] = curve(t - 0.001), [x2, y2] = curve(t + 0.001); const dx = x2 - x1, dy = y2 - y1, l = Math.hypot(dx, dy) || 1; return [-dy / l, dx / l]; };
+  // Stages sit on each half's outer arc, clear of the crossing.
+  const stageT = (i) => T0 + (i < 4 ? 0 : Math.PI) + GAP + ((i % 4) + 0.5) * ((Math.PI - 2 * GAP) / 4);
+  let centre = { dev: [0, 0], ops: [0, 0] }, lobeW = 0;
+
+  const tags = STAGES.map((s) => {
+    const el = document.createElement('span');
+    el.className = `tag ${s.half}`; el.textContent = s.name; el.setAttribute('aria-hidden', 'true');
+    loopEl.appendChild(el); return el;
+  });
+
+  function layout() {
+    const r = loopEl.getBoundingClientRect();
+    W = r.width; H = r.height;
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    A = Math.min(W * (narrow.matches ? 0.36 : 0.44), H * 1.2);
+    // True centre of each half: the polygon centroid of that lobe's outline.
+    const cen = (from) => {
+      let a = 0, cx = 0, cy = 0; const n = 240;
+      for (let k = 0; k < n; k++) {
+        const [x0, y0] = curve(from + (k / n) * Math.PI), [x1, y1] = curve(from + ((k + 1) / n) * Math.PI);
+        const cr = x0 * y1 - x1 * y0; a += cr; cx += (x0 + x1) * cr; cy += (y0 + y1) * cr;
+      }
+      return [cx / (3 * a), cy / (3 * a)];
+    };
+    centre = { dev: cen(T0), ops: cen(T0 + Math.PI) };
+    lobeW = A * 0.8;
+    for (const k of ['dev', 'ops']) {
+      const el = document.getElementById(`half-${k}`);
+      el.style.left = `${centre[k][0]}px`; el.style.top = `${centre[k][1]}px`;
+    }
+    STAGES.forEach((s, i) => {
+      const [x, y] = curve(stageT(i)), [cx, cy] = centre[s.half];
+      const dx = x - cx, dy = y - cy, l = Math.hypot(dx, dy) || 1, k = Math.max(24, A * 0.16);
+      tags[i].style.left = `${x + (dx / l) * k}px`; tags[i].style.top = `${y + (dy / l) * k}px`;
+    });
+    if (card) place(card, active);
+  }
+
+  // --- particles: constant flow along the band ---
+  const N = 1700;
+  const parts = Array.from({ length: N }, () => ({
+    u: Math.random(), off: (Math.random() + Math.random() + Math.random() - 1.5) / 1.5,
+    sp: 0.022 + Math.random() * 0.006, z: Math.random(),
+  }));
+  const sparks = []; // short-lived bursts when a card leaves or enters its orb
+
+  // --- the card ---
+  let card = null, active = -1, target = 0, busy = false;
+  const host = () => (narrow.matches ? slot : loopEl);
+
+  function makeCard(i) {
+    const s = STAGES[i];
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-expanded', 'false');
+    el.style.setProperty('--c', `var(--${s.half})`);
+    el.innerHTML = `
+      <p class="step">${String(i + 1).padStart(2, '0')} / 08 · ${s.half === 'dev' ? 'Dev' : 'Ops'}</p>
+      <h2><span class="swatch" aria-hidden="true"></span>${s.name}</h2>
+      <p class="what">${s.what}</p>
+      <ul class="chips" aria-label="Tools">${s.tools.map((t) => `<li>${t}</li>`).join('')}</ul>
+      <p class="more"><span class="chev" aria-hidden="true">›</span>What I did</p>
+      <ul class="did">${s.work.map(([k, v]) => `<li><b>${k}:</b> ${v}</li>`).join('')}</ul>`;
+    const toggle = () => { el.setAttribute('aria-expanded', String(el.getAttribute('aria-expanded') !== 'true')); place(el, i); };
+    el.addEventListener('click', toggle);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    return el;
+  }
+
+  // Resting position: centred in its half (or in the slot on narrow screens).
+  function place(el, i) {
+    if (narrow.matches) {
+      const w = Math.min(slot.clientWidth, 440);
+      el.style.setProperty('--cw', `${w}px`);
+      el.style.left = `${(slot.clientWidth - w) / 2}px`; el.style.top = '0px';
+      slot.style.minHeight = `${el.offsetHeight + 8}px`;
+      return;
+    }
+    const [cx, cy] = centre[STAGES[i].half];
+    const w = Math.min(320, lobeW);
+    el.style.setProperty('--cw', `${w}px`);
+    const h = el.offsetHeight;
+    el.style.left = `${cx - w / 2}px`;
+    el.style.top = `${Math.max(4, Math.min(H - h - 4, cy - h / 2))}px`;
+  }
+  // The transform that squeezes the card into its stage's orb, tipped away at an angle.
+  function orbTransform(el, i) {
+    const [nx, ny] = curve(stageT(i));
+    const lr = loopEl.getBoundingClientRect(), er = el.getBoundingClientRect();
+    const ox = lr.left + nx - (er.left + er.width / 2), oy = lr.top + ny - (er.top + er.height / 2);
+    const side = STAGES[i].half === 'dev' ? 1 : -1;
+    return `translate3d(${ox}px, ${oy}px, -160px) scale(0.04) rotateX(${ny < H / 2 ? -65 : 65}deg) rotateY(${side * 50}deg)`;
+  }
+  function burst(i, n, out) {
+    if (reduce.matches) return;
+    const [x, y] = curve(stageT(i));
+    const col = rgb(cssVar(STAGES[i].half === 'dev' ? '--dev' : '--ops'));
+    for (let k = 0; k < n; k++) {
+      const a = Math.random() * TAU, v = (out ? 70 : 35) + Math.random() * 90;
+      sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.45 + Math.random() * 0.4, age: 0, col });
+    }
+    kick();
+  }
+
+  async function show(i) {
+    target = i;
+    if (busy) return;
+    busy = true;
+    while (active !== target) {
+      const next = target;
+      if (card) {
+        // Collapse the current card back into its orb.
+        const old = card, from = active;
+        if (!reduce.matches) {
+          await old.animate([{ transform: 'none', opacity: 1 }, { transform: orbTransform(old, from), opacity: 0 }],
+            { duration: 300, easing: 'cubic-bezier(.55,0,.75,.2)', fill: 'forwards' }).finished.catch(() => {});
+          burst(from, 26, false);
+        }
+        old.remove();
+      }
+      active = next;
+      setActiveUI(next);
+      card = makeCard(next);
+      host().appendChild(card);
+      place(card, next);
+      if (!reduce.matches) {
+        burst(next, 36, true);
+        await card.animate([{ transform: orbTransform(card, next), opacity: 0 }, { transform: 'none', opacity: 1 }],
+          { duration: 580, easing: 'cubic-bezier(.16,1,.3,1)' }).finished.catch(() => {});
+      }
+    }
+    busy = false;
+  }
+
+  // --- stage buttons + scroll ---
+  STAGES.forEach((s, i) => {
+    const li = document.createElement('li'), b = document.createElement('button');
+    b.type = 'button'; b.textContent = s.name; b.style.setProperty('--c', `var(--${s.half})`);
+    b.addEventListener('click', () => goTo(i));
+    li.appendChild(b); list.appendChild(li);
+  });
+  const buttons = [...list.querySelectorAll('button')];
+  function setActiveUI(i) {
+    buttons.forEach((b, k) => (k === i ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current')));
+    tags.forEach((t, k) => t.classList.toggle('on', k === i));
+  }
+  function goTo(i) {
+    const span = track.offsetHeight - innerHeight;
+    const y = scrollY + track.getBoundingClientRect().top + span * ((i + 0.5) / STAGES.length);
+    scrollTo({ top: y, behavior: reduce.matches ? 'auto' : 'smooth' });
+  }
+  let litT = stageT(0), litGoal = stageT(0);
+  function onScroll() {
+    const rect = track.getBoundingClientRect(), span = track.offsetHeight - innerHeight;
+    const progress = Math.min(1, Math.max(0, -rect.top / span));
+    const i = Math.min(STAGES.length - 1, Math.floor(progress * STAGES.length));
+    litGoal = stageT(i);
+    if (i !== target) show(i);
+    kick();
+    document.getElementById('hint').style.opacity = progress > 0.02 ? '0' : '1';
+  }
+
+  // --- render loop: the loop always flows the same way; only the lit stage brightens ---
+  let raf = 0, last = 0, visible = true;
+  function frame(now) {
+    raf = 0;
+    const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+    last = now;
+    litT += (litGoal - litT) * Math.min(1, dt * 8);
+    const dev = rgb(cssVar('--dev')), ops = rgb(cssVar('--ops'));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const band = Math.max(7, A * 0.07);
+    for (const p of parts) {
+      if (!reduce.matches) p.u = (p.u + p.sp * dt) % 1;
+      const t = T0 + p.u * TAU;
+      const [x0, y0] = curve(t), [nx, ny] = normal(t);
+      const col = t < T0 + Math.PI ? dev : ops;
+      const d = Math.abs(((t - litT + Math.PI) % TAU + TAU) % TAU - Math.PI);
+      const lit = Math.max(0, 1 - d / 0.38) ** 1.4;
+      const a = 0.2 + 0.08 * p.z + 0.72 * lit;
+      const r = 0.6 + 0.6 * p.z + 1.3 * lit;
+      ctx.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${a})`;
+      ctx.beginPath(); ctx.arc(x0 + nx * p.off * band, y0 + ny * p.off * band, r, 0, TAU); ctx.fill();
+    }
+    // Stage orbs: small dotted rings; the lit one is larger and brighter.
+    STAGES.forEach((s, i) => {
+      const [x, y] = curve(stageT(i)), col = s.half === 'dev' ? dev : ops, on = i === active;
+      const R = on ? 12 : 6, n = on ? 16 : 9, spin = (reduce.matches ? 0 : now / 1000) * 0.8 + i;
+      for (let k = 0; k < n; k++) {
+        const ang = spin + (k / n) * TAU, depth = Math.sin(ang) * 0.5 + 0.5;
+        ctx.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${on ? 0.45 + 0.55 * depth : 0.35 + 0.3 * depth})`;
+        ctx.beginPath(); ctx.arc(x + Math.cos(ang) * R, y + Math.sin(ang) * R * 0.42, on ? 1.7 : 1.1, 0, TAU); ctx.fill();
+      }
+      ctx.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${on ? 1 : 0.6})`;
+      ctx.beginPath(); ctx.arc(x, y, on ? 3.2 : 2, 0, TAU); ctx.fill();
+    });
+    for (let k = sparks.length - 1; k >= 0; k--) {
+      const s = sparks[k];
+      s.age += dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= 0.92; s.vy *= 0.92;
+      if (s.age >= s.life) { sparks.splice(k, 1); continue; }
+      ctx.fillStyle = `rgba(${s.col[0]},${s.col[1]},${s.col[2]},${1 - s.age / s.life})`;
+      ctx.beginPath(); ctx.arc(s.x, s.y, 1.6, 0, TAU); ctx.fill();
+    }
+    if (visible && !document.hidden) raf = requestAnimationFrame(frame); else last = 0;
+  }
+  const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  new IntersectionObserver((e) => { visible = e[0].isIntersecting; if (visible) kick(); }).observe(canvas);
+
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', () => { layout(); if (card && card.parentElement !== host()) { host().appendChild(card); place(card, active); } kick(); });
+  document.addEventListener('visibilitychange', kick);
+  layout();
+  onScroll();
+  show(target);
+  kick();
+})();
+</script>
+
+</body>
+</html>

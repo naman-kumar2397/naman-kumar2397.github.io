@@ -39,7 +39,7 @@ export function initDevOpsLoop(root: HTMLElement) {
     return s.startsWith('#') && s.length === 7 ? [(n >> 16) & 255, (n >> 8) & 255, n & 255] : [128, 128, 128];
   };
 
-  let W = 0, H = 0, dpr = 1, A = 0, lobeW = 0;
+  let W = 0, H = 0, dpr = 1, A = 0;
   let centre: Record<'dev' | 'ops', [number, number]> = { dev: [0, 0], ops: [0, 0] };
   const curve = (t: number): [number, number] => {
     const s = Math.sin(t), c = Math.cos(t), d = 1 + s * s;
@@ -80,7 +80,6 @@ export function initDevOpsLoop(root: HTMLElement) {
       return [cx / (3 * a), cy / (3 * a)];
     };
     centre = { dev: cen(T0), ops: cen(T0 + Math.PI) };
-    lobeW = A * 0.8;
     for (const k of ['dev', 'ops'] as const) {
       halves[k].style.left = `${centre[k][0]}px`;
       halves[k].style.top = `${centre[k][1]}px`;
@@ -116,13 +115,15 @@ export function initDevOpsLoop(root: HTMLElement) {
     el.style.setProperty('--c', `var(${colourVar(i)})`);
     el.innerHTML = `
       <span class="step">${String(i + 1).padStart(2, '0')} / 08 · ${s.half === 'dev' ? 'Dev' : 'Ops'}</span>
-      <span class="name"><span class="swatch" aria-hidden="true"></span>${s.name}</span>
+      <span class="name">${s.name}</span>
       <span class="what">${s.what}</span>
       <span class="chips">${s.tools.map((t) => `<span class="chip-i">${t}</span>`).join('')}</span>
-      <span class="more"><span class="chev" aria-hidden="true">›</span>What I did</span>
+      <span class="more" data-more>What I did</span>
       <span class="did">${s.work.map(([k, v]) => `<span><b>${k}:</b> ${v}</span>`).join('')}</span>`;
     el.addEventListener('click', () => {
-      el.setAttribute('aria-expanded', String(el.getAttribute('aria-expanded') !== 'true'));
+      const open = el.getAttribute('aria-expanded') !== 'true';
+      el.setAttribute('aria-expanded', String(open));
+      el.querySelector('[data-more]')!.textContent = open ? 'Show tools' : 'What I did';
       place(el, i);
     });
     return el;
@@ -143,8 +144,16 @@ export function initDevOpsLoop(root: HTMLElement) {
     }
     slot!.style.minHeight = '';
     const [cx, cy] = centre[STAGES[i].half];
-    const w = Math.min(320, lobeW);
+    // The space inside the orbit: the lobe is about 0.7A tall at its centre, minus the band.
+    const w = Math.min(320, A * 0.62), maxH = A * 0.5;
     el.style.setProperty('--cw', `${w}px`);
+    // Shrink the type until the text fits inside the orbit (not below 72%).
+    let fs = 1;
+    el.style.setProperty('--fs', '1');
+    for (let k = 0; k < 6 && el.offsetHeight > maxH && fs > 0.72; k++) {
+      fs = Math.max(0.72, fs * Math.sqrt(maxH / el.offsetHeight));
+      el.style.setProperty('--fs', fs.toFixed(3));
+    }
     const h = el.offsetHeight;
     // Coordinates are relative to the pin (the loop's parent); the loop starts at its top.
     const offY = loopEl!.offsetTop, offX = loopEl!.offsetLeft;
@@ -200,6 +209,9 @@ export function initDevOpsLoop(root: HTMLElement) {
   function setActiveUI(i: number) {
     buttons.forEach((b, k) => (k === i ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current')));
     tags.forEach((t, k) => t.classList.toggle('on', k === i));
+    // The half's DEV/OPS label steps aside while its stage text is showing (wide screens).
+    halves.dev.classList.toggle('under', !narrow.matches && STAGES[i].half === 'dev');
+    halves.ops.classList.toggle('under', !narrow.matches && STAGES[i].half === 'ops');
     if (status) status.textContent = `${STAGES[i].name}: ${STAGES[i].what} Tools: ${STAGES[i].tools.join(', ')}.`;
   }
   function goTo(i: number) {

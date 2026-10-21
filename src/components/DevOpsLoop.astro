@@ -81,31 +81,32 @@ import { loopStages } from '../data/devopsLoop';
   .half.dev { color: var(--dev); }
   .half.ops { color: var(--ops); }
 
-  /* The card floats over the loop on wide screens (moved there by the script). */
+  /* The stage text floats borderless inside its half of the loop (below it on phones), sized to
+     the space inside the orbit; the script scales --fs down if a stage has more text. */
   .dl-slot { position: relative; perspective: 900px; }
   .dl :global(.dl-card) {
     position: absolute; left: 0; top: 0; width: var(--cw, 300px); box-sizing: border-box; z-index: 2;
     transform-origin: 50% 50%; will-change: transform, opacity;
-    background: color-mix(in srgb, var(--panel) 80%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    border: 1px solid color-mix(in srgb, var(--c) 45%, var(--border)); border-radius: 10px;
-    box-shadow: 0 18px 40px -18px rgba(1, 4, 9, .45), 0 0 0 1px color-mix(in srgb, var(--c) 10%, transparent);
-    padding: 14px 16px; cursor: pointer; text-align: left; color: var(--text); font: inherit;
-    display: grid; gap: 8px;
+    background: none; border: 0; padding: 4px; margin: 0; border-radius: 8px;
+    cursor: pointer; text-align: center; color: var(--text); font: inherit; font-size: calc(var(--fs, 1) * 14px);
+    display: grid; justify-items: center; gap: .55em;
   }
-  .dl :global(.dl-card:focus-visible) { outline: 2px solid var(--c); outline-offset: 2px; }
-  .dl :global(.dl-card .name) { margin: 0; font-size: 19px; font-weight: 650; display: flex; align-items: center; gap: 8px; }
-  .dl :global(.dl-card .swatch) { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 22%, transparent); flex: none; }
-  .dl :global(.dl-card .more) { display: flex; align-items: center; gap: 6px; font: 500 12px/1 var(--mono); color: var(--c); margin: 2px 0 0; }
-  .dl :global(.dl-card .chev) { display: inline-block; transition: transform var(--dur-fast) var(--ease-standard); }
-  .dl :global(.dl-card[aria-expanded='true'] .chev) { transform: rotate(90deg); }
-  .dl :global(.dl-card .step) { font: 11px/1.4 var(--mono); color: var(--muted); }
-  .dl :global(.dl-card .what) { font-size: 13px; color: var(--muted); line-height: 1.45; }
-  .dl :global(.dl-card .chips) { display: flex; flex-wrap: wrap; gap: 5px; }
-  .dl :global(.dl-card .chip-i) { font-size: 12px; line-height: 20px; padding: 0 9px; border-radius: 999px; color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); border: 1px solid color-mix(in srgb, var(--c) 28%, transparent); }
-  .dl :global(.dl-card .did) { display: none; gap: 6px; font-size: 13px; line-height: 1.45; padding: 0; }
-  .dl :global(.dl-card .did span) { display: block; padding-left: 14px; position: relative; }
-  .dl :global(.dl-card .did span)::before { content: ''; position: absolute; left: 3px; top: .62em; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+  .dl :global(.dl-card:focus-visible) { outline: 2px solid var(--c); outline-offset: 4px; }
+  .dl :global(.dl-card .step) { font: .78em/1.4 var(--mono); color: var(--muted); letter-spacing: .04em; }
+  .dl :global(.dl-card .name) { font-size: 1.5em; line-height: 1.15; font-weight: 650; color: var(--c); }
+  .dl :global(.dl-card .what) { font-size: .93em; color: var(--muted); line-height: 1.45; text-wrap: balance; }
+  .dl :global(.dl-card .chips) { display: flex; flex-wrap: wrap; justify-content: center; gap: .35em; }
+  .dl :global(.dl-card .chip-i) { font-size: .86em; line-height: 1.7; padding: 0 .65em; border-radius: 999px; color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent); }
+  .dl :global(.dl-card .more) { display: inline-flex; align-items: center; gap: .4em; font: 500 .86em/1 var(--mono); color: var(--c); }
+  .dl :global(.dl-card .did) { display: none; gap: .6em; font-size: .93em; line-height: 1.45; text-wrap: balance; }
+  .dl :global(.dl-card .did span) { display: block; }
+  .dl :global(.dl-card .did b) { display: block; color: var(--c); font-weight: 600; }
+  /* "What I did" swaps the tools for the work, so the text keeps fitting inside the orbit. */
+  .dl :global(.dl-card[aria-expanded='true'] .chips),
+  .dl :global(.dl-card[aria-expanded='true'] .what) { display: none; }
   .dl :global(.dl-card[aria-expanded='true'] .did) { display: grid; }
+  .half { transition: opacity var(--dur-normal) var(--ease-standard); }
+  .half:global(.under) { opacity: 0; }
 
   .dl-controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
   .dl-stages { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0; padding: 0; list-style: none; }

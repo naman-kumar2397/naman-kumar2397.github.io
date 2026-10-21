@@ -1,55 +1,141 @@
 ---
 /*
- * /home-alternate/: the journey homepage, built alongside the live one. The hero gives the
- * key facts in five seconds; the journey is a guided ride through six chapters (newest first)
- * with one morphing particle field; then the toolbox and the exit. Native scroll only.
- * While it is the alternate it is noindex with its canonical on /, and it is not in the
+ * /home-alternate/: the "git universe" homepage, built alongside the live one. The site is a
+ * career told as git log; here that log comes to life. The opening types `git log --graph
+ * --oneline`, prints the real graph and lifts it into 3D while the identity lands; then native
+ * scroll flies a camera back in time through seven stops, from HEAD to `init`, and pulls back to
+ * the whole log. Content: src/lib/universe.ts (picked from src/data). Motion: src/scripts/
+ * universe.ts (controller), universe-gl.ts (three.js, desktop only, on demand), universe-2d.ts
+ * (phones). While it is the alternate it is noindex with its canonical on /, and it is not in the
  * sitemap or llms.txt (both are data-driven and do not list it).
  */
 import Base from '../layouts/Base.astro';
-import RepoHeader from '../components/RepoHeader.astro';
-import RideHero from '../components/ride/RideHero.astro';
-import Journey from '../components/ride/Journey.astro';
-import Toolbox from '../components/ride/Toolbox.astro';
-import Exit from '../components/ride/Exit.astro';
-import { commits } from '../data/journey';
-import { caseStudies } from '../data/caseStudies';
-import { chapters } from '../lib/ride';
+import Opening from '../components/universe/Opening.astro';
+import Stops from '../components/universe/Stops.astro';
+import EndCard from '../components/universe/EndCard.astro';
+import { sceneData } from '../lib/universe';
 import { profileJsonLd } from '../lib/jsonld';
 
 const site = Astro.site!.toString();
 const jsonLd = await profileJsonLd(site);
-const tabs = [
-  { href: '#top', label: 'Overview' },
-  { href: '#journey', label: 'Journey', count: chapters.length },
-  { href: '#toolbox', label: 'Toolbox' },
-  { href: '#contact', label: 'Contact' },
-];
 ---
 <Base
   title="Naman Kumar | Lead SRE, Melbourne: the journey"
-  description="Naman Kumar, Lead SRE in Melbourne: the career journey from HEAD back to main, with the key facts, the case studies and the toolbox."
+  description="Naman Kumar, Lead SRE in Melbourne: the career as a git log you can fly through, from HEAD back to init, with the key facts and the case studies."
   noindex
   canonical={site}
   jsonLd={jsonLd}
 >
   <a class="skip" href="#main">Skip to content</a>
-  <RepoHeader commitCount={commits.length} projectCount={caseStudies.length} tabs={tabs} />
-  <main id="main">
-    <RideHero />
-    <Journey />
-    <Toolbox />
-    <Exit />
+  <script is:inline>
+    // Mode, before first paint: 'gl' (900px+, motion allowed, no Save-Data, WebGL2), 'flat'
+    // (narrower, motion allowed, no Save-Data) or none (static). If the controller never
+    // starts, drop back to static so nothing stays hidden.
+    (function () {
+      var d = document.documentElement, c = navigator.connection, mode = '';
+      if (d.classList.contains('motion') && !(c && c.saveData)) {
+        if (matchMedia('(min-width: 900px)').matches) {
+          try {
+            var gl = document.createElement('canvas').getContext('webgl2');
+            if (gl) { mode = 'gl'; var x = gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); }
+          } catch (e) {}
+        } else mode = 'flat';
+      }
+      if (!mode) return;
+      d.setAttribute('data-u', mode);
+      setTimeout(function () { if (!window.__uReady) d.removeAttribute('data-u'); }, 4000);
+    })();
+  </script>
+  <main id="main" class="u" data-scene={JSON.stringify(sceneData)}>
+    <div class="u-sky">
+      <canvas class="u-gl" aria-hidden="true"></canvas>
+      <canvas class="u-flat" aria-hidden="true"></canvas>
+      <div class="u-hud">
+        <div class="u-ctl">
+          <button type="button" class="u-pause" aria-pressed="false">Pause</button>
+          <a class="u-skip" href="#end">Skip to resume</a>
+        </div>
+        <p class="u-readout" aria-live="polite"></p>
+        <div class="u-progress" aria-hidden="true"><span></span></div>
+      </div>
+    </div>
+    <Opening />
+    <Stops />
+    <EndCard />
   </main>
-  <footer class="container foot">
-    <p><span class="mono">HEAD</span> is where I am now. Built with Astro. Cookie-free, privacy-friendly visit counts (GoatCounter).</p>
+  <footer class="u-foot">
+    <p><span class="mono">HEAD</span> is where I am now. Built with Astro. Cookie-free visit counts (GoatCounter).</p>
     <p><a href="#top">Back to top</a></p>
   </footer>
 </Base>
 
+<script>
+  import '../scripts/universe';
+</script>
+
 <style>
   .skip { position: absolute; left: 8px; top: -48px; z-index: 30; background: var(--bg); padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; }
   .skip:focus { top: 8px; }
-  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding-top: 40px; padding-bottom: 40px; font-size: 13px; color: var(--muted); }
-  .foot p { margin: 0; }
+
+  /* Stage tokens: a deep, dark stage in dark mode; a light, airy one in light mode. */
+  .u {
+    --u-bg: color-mix(in srgb, var(--panel) 55%, var(--bg));
+    --u-bg2: var(--bg);
+    --u-ink: var(--text);
+    --u-dim: var(--muted);
+    --u-haze: color-mix(in srgb, var(--accent) 9%, transparent);
+    --u-haze2: color-mix(in srgb, var(--c-teal) 7%, transparent);
+    position: relative; isolation: isolate; display: block; background: var(--u-bg); color: var(--u-ink);
+  }
+  @media (prefers-color-scheme: dark) {
+    .u {
+      --u-bg: color-mix(in srgb, var(--bg) 45%, #000);
+      --u-bg2: color-mix(in srgb, var(--bg) 80%, #000);
+      --u-haze: color-mix(in srgb, var(--accent) 13%, transparent);
+      --u-haze2: color-mix(in srgb, var(--c-purple) 9%, transparent);
+    }
+  }
+  .u :global(.btn-primary) { box-shadow: 0 0 0 1px rgba(255, 255, 255, .06), 0 8px 24px -10px color-mix(in srgb, var(--primary-bg) 80%, transparent); }
+
+  /* The sticky stage: canvas, haze and HUD stay in view for the whole ride. Static mode has no stage. */
+  .u-sky { display: none; }
+  :global(html[data-u]) .u-sky {
+    display: block; position: sticky; top: 0; height: 100svh; margin-bottom: -100svh; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 70% 60% at 72% 30%, var(--u-haze), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 10% 90%, var(--u-haze2), transparent 70%),
+      linear-gradient(180deg, var(--u-bg2), var(--u-bg) 70%);
+  }
+  .u-gl, .u-flat { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+  :global(html[data-u='gl']) .u-gl { display: block; opacity: 0; }
+  :global(html[data-u='gl']) .u:global(.gl-on) .u-gl { opacity: 1; }
+  :global(html[data-u='flat']) .u-flat { display: block; }
+  /* A vignette for depth (gl only). */
+  :global(html[data-u='gl']) .u-sky::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 85% 80% at 50% 45%, transparent 55%, color-mix(in srgb, var(--u-bg) 70%, transparent)); }
+
+  /* HUD: readout bottom-left, progress line, pause and skip top-right. Shown during the ride. */
+  .u-hud { position: absolute; inset: 0; z-index: 3; opacity: 0; visibility: hidden; transition: opacity var(--dur-slow) var(--ease-standard), visibility 0s var(--dur-slow); }
+  .u:global([data-hud]) .u-hud { opacity: 1; visibility: visible; transition: opacity var(--dur-slow) var(--ease-standard); }
+  .u-ctl { position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 6px; pointer-events: auto; }
+  .u-ctl button, .u-ctl a {
+    font: 500 12px/1 var(--mono); color: var(--u-ink); background: color-mix(in srgb, var(--u-bg) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--u-ink) 20%, transparent); border-radius: 999px; padding: 8px 12px; min-height: 32px;
+    display: inline-flex; align-items: center; cursor: pointer; backdrop-filter: blur(6px);
+  }
+  .u-ctl a:hover, .u-ctl button:hover { text-decoration: none; border-color: color-mix(in srgb, var(--u-ink) 45%, transparent); }
+  .u-ctl button[aria-pressed='true'] { background: var(--u-ink); color: var(--u-bg); }
+  :global(html[data-u='flat']) .u-pause { display: none; }
+  .u-readout { position: absolute; left: 16px; bottom: 18px; margin: 0; font: 500 12px/1 var(--mono); color: var(--u-dim); display: flex; gap: 12px; white-space: nowrap; }
+  .u-readout :global(.ref) { color: var(--c, var(--u-ink)); font-weight: 600; }
+  .u-readout :global(.rev) { color: var(--u-ink); }
+  .u-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: color-mix(in srgb, var(--u-ink) 10%, transparent); }
+  .u-progress span { display: block; height: 100%; background: var(--c-blue); transform-origin: 0 50%; transform: scaleX(0); }
+  @media (min-width: 900px) {
+    .u-ctl { top: 20px; right: 24px; }
+    .u-readout { left: 7vw; bottom: 26px; font-size: 13px; gap: 16px; }
+  }
+
+  .u-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; max-width: 1120px; margin: 0 auto; padding: 32px 16px 40px; font-size: 13px; color: var(--muted); }
+  .u-foot p { margin: 0; }
+  @media (min-width: 768px) { .u-foot { padding: 32px 32px 40px; } }
 </style>

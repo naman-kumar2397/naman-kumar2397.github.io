@@ -1,0 +1,140 @@
+---
+/*
+ * The opening of /home-alternate/. A terminal (decorative, aria-hidden) types
+ * `git log --graph --oneline` and prints the real graph, newest first, from src/lib/layout.ts;
+ * src/scripts/universe.ts then hands the graph to the 3D scene, which lifts it off the screen,
+ * and the identity lands. The name, role, facts and buttons are in the HTML from first paint and
+ * readable at rest; without JS, with reduced motion or on phones the terminal is simply printed.
+ */
+import { profile } from '../../data/profile';
+import { gitLog, heroFacts, type Cell } from '../../lib/universe';
+
+const lines = gitLog(10);
+// Consecutive graph cells of one colour share a span.
+const runs = (cells: Cell[]) => cells.reduce<{ text: string; colour: string }[]>((out, c) => {
+  const last = out[out.length - 1];
+  const colour = c.ch === ' ' ? (last?.colour ?? c.colour) : c.colour;
+  if (last && last.colour === colour) last.text += c.ch;
+  else out.push({ text: c.ch, colour });
+  return out;
+}, []);
+const city = profile.location.split(',')[0];
+// Emphasise a fact's figure ("50k+ users at ..." -> <b>50k+</b> users at ...).
+const split = (s: string) => {
+  const m = s.match(/^(.*?)(~?\d[\d.,]*[kKM]?\+?)(.*)$/);
+  return m ? m.slice(1) : ['', '', s];
+};
+const cmd = 'git log --graph --oneline';
+---
+<section id="top" class="u-hero" aria-labelledby="u-name">
+  <div class="term" aria-hidden="true">
+    <p class="cmd"><span class="ps1">~/journey</span> <span class="dollar">$</span> <span class="typed" data-cmd={cmd}>{cmd}</span><span class="caret"></span></p>
+    <div class="out">
+      {lines.map((l, i) => (
+        <div class="ln" style={`--i:${i}`} data-row={l.row}>
+          <span class="g">{runs(l.graph).map((r) => <span style={`color:var(--c-${r.colour})`}>{r.text}</span>)}</span>
+          {l.hash && (
+            <span class="t">
+              <span class="h">{l.hash}</span>
+              {l.refs && <span class="refs">({l.refs.map((r, k) => <>{k > 0 && ', '}<span class={r.head ? 'ref head' : 'ref'} style={`color:var(--c-${r.colour})`}>{r.name}</span></>)})</span>}
+              <span class="m">{l.message}</span>
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+  <div class="id">
+    <h1 id="u-name">{profile.name}</h1>
+    <p class="role">{profile.role}<span class="sep" aria-hidden="true"> · </span><span class="city">{city}</span></p>
+    <ul class="facts" aria-label="Key facts">
+      {heroFacts.map((f) => { const [a, b, c] = split(f); return <li>{a}<b>{b}</b>{c}</li>; })}
+    </ul>
+    <div class="ctas">
+      <a class="btn btn-lg btn-primary" href="/resume.pdf" download="Naman_Kumar_Resume.pdf">Download resume (PDF)</a>
+      <a class="btn btn-lg u-go" href="#ride">Take this ride with me</a>
+      <a class="contact" href="#end">Contact</a>
+    </div>
+  </div>
+  <span class="cue" aria-hidden="true"><span></span></span>
+</section>
+
+<style>
+  .u-hero { position: relative; z-index: 1; display: grid; align-content: end; gap: 28px; padding: 28px 16px 36px; }
+  /* ---- Terminal */
+  .term { font: 12px/1.6 var(--mono); color: var(--u-dim); min-width: 0; }
+  .cmd { margin: 0 0 6px; color: var(--u-ink); white-space: pre; }
+  .ps1 { color: var(--c-green); }
+  .dollar { color: var(--u-dim); }
+  .caret { display: inline-block; width: .6em; height: 1.15em; margin-left: 1px; vertical-align: -0.2em; background: var(--u-ink); opacity: .85; }
+  .out { min-width: 0; }
+  .ln { white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+  .g { font-weight: 700; }
+  .h { color: var(--c-yellow); }
+  .refs { margin-left: .6ch; }
+  .ref.head { font-weight: 700; }
+  .m { margin-left: .6ch; color: var(--u-ink); opacity: .78; }
+  /* ---- Identity */
+  .id { min-width: 0; }
+  h1 { margin: 0; font-size: clamp(46px, 13vw, 76px); line-height: .98; letter-spacing: -0.045em; font-weight: 700; color: var(--u-ink); }
+  .role { margin: 12px 0 0; font-size: clamp(16px, 4.4vw, 19px); font-weight: 600; color: var(--u-ink); }
+  .city { color: var(--u-dim); font-weight: 500; }
+  .facts { display: flex; flex-wrap: wrap; gap: 4px 0; margin: 14px 0 0; padding: 0; list-style: none; font-size: 13.5px; line-height: 22px; color: var(--u-dim); }
+  .facts li { padding: 0 10px; border-left: 1px solid color-mix(in srgb, var(--u-dim) 45%, transparent); white-space: nowrap; }
+  .facts li:first-child { padding-left: 0; border-left: 0; }
+  .facts b { color: var(--u-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 20px; }
+  .ctas .btn:not(.btn-primary) { background: color-mix(in srgb, var(--u-bg) 70%, transparent); color: var(--u-ink); border-color: color-mix(in srgb, var(--u-ink) 28%, transparent); }
+  .contact { padding: 10px 4px; font-weight: 500; color: var(--u-ink); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--u-ink) 35%, transparent); text-underline-offset: 4px; }
+  .cue { display: none; }
+  @media (max-width: 559px) {
+    .ctas .btn { flex: 1 1 100%; }
+    .ctas .contact { margin: 0 auto; }
+  }
+
+  @media (min-width: 900px) {
+    .u-hero { min-height: 100svh; align-content: space-between; gap: 32px; padding: max(40px, 9vh) 7vw max(44px, 9vh); }
+    .term { font-size: clamp(12px, 1.75vh, 16px); }
+    h1 { font-size: clamp(72px, min(9.4vw, 15.5vh), 150px); }
+    .role { font-size: clamp(18px, 2.6vh, 24px); margin-top: 1.6vh; }
+    .facts { font-size: clamp(13px, 1.85vh, 16px); line-height: 1.6; margin-top: 2.2vh; }
+    .facts li { padding: 0 14px; }
+    .ctas { margin-top: 3.4vh; gap: 12px 14px; }
+    :global(html[data-u='gl']) .cue { display: block; position: absolute; left: 50%; bottom: 22px; width: 1px; height: 44px; overflow: hidden; background: color-mix(in srgb, var(--u-ink) 18%, transparent); }
+    .cue span { position: absolute; left: 0; top: 0; width: 1px; height: 14px; background: var(--u-ink); }
+  }
+
+  /* ---- The opening (gl mode only). Before the module runs, the stage shows a faint name; the
+     module types, prints, lifts and lands (src/scripts/universe.ts sets data-phase). */
+  :global(html[data-u='gl']) .ln { opacity: 0; transform: translateY(4px); }
+  :global(html[data-u='gl']) .ln:global(.on) { opacity: 1; transform: none; transition: opacity 120ms linear, transform 160ms var(--ease-out); }
+  :global(html[data-u='gl']) .u-hero:not([data-phase]) .typed { visibility: hidden; }
+  :global(html[data-u='gl']) .caret { animation: blink 1s steps(1) infinite; }
+  :global(html[data-u='gl']) h1 { opacity: .07; filter: blur(10px); transform: scale(1.035); transform-origin: 0 100%; }
+  :global(html[data-u='gl']) .role, :global(html[data-u='gl']) .facts, :global(html[data-u='gl']) .ctas, :global(html[data-u='gl']) .cue { opacity: 0; transform: translateY(16px); }
+  :global(html[data-u='gl']) .u-hero:is([data-phase='lift'], [data-phase='rest']) h1 {
+    opacity: 1; filter: none; transform: none;
+    transition: opacity 1100ms var(--ease-out) 420ms, filter 1100ms var(--ease-out) 420ms, transform 1300ms var(--ease-out) 420ms;
+  }
+  :global(html[data-u='gl']) .u-hero:is([data-phase='lift'], [data-phase='rest']) :is(.role, .facts, .ctas, .cue) {
+    opacity: 1; transform: none; transition: opacity 800ms var(--ease-out) var(--d, 0ms), transform 900ms var(--ease-out) var(--d, 0ms);
+  }
+  .role { --d: 760ms; }
+  .facts { --d: 880ms; }
+  .ctas { --d: 1000ms; }
+  .cue { --d: 1500ms; }
+  /* Lift-off: the scene takes over the graph glyphs at the same place; hashes, refs and
+     messages drift right and fade, line by line. */
+  :global(html[data-u='gl']) .u-hero[data-phase='lift'] .g { opacity: 0; }
+  :global(html[data-u='gl']) .u-hero[data-phase='rest'] .g { opacity: 0; transition: opacity 500ms var(--ease-out); }
+  :global(html[data-u='gl']) .u-hero:is([data-phase='lift'], [data-phase='rest']) .t {
+    display: inline-block; opacity: 0; transform: translateX(28px); filter: blur(6px);
+    transition: opacity 520ms var(--ease-out) calc(var(--i) * 28ms), transform 700ms var(--ease-out) calc(var(--i) * 28ms), filter 600ms var(--ease-out) calc(var(--i) * 28ms);
+  }
+  :global(html[data-u='gl']) .u-hero:is([data-phase='lift'], [data-phase='rest']) .caret { animation: none; opacity: 0; transition: opacity 400ms; }
+  :global(html[data-u='gl']) .u-hero:is([data-phase='lift'], [data-phase='rest']) .cmd { opacity: .5; transition: opacity 900ms var(--ease-out) 600ms; }
+  :global(html[data-u='gl']) .u-hero[data-phase='rest'] .out { visibility: hidden; transition: visibility 0s 1.2s; }
+  :global(html[data-u='gl']) .u-hero[data-phase='rest'] .cue span { animation: cue 2.2s var(--ease-in-out) 1.8s 2; }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes cue { from { transform: translateY(-14px); } to { transform: translateY(44px); } }
+</style>

@@ -6,12 +6,13 @@
 //   target     an interactive element is smaller than 24x24px (WCAG 2.5.8)
 //   align      a connector line (::after) and its arrowhead (::before) are off-centre (> 0.5px)
 //   overflow   the page scrolls horizontally
-// A motion-on pass for the journey homepage (/home-alternate/) at 1366 and 390, both schemes:
-//   ride       horizontal overflow, not exactly 6 chapter headings, the hero's fact row or resume
-//              button below the fold at 390x844, CLS >= 0.05 over load and a full scroll, a
-//              chapter's text overlapping another text block at any scroll position, the rail's
-//              current chapter not matching the chapter at the middle of the viewport, or (desktop)
-//              a particle field that does not animate
+// A motion-on pass for the git universe homepage (/home-alternate/): desktop with WebGL
+// (SwiftShader) at 1366x768 and 1440x900, phone canvas at 390x844, both schemes:
+//   universe   wrong mode, the opening never ending, not exactly 7 stop headings, the name, fact
+//              row or resume button outside the first viewport or not fully shown at rest, the
+//              readout not naming the stop in view, a stop's caption not shown at its stop, a
+//              caption overlapping another (at each stop and mid-flight), (desktop) a WebGL scene
+//              that does not animate, horizontal overflow, CLS >= 0.05 over load and a full scroll
 // Then a second pass with motion on (WebGL through SwiftShader) for pages with a 3D architecture
 // diagram (.arch3d), once its view is ready:
 //   arch3d     labels overlap each other or leave the stage, the toggle is under 24px, the
@@ -280,74 +281,75 @@ for (const path of pages3d) for (const w of [900, 1366]) {
   });
 }
 await noGl.close();
-// Motion-on pass for the journey homepage.
-function auditRide() {
+// Motion-on pass for the git universe homepage (/home-alternate/): desktop with WebGL (SwiftShader)
+// at 1366x768 and 1440x900, and the phone canvas at 390x844, both schemes.
+const capOverlaps = () => {
+  const caps = [...document.querySelectorAll('.u-cap-in')].filter((el) => {
+    const cs = getComputedStyle(el); const r = el.getBoundingClientRect();
+    return cs.visibility !== 'hidden' && Number(cs.opacity) > 0.05 && r.bottom > 0 && r.top < innerHeight;
+  }).map((el) => [el.closest('.u-stop').id, el.getBoundingClientRect()]);
   const out = [];
-  const vis = (el) => { const r = el.getBoundingClientRect(); const cs = getComputedStyle(el); return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 1 && r.height > 1 && r.bottom > 0 && r.top < innerHeight; };
-  // Text blocks: each chapter's text box, the rail and the stage. Then leaf text inside a chapter.
-  const blocks = [...document.querySelectorAll('.ch-in, .rail, .stage')].filter(vis).map((el) => [el, el.getBoundingClientRect()]);
-  const label = (el) => `${el.className.split(' ')[0]}${el.closest('.ch') ? `#${el.closest('.ch').id}` : ''}`;
-  const hit = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5;
-  for (let i = 0; i < blocks.length; i++) for (let j = i + 1; j < blocks.length; j++) {
-    if (hit(blocks[i][1], blocks[j][1])) out.push(`${label(blocks[i][0])} overlaps ${label(blocks[j][0])}`);
+  for (let i = 0; i < caps.length; i++) for (let j = i + 1; j < caps.length; j++) {
+    const [a, ra] = caps[i], [b, rb] = caps[j];
+    if (Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left) > 0.5 && Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top) > 0.5) out.push(`caption ${a} overlaps caption ${b}`);
   }
-  for (const [box] of blocks.filter(([el]) => el.classList.contains('ch-in'))) {
-    const leaves = [...box.querySelectorAll('p, h2, li, a')].filter((el) => vis(el) && !el.querySelector('p, h2, li, a')).map((el) => [el, el.getBoundingClientRect()]);
-    for (let i = 0; i < leaves.length; i++) for (let j = i + 1; j < leaves.length; j++) {
-      if (hit(leaves[i][1], leaves[j][1])) out.push(`in ${label(box)}: "${leaves[i][0].textContent.trim().slice(0, 24)}" overlaps "${leaves[j][0].textContent.trim().slice(0, 24)}"`);
-    }
-  }
-  // The rail's current chapter is the chapter crossing the middle of the viewport.
-  const chs = [...document.querySelectorAll('.ch')];
-  const mid = innerHeight / 2;
-  const at = chs.findIndex((c) => { const r = c.getBoundingClientRect(); return r.top <= mid && r.bottom > mid; });
-  const cur = [...document.querySelectorAll('.rail a')].findIndex((a) => a.hasAttribute('aria-current'));
-  if (at >= 0 && cur !== at) out.push(`rail marks chapter ${cur + 1} while chapter ${at + 1} is in the middle of the viewport`);
   return out;
-}
-const canvasHash = () => {
-  const c = document.querySelector('.stage canvas');
-  if (!c || !c.width) return null;
-  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-  let h = 0;
-  for (let i = 0; i < d.length; i += 16) h = (h * 31 + d[i] + d[i + 3]) | 0;
-  return h;
 };
 if (ride.length) {
-  const rb = await chromium.launch(executablePath ? { executablePath } : { channel: 'chrome' });
-  for (const [w, h] of [[1366, 900], [390, 844]]) for (const scheme of schemes) {
-    const ctx = await rb.newContext({ viewport: { width: w, height: h }, colorScheme: scheme });
+  const ub = await launch3d();
+  for (const [w, h] of [[1366, 768], [1440, 900], [390, 844]]) for (const scheme of schemes) {
+    const ctx = await ub.newContext({ viewport: { width: w, height: h }, colorScheme: scheme });
     await ctx.addInitScript(watchShifts);
     const page = await ctx.newPage();
     const report = (msg) => {
-      const key = `/home-alternate/ ride: ${msg}`;
-      findings.set(key, [...(findings.get(key) || []), `${w}${scheme === 'dark' ? 'd' : ''}`]);
+      const key = `/home-alternate/ universe: ${msg}`;
+      findings.set(key, [...(findings.get(key) || []), `${w}x${h}${scheme === 'dark' ? 'd' : ''}`]);
     };
     await page.goto(`${base}/home-alternate/`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(1200);
+    const want = w >= 900 ? 'gl' : 'flat';
+    const mode = await page.evaluate(() => document.documentElement.dataset.u);
+    if (mode !== want) report(`mode is ${mode} (want ${want})`);
+    if (want === 'gl') {
+      // The opening plays once and ends at rest by itself.
+      const rested = await page.waitForFunction(() => document.querySelector('.u-hero').dataset.phase === 'rest', null, { timeout: 15000 }).then(() => true, () => false);
+      if (!rested) report('the opening never reached its end state');
+      await page.waitForTimeout(2200);
+    } else await page.waitForTimeout(600);
     const first = await page.evaluate(() => {
-      const bottom = (sel) => document.querySelector(sel)?.getBoundingClientRect().bottom ?? Infinity;
-      return { facts: bottom('.hero .facts'), resume: bottom('.hero .btn-primary'), h2: document.querySelectorAll('.ch h2').length, live: document.getElementById('journey').classList.contains('live') };
+      const box = (sel) => { const el = document.querySelector(sel); const r = el.getBoundingClientRect(); return { bottom: r.bottom, o: Number(getComputedStyle(el).opacity) }; };
+      return { facts: box('.u-hero .facts'), resume: box('.u-hero .btn-primary'), h1: box('.u-hero h1'), h2: document.querySelectorAll('.u-stop h2').length };
     });
-    if (first.h2 !== 6) report(`${first.h2} chapter headings (want 6)`);
-    if (!first.live) report('journey did not start in the live layout');
-    if (h === 844 && first.facts > h) report(`hero fact row ends at ${first.facts.toFixed(0)}px, below the fold`);
-    if (h === 844 && first.resume > h) report(`resume button ends at ${first.resume.toFixed(0)}px, below the fold`);
-    // Scroll through the journey in steps of a third of the viewport.
-    const [top, end] = await page.evaluate(() => { const r = document.getElementById('journey').getBoundingClientRect(); return [r.top + scrollY - innerHeight, r.bottom + scrollY]; });
-    for (let y = Math.max(0, top); y <= end; y += h / 3) {
-      await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), y);
-      await page.waitForTimeout(120);
-      for (const f of await page.evaluate(auditRide)) report(f);
+    if (first.h2 !== 7) report(`${first.h2} stop headings (want 7)`);
+    for (const [name, b] of Object.entries({ 'name': first.h1, 'fact row': first.facts, 'resume button': first.resume })) {
+      if (b.bottom > h) report(`hero ${name} ends at ${b.bottom.toFixed(0)}px, below the first viewport`);
+      if (b.o < 0.99) report(`hero ${name} is not fully visible at rest (opacity ${b.o})`);
     }
-    if (w >= 900) {
-      // The field must be animating, not a still: two samples in the same scroll position differ.
-      await page.evaluate(() => document.getElementById('now').scrollIntoView({ behavior: 'instant', block: 'center' }));
-      await page.waitForTimeout(400);
-      const a = await page.evaluate(canvasHash);
-      await page.waitForTimeout(500);
-      const b = await page.evaluate(canvasHash);
-      if (a === null || a === b) report('the particle field is not animating');
+    // Each stop: the readout names the stop in view, its caption shows, no caption overlaps another.
+    const settles = await page.evaluate(() => [...document.querySelectorAll('.u-stop')].map((s) => ({ id: s.id, y: Number(s.dataset.settle), ref: s.dataset.ref, rev: s.dataset.rev })));
+    let prev = 0;
+    for (const s of settles) {
+      await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), (prev + s.y) / 2);
+      await page.waitForTimeout(150);
+      for (const f of await page.evaluate(capOverlaps)) report(`mid-flight before ${s.id}: ${f}`);
+      await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), s.y);
+      await page.waitForTimeout(350);
+      const st = await page.evaluate((id) => {
+        const cap = document.querySelector(`#${id} .u-cap-in`).getBoundingClientRect();
+        return { readout: document.querySelector('.u-readout').textContent.trim().split(/\s+/), o: Number(getComputedStyle(document.querySelector(`#${id} .u-cap-in`)).opacity), inView: cap.top >= 0 && cap.bottom <= innerHeight };
+      }, s.id);
+      if (st.readout[0] !== s.rev || st.readout[1] !== s.ref) report(`at ${s.id} the readout says "${st.readout.join(' ')}" (want ${s.rev} ${s.ref})`);
+      if (st.o < 0.99 || !st.inView) report(`at ${s.id} its caption is not fully shown (opacity ${st.o}, in view ${st.inView})`);
+      for (const f of await page.evaluate(capOverlaps)) report(`at ${s.id}: ${f}`);
+      prev = s.y;
+    }
+    if (want === 'gl') {
+      // The scene must be animating, not a still: two captures at the same scroll position differ.
+      await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), settles[1].y);
+      await page.waitForTimeout(800);
+      const a = (await page.screenshot({ type: 'png' })).toString('base64');
+      await page.waitForTimeout(600);
+      const b = (await page.screenshot({ type: 'png' })).toString('base64');
+      if (a === b) report('the WebGL scene is not animating');
     }
     await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
     await page.waitForTimeout(300);
@@ -356,13 +358,13 @@ if (ride.length) {
     if (cls >= 0.05) report(`layout shift ${cls.toFixed(4)} (CLS must stay under 0.05)`);
     await ctx.close();
   }
-  await rb.close();
+  await ub.close();
 }
 
 if (server) await server.stop();
 
 if (!findings.size) {
-  console.log(`layout-check: clean (${pages.length} pages x ${widths.length} widths x ${schemes.length} schemes; journey motion pass: ${ride.length ? '1366 and 390' : 'none'}; 3D: ${pages3d.length} pages x ${widths3d.length} widths x ${schemes.length} schemes, plus list-preferred and no-WebGL runs, CLS < 0.001)`);
+  console.log(`layout-check: clean (${pages.length} pages x ${widths.length} widths x ${schemes.length} schemes; universe motion pass: ${ride.length ? '1366x768, 1440x900 and 390x844' : 'none'}; 3D: ${pages3d.length} pages x ${widths3d.length} widths x ${schemes.length} schemes, plus list-preferred and no-WebGL runs, CLS < 0.001)`);
 } else {
   for (const [k, where] of findings) console.log(`${k}  [${[...new Set(where)].join(', ')}]`);
   console.log(`\nlayout-check: ${findings.size} finding(s)`);

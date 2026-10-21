@@ -1,0 +1,39 @@
+---
+/* The end of the ride on /home-alternate/: the camera has pulled back to the whole log. */
+import { profile } from '../../data/profile';
+import { featured } from '../../lib/universe';
+---
+<section id="end" class="u-end" aria-label="End of the log">
+  <div class="in">
+    <p class="pager mono" aria-hidden="true">(END)</p>
+    <p class="title">That's the whole log.</p>
+    <div class="ctas">
+      <a class="btn btn-lg btn-primary" href="/resume.pdf" download="Naman_Kumar_Resume.pdf">Download resume (PDF)</a>
+      <a class="btn btn-lg" href={`mailto:${profile.email}`}>{profile.email}</a>
+      <a class="btn btn-lg" href={profile.linkedin} rel="noopener">LinkedIn</a>
+    </div>
+    <p class="more">
+      {featured.map((c) => <><a href={c.href}>{c.title}</a><span class="sep" aria-hidden="true"> · </span></>)}
+      <a href="/">The classic homepage</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .u-end { position: relative; z-index: 1; padding: 64px 16px 72px; scroll-margin-top: 0; }
+  .in { max-width: 1120px; margin: 0 auto; }
+  .pager { margin: 0 0 10px; font-size: 13px; color: var(--u-dim); }
+  .title { margin: 0; font-size: clamp(36px, 10vw, 56px); line-height: 1.02; letter-spacing: -0.04em; font-weight: 700; color: var(--u-ink); }
+  .ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+  .ctas .btn { overflow-wrap: anywhere; white-space: normal; }
+  .ctas .btn:not(.btn-primary) { background: color-mix(in srgb, var(--u-bg) 70%, transparent); color: var(--u-ink); border-color: color-mix(in srgb, var(--u-ink) 28%, transparent); }
+  .more { margin: 22px 0 0; font-size: 14px; line-height: 1.6; color: var(--u-dim); }
+  .more a { display: inline-block; padding: 3px 0; color: var(--u-ink); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--u-ink) 30%, transparent); text-underline-offset: 3px; }
+  @media (min-width: 900px) {
+    .u-end { padding: 96px 7vw 120px; }
+    .in { margin: 0; max-width: 760px; }
+    .title { font-size: clamp(56px, min(7vw, 12vh), 112px); }
+  }
+  /* Desktop with WebGL: the card sits over the pulled-back view of the whole log. */
+  :global(html[data-u='gl']) .u-end { min-height: 100svh; display: grid; align-content: end; padding-bottom: 16vh; }
+</style>

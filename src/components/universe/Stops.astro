@@ -1,0 +1,87 @@
+---
+/*
+ * The seven stops of the ride on /home-alternate/, newest first. One h2 each (a figure and one
+ * line), a ref and year, and a small case-study link where one exists. Desktop with WebGL: each
+ * stop is a tall section whose caption is pinned while the camera holds on its commit, and fades
+ * while the camera flies (src/scripts/universe.ts). Phones: large captions beside the 2D graph.
+ * Static (no JS, reduced motion, Save-Data, no WebGL2): stacked sections on a CSS branch rail.
+ */
+import { stops } from '../../lib/universe';
+---
+<div id="ride" class="u-ride" tabindex="-1" aria-label="The ride, newest first">
+  {stops.map((s) => (
+    <section
+      class="u-stop"
+      id={s.id}
+      tabindex="-1"
+      aria-labelledby={`${s.id}-h`}
+      style={`--c:var(--c-${s.colour})`}
+      data-rev={s.rev}
+      data-ref={s.ref.replace(/^HEAD -> /, '')}
+      data-year={s.year}
+      data-colour={s.colour}
+    >
+      <div class="u-cap">
+        <div class="u-cap-in">
+          <p class="ref"><span class="dot" aria-hidden="true"></span>{s.ref}</p>
+          <h2 id={`${s.id}-h`}><span class="num">{s.num}</span> <span class="line">{s.line}</span></h2>
+          {s.sub && <p class="sub">{s.sub}</p>}
+          {(s.meta || s.link) && (
+            <p class="meta">{s.meta}{s.link && <>{s.meta && <span class="sep" aria-hidden="true"> · </span>}<a href={s.link.href}>{s.link.label}</a></>}</p>
+          )}
+        </div>
+      </div>
+    </section>
+  ))}
+</div>
+
+<style>
+  .u-ride { position: relative; z-index: 1; outline: none; }
+  .u-stop { position: relative; scroll-margin-top: 0; outline: none; }
+  .u-stop:focus-visible .u-cap-in { outline: 2px solid var(--focus); outline-offset: 8px; border-radius: 8px; }
+  .u-cap-in { position: relative; max-width: 680px; }
+  .ref { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font: 600 13px/20px var(--mono); color: color-mix(in srgb, var(--c) 82%, var(--u-ink)); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 22%, transparent); flex: none; }
+  h2 { margin: 0; font-weight: 650; color: var(--u-ink); text-wrap: balance; }
+  .num { display: block; font-size: clamp(48px, 14vw, 72px); line-height: 1; letter-spacing: -0.04em; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .line { display: block; margin-top: 10px; font-size: clamp(19px, 5vw, 24px); line-height: 1.28; letter-spacing: -0.012em; }
+  .sub { margin: 10px 0 0; font-size: 17px; line-height: 1.4; color: var(--u-ink); opacity: .86; }
+  .meta { margin: 12px 0 0; font-size: 14px; line-height: 1.5; color: var(--u-dim); }
+  .meta a { color: var(--u-ink); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--c) 70%, transparent); text-underline-offset: 3px; display: inline-block; padding: 3px 0; }
+
+  /* Static: stacked sections on a rail coloured by branch (a CSS mini graph). */
+  .u-stop { padding: 44px 16px 44px 52px; }
+  .u-stop::before { content: ''; position: absolute; left: 22px; top: 0; bottom: 0; width: 2px; background: color-mix(in srgb, var(--c) 60%, transparent); }
+  .u-stop::after { content: ''; position: absolute; left: 16px; top: 49px; width: 14px; height: 14px; border-radius: 50%; background: var(--u-bg); border: 3px solid var(--c); }
+  .u-stop:first-child::after { background: var(--c); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 25%, transparent); }
+  .u-stop .dot { display: none; }
+  @media (min-width: 768px) {
+    .u-stop { padding: 64px 32px 64px 96px; max-width: 1120px; margin: 0 auto; }
+    .u-stop::before { left: 54px; }
+    .u-stop::after { left: 48px; top: 70px; }
+  }
+
+  /* Phones with motion: big captions beside the sticky 2D graph (src/scripts/universe-2d.ts). */
+  :global(html[data-u='flat']) .u-stop { min-height: 88svh; display: grid; align-items: center; padding: 48px 18px 48px 72px; }
+  :global(html[data-u='flat']) .u-stop::before, :global(html[data-u='flat']) .u-stop::after { display: none; }
+  :global(html[data-u='flat']) .u-stop .dot { display: block; }
+
+  /* Desktop with WebGL: a tall section per stop; the caption is pinned for its dwell window. */
+  :global(html[data-u='gl']) .u-stop { height: 175svh; padding: 0; max-width: none; }
+  :global(html[data-u='gl']) .u-stop::before, :global(html[data-u='gl']) .u-stop::after { display: none; }
+  :global(html[data-u='gl']) .u-stop .dot { display: block; }
+  :global(html[data-u='gl']) .u-cap { position: sticky; top: 0; height: 100svh; display: flex; align-items: flex-end; padding: 0 7vw 15vh; pointer-events: none; }
+  :global(html[data-u='gl']) .u-cap-in { pointer-events: auto; will-change: opacity, transform; }
+  /* A soft scrim keeps the text readable over the scene. */
+  :global(html[data-u='gl']) .u-cap-in::before {
+    content: ''; position: absolute; inset: -18% -22% -24% -30%; z-index: -1; pointer-events: none;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--u-bg) 82%, transparent), color-mix(in srgb, var(--u-bg) 50%, transparent) 55%, transparent);
+  }
+  @media (min-width: 900px) {
+    .num { font-size: clamp(80px, min(9vw, 15vh), 150px); letter-spacing: -0.05em; }
+    .line { font-size: clamp(22px, 3.3vh, 32px); margin-top: 1.6vh; max-width: 26em; }
+    .sub { font-size: clamp(17px, 2.3vh, 21px); }
+    .meta { font-size: 15px; margin-top: 2vh; }
+    .ref { font-size: 14px; margin-bottom: 1.6vh; }
+  }
+</style>

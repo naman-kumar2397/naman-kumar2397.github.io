@@ -60,27 +60,43 @@ is a static list of the eight stages.
 
 **Contact / Footer**: staggered reveals, hover states, underline sweeps.
 
-**Journey homepage** (`/home-alternate/`, noindex alternate of the home page; `src/pages/home-alternate.astro`,
-`src/components/ride/*`, content picked from `src/data` by `src/lib/ride.ts`):
-- Hero: the home hero's entrance (word-masked name, staggered status, role, statement, fact chips, CTAs), the same portrait
-  entrance and gate (`src/components/PortraitFx.astro` starts it on both pages), slow ambient gradients and a scroll cue line.
-- Journey (`src/scripts/ride.ts`, `src/scripts/ride-field.ts`): `.live` is decided before first paint (html.motion, no
-  Save-Data). Desktop: a sticky chapter rail (branch-coloured nodes, HEAD ring on the current chapter, a line that fills
-  with progress) and a sticky stage beside six chapters, each a one-screen scene whose text is pinned (never hidden) while
-  native scroll scrubs one shared canvas 2D particle field (1400 points, projected 3D, DPR capped at 1.5). Each chapter has
-  a shape (accounts orbiting a team ring; agents converging with pulses and a timeline; two clouds merging; a sparse disc
-  filling up; a log stream into a sink settling into 70 dots; a collapse into `main`), and the last 28% of a chapter morphs
-  every particle, staggered on a small arc, into the next shape. Scenes trail the text by 0.14 of a chapter so a morph is
-  half done as the next chapter becomes current. Phones: each chapter card gets its own small field (360 points, its scene
-  only). Count-up figures count once, the first time their chapter is current (final value server-rendered, width reserved).
-- Polite live region "Chapter n of 6: title" once the reader settles; J/K and up/down arrows move between chapters only
-  while focus is inside the journey; rail links land on the same settled point. Pause button (WCAG 2.2.2) freezes the
-  field; scrolling still scrubs it. Fields start when the journey nears the viewport and stop off screen and in hidden
-  tabs. Colours come from the tokens (`--muted`, `--c-<branch>`) and are re-read on a colour scheme change.
-- No JS, reduced motion or Save-Data: the same HTML as stacked chapter cards with a chapter index; no pinning, no canvas.
-- Toolbox: the DevOps loop as a compact strip of disclosures (no pinning). `npm run check:layout` runs a motion-on pass
-  for this page (1366 and 390, both schemes): overflow, 6 chapter headings, hero facts and resume above the fold at
-  390x844, CLS < 0.05, no text overlap at any scroll position, rail matches the chapter in view, field animating.
+**Git universe homepage** (`/home-alternate/`, noindex alternate of the home page; `src/pages/home-alternate.astro`,
+`src/components/universe/*`, content picked from `src/data` by `src/lib/universe.ts`, controller `src/scripts/universe.ts`):
+- Mode decided before first paint by an inline gate (`html[data-u]`): `gl` (900px and up, motion allowed, no Save-Data,
+  WebGL2), `flat` (narrower, motion allowed, no Save-Data) or none (static). A safety timeout drops back to static at 4s
+  if the controller never starts.
+- Opening (gl, once per load, about 3s): a terminal types `git log --graph --oneline` and prints the real graph (lanes,
+  `*`, `|`, `/`, `\` and branch-coloured refs from `computeLayout`, newest 10 commits). The 3D scene
+  (`src/scripts/universe-gl.ts`, three.js, dynamic import when the opening starts) measures where each glyph was printed,
+  puts every vertex there on a plane facing the camera, and morphs it to its place in the 3D graph (newest rows first,
+  1.35s) while hashes and messages drift off and the name, role, facts and buttons land. The name is painted (faint) from
+  first paint, so LCP is not delayed. Any key, wheel, touch, click or scroll skips to the end state.
+- Ride (gl): one sticky full-viewport canvas; x = lane, z = time (newest nearest), a gentle y wave. Branches are
+  camera-facing glowing ribbons with forks and merges curved as in the 2D graph and light pulses travelling towards HEAD;
+  commits are instanced billboards shaded as spheres with a halo (merges ringed in the merged branch's colour, HEAD larger
+  and pulsing); 1600 points of star dust; fog in the shaders. Native scroll (no snapping) drives a CatmullRom camera path
+  through the seven stops: a dwell window per stop (camera holds on the key commit, which grows a halo while its branch
+  brightens; the caption is pinned and shown) and a flight between (camera cranes up and widens its field of view
+  slightly, the caption fades; every caption stays in the DOM). After `init` the camera pulls back and the fog clears to
+  show the whole log behind the end card. Damped camera, subtle breathing drift and pointer parallax (fine pointer).
+- HUD: mono readout bottom-left (`HEAD~10^2~3  project/netflix-game-launch  2024`, real revision names, polite live
+  region on stop change), a thin progress line, Pause (WCAG 2.2.2: freezes drift, pulses and twinkle; scroll still flies)
+  and "Skip to resume" top-right. J/K and the arrow keys move between stops while focus is in the ride.
+- Rendering: unlit shader materials only, premultiplied output (additive light on the dark stage, normal blending on the
+  light one), pixel ratio capped at 1.5, `compileAsync` before the first frame, renders only while on screen and visible
+  and only while something moves, disposed on a non-persisted pagehide. A software renderer (SwiftShader, llvmpipe) gets
+  a 0.6 pixel ratio and 30fps, and sustained slow frames step the resolution down. Colours from the tokens, re-read on a
+  colour scheme change.
+- Phones (`flat`, `src/scripts/universe-2d.ts`): a vertical 2D canvas graph on a sticky layer beside large captions;
+  each stop's commit sits level with its caption and the graph draws itself above a reading line as you scroll. Renders
+  on scroll only; no three.js download.
+- Static (no JS, reduced motion, Save-Data, no WebGL2): the printed terminal, the hero, and the seven stops stacked on a
+  CSS rail coloured by branch; no canvas.
+- `npm run check:layout` runs a motion-on pass (1366x768 and 1440x900 with WebGL, 390x844 phone, both schemes): mode,
+  the opening reaching its end state, 7 stop headings, name, facts and resume in the first viewport and fully shown,
+  readout matching the stop at each stop position, captions shown at their stop and never overlapping (also mid-flight),
+  the WebGL scene animating, no horizontal overflow, CLS < 0.05. `npm run check:bundle` allows three.js on this page only
+  through a dynamic import.
 
 **Thinking orbs** (`src/scripts/orbs.ts`, engine from [thinking-orbs](https://github.com/Jakubantalik/thinking-orbs), MIT):
 small dotted canvas animations tinted with the branch colour, used only for live or in-progress work: "working" on HEAD,
@@ -91,7 +107,7 @@ Datadog node the log stream pours into. Decorative (aria-hidden), paused off scr
 real migrated rates. Loads near the viewport when the browser is idle; never with reduced motion or Save-Data.
 
 **3D architecture diagrams** (`src/components/Diagram.astro` + `src/scripts/arch3d.ts`, three.js, project pages only; the
-home page stays 2D and three-free, enforced by `npm run check:bundle`): one board tilted 30° away from a fixed camera, a
+home page stays 2D and three-free, enforced by `npm run check:bundle`; the alternate home page loads it on demand): one board tilted 30° away from a fixed camera, a
 lane per stage, an HTML card per component resting on the board (soft contact shadow), and flat glowing grooves for the
 flow. Edges only join neighbouring stages: node to node when either side has one component (so fan-out and fan-in are
 literal), otherwise through a hub between the lanes (hover never lights a component across a hub: the bundle says the

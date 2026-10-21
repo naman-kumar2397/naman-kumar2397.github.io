@@ -32,6 +32,9 @@ data-attribute contract (`data-reveal`, `data-reveal-group`, `data-inview`, `dat
 - `<details>`: animated open/close where supported (`::details-content`), rotating chevrons
 
 **Hero**: staggered "coming online" entrance (status, word-masked name, role, statement, pitch, CTAs, photo);
+portrait entrance on desktop (`src/scripts/portrait.ts`): the photo's own pixels spin as a dotted orb, fly home to
+form it, the real photo fades in and a third of the pixels orbit as a ring (slows to a stop after 10 s, orbits again
+on hover; decided before first paint, safety reveal at 4 s; phones, reduced motion and Save-Data get the plain fade);
 live status dot pulse (only while visible); very slow ambient gradients (paused off-screen); desktop
 cursor glow; subtle photo parallax; CTA sheen
 
